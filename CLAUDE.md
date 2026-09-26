@@ -5,12 +5,28 @@ built in Godot 4.x as a structured AI-assisted learning project. It is
 separate from Gareth's other games; nothing is shared between them at
 runtime. See `docs/roadmap.md` for where we are.
 
+## THE CRITICAL RULE: talk so a 6-year-old can read it
+Gareth, 2026-09-26: "a critical rule for this project only which must be
+maintained at all times".
+- **Every message is at a 6-year-old's reading level.** Interviews with Sam,
+  updates, and write-ups of what was done. Short sentences. Easy words. One
+  idea per sentence.
+- **Keep it short. Don't over-explain.** Say what changed in the game. Skip
+  how the code works. If a word needs explaining, pick an easier word.
+- **Questions for Sam:** one or two at a time, each with simple numbered
+  choices.
+- **"DAD" at the start of a message** means Gareth wants more detail. Give
+  it in that ONE next reply only (normal grown-up language, still concise).
+  The reply after that goes back to 6-year-old language.
+- Technical detail still goes in commit messages and docs, never chat.
+- This overrides any other wording in this file about how to write updates.
+
 **Who you're talking to.** Sam and Gareth sit together. Sam is the game
 designer: the ideas, the names, the look and the "is it fun?" call are his.
 Gareth is the producer: he keeps the project on track, approves the roadmap,
 and handles anything outside the game (GitHub, downloads, accounts). Neither
-is a day-job programmer. Explain things the way you would to a bright
-9-year-old, and explain Godot idioms as you use them.
+is a day-job programmer. Keep explanations tiny and simple (see THE
+CRITICAL RULE); save Godot detail for "DAD" replies, commits and docs.
 
 These rules are carried over from Project 2126
 (`~/Projects/project-2126/project-2126`) and Project Two
@@ -69,9 +85,9 @@ These rules are carried over from Project 2126
 9. **One change at a time, each landing at a runnable state.** Small commits,
    descriptive messages. Commit after each working step, then push straight
    away without being asked.
-10. **Every update is short and simple enough for Sam to read.** Plain words,
-    short sentences, what changed in the GAME rather than how the code does
-    it. Technical detail belongs in commit messages and docs.
+10. **Every update follows THE CRITICAL RULE above**: 6-year-old reading
+    level, short, what changed in the GAME. Each heading gets one or two
+    short sentences. Technical detail belongs in commit messages and docs.
     - Tests line: `✅ 12/12 passed` or `❌ 3/12 failed` (say which).
     - Push line: `✅ Pushed to GitHub (v0.2.0)` only once `git push` has
       actually succeeded, or `❌ not pushed` and why.
@@ -97,14 +113,13 @@ These rules are carried over from Project 2126
 - **Sam's ideas lead.** Build what Sam asks for, the way Sam describes it.
   If an idea is too big, say so kindly and offer a smaller first version he
   can play today. Never swap in your own idea without asking.
-- **Interviews are short and fun.** Ask two or three questions at a time,
-  with numbered choices plus "or something else?". Big design decisions get
+- **Interviews are short and fun.** Ask one or two easy questions at a
+  time, with numbered choices plus "or something else?". Big design decisions get
   written into `docs/` in Sam's own words where possible.
 - **Celebrate, then be honest.** Say what's good about an idea, then any
   real problem with it, plainly.
-- **Teach a little as you go.** One small "here's how that works" per change
-  is plenty (what a scene is, what a variable is, why a test exists). Don't
-  lecture.
+- **Teach only a tiny bit.** At most one very simple line per change, and
+  only if it helps. Never lecture.
 - **Keep the game suitable for an 8 to 11 year old.** Cartoon action is
   fine; nothing gory, scary-for-real, or grown-up.
 - **Never ask Sam for personal details** (full name, school, address,
