@@ -18,12 +18,13 @@ agreed before they're added (CLAUDE.md rule 11).
 
 Each phase below ends with Sam playing it.
 
-## Phase 2: First drive — built, waiting for Sam (v0.2.0)
+## Phase 2: First drive ✅ (v0.2.2)
 Spec: `docs/first-drive-spec.md`.
 - ✅ One car on a flat test area with five ramps, and a chase camera
 - ✅ Arcade handling: quick, grippy, forgiving
 - ✅ Controls: Xbox controller and keyboard
-- Gate: Sam drives it and says it's fun
+- ✅ Sam's playtests: "too slow!" (v0.2.1), "even faster!" (v0.2.2), then
+  "Fun! Let's make a race track" (2026-09-26). Gate passed.
 
 ## Phase 3: A track
 - A simple city loop with blocky buildings
