@@ -1,0 +1,103 @@
+{
+  "_comment": "Hard limits on Claude Code for this project (Gareth, 2026-09-19). Three layers: deny/ask rules (checked first, even in auto mode), the macOS Bash sandbox (writes only to the project and Claude's scratch/memory folders, network only to GitHub), and .claude/hooks/guard.py (blocks the rest and makes this folder read-only to Claude). Loosen only by editing this file yourself.",
+  "permissions": {
+    "deny": [
+      "Bash(sudo *)",
+      "Bash(su *)",
+      "Bash(rm -rf *)",
+      "Bash(rm -fr *)",
+      "Bash(rm -r *)",
+      "Bash(git push --force*)",
+      "Bash(git push -f*)",
+      "Bash(git reset --hard*)",
+      "Bash(git clean *)",
+      "Bash(git checkout -- *)",
+      "Bash(git restore *)",
+      "Bash(git branch -D *)",
+      "Bash(git remote set-url *)",
+      "Bash(git remote remove *)",
+      "Bash(kill -9 *)",
+      "Bash(killall *)",
+      "Bash(diskutil *)",
+      "Bash(launchctl *)",
+      "Bash(defaults write *)",
+      "Bash(security *)",
+      "Bash(chmod -R *)",
+      "Bash(chown *)",
+      "Bash(crontab *)",
+      "Bash(ssh *)",
+      "Bash(scp *)",
+      "Bash(rsync *)",
+      "Read(~/.ssh/**)",
+      "Read(~/.aws/**)",
+      "Read(~/.gnupg/**)",
+      "Read(~/.config/gcloud/**)",
+      "Read(~/Library/Keychains/**)",
+      "Read(~/.zsh_history)",
+      "Read(~/.bash_history)",
+      "Edit(~/.zshrc)",
+      "Edit(~/.zprofile)",
+      "Edit(~/.bashrc)",
+      "Edit(~/.bash_profile)",
+      "Edit(./.claude/**)"
+    ],
+    "ask": [
+      "Bash(curl *)",
+      "Bash(wget *)",
+      "Bash(brew *)",
+      "Bash(pip *)",
+      "Bash(pip3 *)",
+      "Bash(npm *)",
+      "Bash(git remote *)",
+      "Bash(gh *)",
+      "Bash(pkill *)"
+    ],
+    "disableBypassPermissionsMode": "disable",
+    "additionalDirectories": [
+      "~/Downloads",
+      "/private/tmp/claude-501",
+      "~/.claude/projects"
+    ]
+  },
+  "sandbox": {
+    "enabled": false,
+    "filesystem": {
+      "allowWrite": [
+        "./",
+        "/private/tmp/claude-501/",
+        "~/.claude/projects/",
+        "~/Library/Application Support/Godot/",
+        "~/Library/Caches/Godot/",
+        "/private/var/folders/",
+        "/tmp/"
+      ],
+      "denyRead": [
+        "~/.ssh/",
+        "~/.aws/",
+        "~/.gnupg/",
+        "~/.config/gcloud/",
+        "~/.zsh_history",
+        "~/.bash_history"
+      ]
+    },
+    "network": {
+      "allowedDomains": ["github.com", "*.github.com", "*.githubusercontent.com"],
+      "strictAllowlist": true
+    },
+    "excludedCommands": ["open", "osascript", "git push", "/Applications/Blender.app/Contents/MacOS/Blender"],
+    "allowUnsandboxedCommands": false
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|Write|Edit|MultiEdit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/guard.py"
+          }
+        ]
+      }
+    ]
+  }
+}

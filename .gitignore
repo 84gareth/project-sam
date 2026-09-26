@@ -1,0 +1,19 @@
+# Godot 4+ specific ignores
+.godot/
+/android/
+
+# Exported builds
+/builds/
+
+# Screenshots, GPU captures and other scratch output. Tools write here, never
+# to the project root (Project 2126's root filled up with ~150 of them).
+# The .gdignore stops Godot importing them as game assets.
+/captures/*
+!/captures/.gdignore
+
+# macOS
+.DS_Store
+
+# Editor swap / backup files
+*.swp
+*~
