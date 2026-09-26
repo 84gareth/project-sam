@@ -3,8 +3,8 @@ extends RefCounted
 ## scene. car.gd asks these functions what to do each physics tick.
 ## Tune the feel here; docs/first-drive-spec.md says what each number is for.
 
-const MAX_SPEED: float = 34.0        ## metres per second, forwards
-const ACCEL: float = 24.0            ## speed gained per second on full throttle
+const MAX_SPEED: float = 48.0        ## metres per second, forwards
+const ACCEL: float = 34.0            ## speed gained per second on full throttle
 const BRAKE: float = 32.0            ## speed lost per second on full brake
 const REVERSE_ACCEL: float = 10.0
 const MAX_REVERSE: float = 8.0

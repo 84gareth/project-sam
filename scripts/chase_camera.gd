@@ -7,7 +7,7 @@ extends Camera3D
 @export var height: float = 3.2
 @export var look_height: float = 1.2
 ## Bigger = snappier follow.
-@export var follow: float = 6.0
+@export var follow: float = 12.0
 
 var _target: Node3D
 
