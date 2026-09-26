@@ -20,7 +20,7 @@ five computer cars over three laps, fly off ramps and throw silly things.
 | One race | About 3 minutes |
 | On the track | Ramps and jumps |
 | Throwables | Water balloons (splash, slows), jelly (stuck), banana skins (slip and spin). More later. |
-| Controls | Game pad |
+| Controls | Xbox controller, plus keyboard for now (Gareth, 2026-09-26) |
 
 ## The core loop (what has to be fun first)
 Drive fast, fly off a ramp, throw something silly at the car ahead, cross
@@ -28,6 +28,5 @@ the line first. Everything else (hero picking, car colours, unlocking crazy
 cars) comes after driving feels good.
 
 ## Open questions
-- For Gareth: which game pad will Sam use? (Needed before controls work.)
 - For Sam, later: which button throws, what the hero looks like, which
   crazy cars to win, what the city looks like.
