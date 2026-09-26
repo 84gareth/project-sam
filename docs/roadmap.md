@@ -10,7 +10,10 @@ agreed before they're added (CLAUDE.md rule 11).
 - ✅ Git repo, working rules (CLAUDE.md, docs/process.md) and hard limits
   (`.claude/`)
 
-## Phase 1: Decide the game (with Sam)
+## Phase 1: Decide the game (with Sam) — in progress
+- ✅ Interviews 1 and 2 (2026-09-26): the game is **Turbo Town**, a 3D
+  crazy-car city race. Pitch: `docs/pitch.md`
+- ✅ Title screen shows the name (v0.1.1)
 - Interview Sam: what kind of game, who you play as, what you do over and
   over, how you win or lose, 2D or 3D, what it looks like, what makes it fun
 - One-page pitch in `docs/pitch.md`, in Sam's words where possible

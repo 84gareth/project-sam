@@ -189,8 +189,8 @@ so, kindly.
   needs to check.
 
 ## Current status
-Updated 2026-09-26 (v0.1.0).
+Updated 2026-09-26 (v0.1.1).
 - **Phase 0 (setup) done.** An empty, runnable Godot project showing its
   name and version, both test lanes, the hard limits, and git.
-- **Next: Phase 1, decide the game with Sam** (an interview, then a
-  one-page pitch).
+- **Phase 1 in progress.** The game is **Turbo Town**, a 3D crazy-car
+  city race (`docs/pitch.md`). Next: agree the roadmap to a first drive.
