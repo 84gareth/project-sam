@@ -99,6 +99,13 @@ These rules are carried over from Project 2126
       4. **What's next**
       5. **Model and effort level required**, e.g. `Opus 5.5 · high`.
     - Never use the phrase "load-bearing". Say the actual thing.
+    - **Something to test? End with a launch block** (Gareth, 2026-09-26):
+      after the five headings, a `bash` code block that cds into the project
+      and runs `tools/playtest.sh` with the right arguments (a scene name to
+      jump straight to it), so it launches with the Run button:
+      ```bash
+      cd "/Users/gareth/Projects/Project Sam" && tools/playtest.sh
+      ```
 11. **Work the roadmap in order; don't silently insert.** `docs/roadmap.md` is
     the single ordered list. When something new comes up, propose where it
     goes and get an OK before adding it.
