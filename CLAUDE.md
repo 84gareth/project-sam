@@ -189,8 +189,10 @@ so, kindly.
   needs to check.
 
 ## Current status
-Updated 2026-09-26 (v0.1.1).
-- **Phase 0 (setup) done.** An empty, runnable Godot project showing its
-  name and version, both test lanes, the hard limits, and git.
-- **Phase 1 in progress.** The game is **Turbo Town**, a 3D crazy-car
-  city race (`docs/pitch.md`). Next: agree the roadmap to a first drive.
+Updated 2026-09-26 (v0.2.0).
+- **Phases 0-1 done.** The game is **Turbo Town**, a 3D crazy-car city race
+  (`docs/pitch.md`). Roadmap to a first playable approved.
+- **Phase 2 (first drive) built, waiting for Sam to play it.** A red box
+  car on a checkered test area with five ramps and a chase camera. Xbox
+  controller and keyboard (`scripts/controls.gd`, an autoload). Handling
+  numbers: `scripts/car_rules.gd`. Look-check: `tools/godot/capture_drive.tscn`.

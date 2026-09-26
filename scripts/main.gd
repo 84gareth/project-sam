@@ -1,6 +1,6 @@
-extends Control
-## Placeholder main scene: shows the game's name and version so there is
-## something runnable from day one. Replace once we know what the game is.
+extends Node3D
+## The first drive (Phase 2): one car on the test area, a chase camera, and
+## the game's name and version in the corner.
 
 @onready var title_label: Label = %TitleLabel
 @onready var version_label: Label = %VersionLabel
