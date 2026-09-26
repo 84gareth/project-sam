@@ -18,7 +18,7 @@ Throw (A / Space) and pause (Menu / Esc) were agreed too but are added when
 something uses them (throw in Phase 5; pause when it's on the roadmap).
 
 ## Handling (arcade, all numbers in `scripts/car_rules.gd`)
-- Top speed 24 m/s, about 1.5 s to reach it. Coasts to a stop.
+- Top speed 34 m/s, about 1.4 s to reach it (was 24 m/s; Sam: "too slow!", v0.2.1). Coasts to a stop.
 - Holding brake stops the car, then reverses slowly (max 8 m/s).
 - No turning when stopped; steering eases off a little at top speed;
   reversing steers the other way, like a real car.
