@@ -26,13 +26,13 @@ Spec: `docs/first-drive-spec.md`.
 - ✅ Sam's playtests: "too slow!" (v0.2.1), "even faster!" (v0.2.2), then
   "Fun! Let's make a race track" (2026-09-26). Gate passed.
 
-## Phase 3: A track — built, waiting for Sam (v0.3.0)
+## Phase 3: A track ✅ (v0.3.0)
 Spec: `docs/track-1-spec.md`. Sam drew the track himself.
 - ✅ Sam's drawing traced into a real track (`tools/trace_track.gd`)
 - ✅ Walls both sides, grass in the middle, blocky buildings outside
 - ✅ 3 laps, a lap counter, a chequered start/finish line
 - The old field with ramps is still there: `tools/playtest.sh test_drive`
-- Gate: Sam races it
+- ✅ Sam raced it (2026-09-27). Gate passed.
 
 ## Phase 4: Racers
 - 5 computer cars, race positions, a results screen

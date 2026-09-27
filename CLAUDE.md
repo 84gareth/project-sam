@@ -212,10 +212,11 @@ Updated 2026-09-27 (v0.3.0).
   five ramps, chase camera. Xbox + keyboard (`scripts/controls.gd`, an
   autoload). Handling: `scripts/car_rules.gd`. Look-check:
   `tools/godot/capture_drive.tscn`.
-- **Phase 3 (a track) built, waiting for Sam (v0.3.0).** Sam drew the
+- **Phase 3 (a track) done (v0.3.0); Sam raced it.** Sam drew the
   track; `tools/trace_track.gd` turned the photo into `tracks/track_1.json`.
   `scenes/race.tscn` is the main scene; the old ramp field is
   `scenes/test_drive.tscn`. Look-check: `tools/godot/capture_race.tscn`.
 - **Sam's power-up ideas are logged in Phase 5** (jelly, water balloons
   thrown forward or back, the worm that digs under the track).
+- **Next: Phase 4 (racers).** Interview Sam first.
 
