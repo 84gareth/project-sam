@@ -7,11 +7,12 @@ Sam's answers, 2026-09-27:
 - **Cars bump** each other.
 - **3, 2, 1, GO!** start: everyone waits, then goes.
 - The end shows **places** (1st, 2nd, 3rd...).
-- **Silly names:** Zoomy, Bumper, Wobble, Turbo Tim, Speedy.
+- **Silly names:** Zoomy, Bumper, Wobble, Turbo Tim (Speedy was a fifth
+  until Sam's first race: "there should be 4 purple cars not 5", v0.4.1).
 
 ## How it works
-- 6 cars on a grid behind the line, two by two, 12 m apart. Sam starts at
-  the back (left), so the race is about overtaking.
+- 5 cars on a grid behind the line, two by two, 12 m apart. Sam starts
+  alone on the back row, so the race is about overtaking.
 - Computer drivers (`scripts/ai_rules.gd`, pure) aim at a point ahead on the
   track, each in its own lane (within 4.5 m of the middle), and ease off for tight bends. Each has its own
   top-speed share (88-95% of the car's top speed) so they spread out.
@@ -21,6 +22,6 @@ Sam's answers, 2026-09-27:
   a little speed.
 - Places during the race: laps done, then distance round the lap
   (`scripts/race_rules.gd`, pure). Shown under the lap counter ("3rd").
-- When Sam finishes, a results panel lists all 6 places (cars still racing
+- When Sam finishes, a results panel lists all 5 places (cars still racing
   are placed by how far round they are). Press A / Enter / Space to race
   again.

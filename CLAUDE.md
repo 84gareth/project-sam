@@ -207,7 +207,7 @@ so, kindly.
   needs to check.
 
 ## Current status
-Updated 2026-09-27 (v0.4.0).
+Updated 2026-09-27 (v0.4.1).
 - **Phases 0-1 done.** The game is **Turbo Town**, a 3D crazy-car city race
   (`docs/pitch.md`). Roadmap to a first playable approved.
 - **Phase 2 (first drive) done (v0.2.2).** Sam: "Fun!" after asking for
@@ -221,7 +221,8 @@ Updated 2026-09-27 (v0.4.0).
   `scenes/test_drive.tscn`. Look-check: `tools/godot/capture_race.tscn`.
 - **Sam's power-up ideas are logged in Phase 5** (jelly, water balloons
   thrown forward or back, the worm that digs under the track).
-- **Phase 4 (racers) built, waiting for Sam (v0.4.0).** Five purple
+- **Phase 4 (racers) done (v0.4.1).** Four purple
   computer racers (`scripts/ai_rules.gd`, pure; a simulated lap is a unit
   test), bumping, 3-2-1-GO, places and results (`scripts/race_rules.gd`).
+- **Next: Phase 5 (power-ups).** Interview Sam first.
 

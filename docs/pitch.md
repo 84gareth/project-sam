@@ -15,7 +15,7 @@ five computer cars over three laps, fly off ramps and throw silly things.
 | You are | A kid hero, picked at the start of each race |
 | Your car | A normal car; you choose its colour |
 | Crazy cars | Won by winning races (e.g. a hot dog car) |
-| Racers | 6 cars: you and 5 computer racers |
+| Racers | 5 cars: you and 4 purple computer racers (Sam, 2026-09-27; was 6) |
 | Laps | 3 |
 | One race | About 3 minutes |
 | On the track | Ramps and jumps |

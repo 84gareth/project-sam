@@ -39,9 +39,9 @@ func test_sam_starts_at_the_back_facing_up_the_track() -> void:
 	for r: Dictionary in _race.racers:
 		if r["name"] != "You" and _track.progress_fraction(r["car"].global_position) > f + 0.001:
 			ahead += 1
-	assert_eq(ahead, 4, "four racers on the rows in front")
+	assert_eq(ahead, 4, "all four racers in front")
 
-func test_five_purple_racers_with_silly_names() -> void:
+func test_four_purple_racers_with_silly_names() -> void:
 	await _start()
 	var names: Array[String] = []
 	for r: Dictionary in _race.racers:
@@ -49,7 +49,7 @@ func test_five_purple_racers_with_silly_names() -> void:
 		if r["name"] != "You":
 			var body: MeshInstance3D = r["car"].get_node("Visual/Body")
 			assert_eq(body.material_override.albedo_color, _race.PURPLE, r["name"] + " is purple")
-	assert_eq(names, ["You", "Zoomy", "Bumper", "Wobble", "Turbo Tim", "Speedy"] as Array[String])
+	assert_eq(names, ["You", "Zoomy", "Bumper", "Wobble", "Turbo Tim"] as Array[String])
 
 func test_everyone_waits_for_go() -> void:
 	await _start(3.0)
@@ -112,5 +112,5 @@ func test_three_laps_then_finished_and_results() -> void:
 	assert_eq(seen, ["Lap 1 / 3", "Lap 2 / 3", "Lap 3 / 3", "Finished!"] as Array[String])
 	assert_true(_race.get_node("%Results").visible, "results showing")
 	var lines: PackedStringArray = _text("ResultsList").split("\n")
-	assert_eq(lines.size(), 6, "all six places")
+	assert_eq(lines.size(), 5, "all five places")
 	assert_eq(lines[0], "1st   You", "carried round that fast, Sam wins")

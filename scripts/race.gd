@@ -1,5 +1,5 @@
 extends Node3D
-## A race on Sam's track: Sam against five purple computer racers.
+## A race on Sam's track: Sam against four purple computer racers.
 ## 3, 2, 1, GO!, then 3 laps. Places show under the lap counter, and a
 ## results panel appears when Sam finishes. A / Enter / Space races again.
 ## (Sam's choices: docs/racers-spec.md.)
@@ -17,7 +17,6 @@ const RIVALS: Array[Dictionary] = [
 	{"name": "Bumper", "slot": 1, "lane": 3.0, "skill": 0.90},
 	{"name": "Wobble", "slot": 2, "lane": 4.5, "skill": 0.88},
 	{"name": "Turbo Tim", "slot": 3, "lane": -4.5, "skill": 0.93},
-	{"name": "Speedy", "slot": 5, "lane": 0.0, "skill": 0.92},
 ]
 
 @export var laps: int = 3
