@@ -34,8 +34,14 @@ Spec: `docs/track-1-spec.md`. Sam drew the track himself.
 - The old field with ramps is still there: `tools/playtest.sh test_drive`
 - ✅ Sam raced it (2026-09-27). Gate passed.
 
-## Phase 4: Racers
-- 5 computer cars, race positions, a results screen
+## Phase 4: Racers — built, waiting for Sam (v0.4.0)
+Spec: `docs/racers-spec.md`.
+- ✅ 5 purple computer racers: Zoomy, Bumper, Wobble, Turbo Tim, Speedy
+- ✅ Medium difficulty, measured: a simulated lap takes 42-46 s
+- ✅ Cars bump each other
+- ✅ 3, 2, 1, GO! start; Sam starts at the back
+- ✅ Place under the lap counter; a results panel at the end; A to race again
+- Gate: Sam races them
 
 ## Phase 5: Power-ups (Sam's ideas, 2026-09-27)
 - Pickups on the track that give a power-up

@@ -71,3 +71,15 @@ func test_camera_stays_behind_the_car() -> void:
 	assert_lt(offset.dot(forward), 0.0, "camera is behind, not in front")
 	assert_gt(offset.y, 1.0, "camera is above the car")
 	assert_lt(offset.length(), 12.0, "camera keeps up")
+
+func test_bumping_another_car_shoves_it() -> void:
+	var other: CharacterBody3D = load("res://scenes/car.tscn").instantiate()
+	other.driven_by_player = false
+	_main.add_child(other)
+	other.global_position = _car.global_position + Vector3(0, 0, -12)
+	await until(func(): return other.is_on_floor(), "other car settles")
+	var start: Vector3 = other.global_position
+	Input.action_press("accelerate")
+	await until(func(): return other.global_position.distance_to(start) > 1.5,
+			"the car in front gets shoved", 5.0)
+	assert_lt(other.global_position.z, start.z, "shoved forwards, the way it was hit")

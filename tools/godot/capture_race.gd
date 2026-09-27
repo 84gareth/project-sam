@@ -24,7 +24,7 @@ func _process(delta: float) -> void:
 				Input.action_press("accelerate")
 				_next()
 		1:
-			if _t > 2.5:
+			if _t > 5.5:   # 3 s countdown, then 2.5 s of racing
 				_shot("race_driving")
 				Input.action_release("accelerate")
 				# The bend at the bottom of Sam's drawing: the lowest point.

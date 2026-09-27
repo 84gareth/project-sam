@@ -65,3 +65,80 @@ theme_override_constants/outline_size = 10
 theme_override_font_sizes/font_size = 56
 text = "Lap 1 / 3"
 horizontal_alignment = 1
+
+[node name="PlaceLabel" type="Label" parent="HUD"]
+unique_name_in_owner = true
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -300.0
+offset_top = 96.0
+offset_right = 300.0
+offset_bottom = 150.0
+grow_horizontal = 2
+theme_override_colors/font_color = Color(1, 0.9, 0.3, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.7)
+theme_override_constants/outline_size = 8
+theme_override_font_sizes/font_size = 40
+text = "6th"
+horizontal_alignment = 1
+
+[node name="CountdownLabel" type="Label" parent="HUD"]
+unique_name_in_owner = true
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -300.0
+offset_top = -150.0
+offset_right = 300.0
+offset_bottom = 0.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.8)
+theme_override_constants/outline_size = 16
+theme_override_font_sizes/font_size = 140
+text = "3"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Results" type="PanelContainer" parent="HUD"]
+unique_name_in_owner = true
+visible = false
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -260.0
+offset_top = -260.0
+offset_right = 260.0
+offset_bottom = 260.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Box" type="VBoxContainer" parent="HUD/Results"]
+layout_mode = 2
+alignment = 1
+
+[node name="ResultsTitle" type="Label" parent="HUD/Results/Box"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 56
+text = "Results"
+horizontal_alignment = 1
+
+[node name="ResultsList" type="Label" parent="HUD/Results/Box"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 36
+text = "1st   You"
+horizontal_alignment = 1
+
+[node name="AgainLabel" type="Label" parent="HUD/Results/Box"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.9, 0.3, 1)
+theme_override_font_sizes/font_size = 26
+text = "Press A to race again"
+horizontal_alignment = 1

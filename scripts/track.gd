@@ -23,11 +23,17 @@ var path: RefCounted
 func _ready() -> void:
 	build()
 
-## Where the car sits at the start: 8 m behind the line, facing the way round.
-func start_transform() -> Transform3D:
-	var d: float = path.length - 8.0
-	var p: Vector2 = path.point_at(d)
+const GRID_FIRST: float = 8.0   ## front row, metres behind the line
+const GRID_ROW: float = 12.0    ## between rows
+const GRID_LANE: float = 5.0    ## either side of the middle
+
+## Starting spot `slot` (0 = front left, 1 = front right, 2 = second row
+## left...), facing the way round.
+func grid_transform(slot: int) -> Transform3D:
+	var d: float = path.length - GRID_FIRST - GRID_ROW * (slot / 2)
 	var dir: Vector2 = path.direction_at(d)
+	var left := Vector2(-dir.y, dir.x)
+	var p: Vector2 = path.point_at(d) + left * GRID_LANE * (1.0 if slot % 2 == 0 else -1.0)
 	return Transform3D(Basis(Vector3.UP, atan2(-dir.x, -dir.y)), Vector3(p.x, 0.2, p.y))
 
 ## 0..1: how far round the lap a world position is (0 = the start line).
