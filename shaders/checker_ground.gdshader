@@ -17,4 +17,5 @@ void fragment() {
 	float k = mod(c.x + c.y, 2.0);
 	ALBEDO = mix(color_a, color_b, k);
 	ROUGHNESS = 0.9;
+	SPECULAR = 0.0;   // no sky shine: keeps the colours from washing out
 }

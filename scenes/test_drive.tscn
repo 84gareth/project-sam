@@ -1,12 +1,11 @@
 [gd_scene format=3]
 
-[ext_resource type="Script" path="res://scripts/main.gd" id="1_main"]
+[ext_resource type="Script" path="res://scripts/hud.gd" id="1_hud"]
 [ext_resource type="PackedScene" path="res://scenes/test_area.tscn" id="2_area"]
 [ext_resource type="PackedScene" path="res://scenes/car.tscn" id="3_car"]
 [ext_resource type="Script" path="res://scripts/chase_camera.gd" id="4_cam"]
 
-[node name="Main" type="Node3D"]
-script = ExtResource("1_main")
+[node name="TestDrive" type="Node3D"]
 
 [node name="TestArea" parent="." instance=ExtResource("2_area")]
 
@@ -22,6 +21,7 @@ script = ExtResource("4_cam")
 target_path = NodePath("../Car")
 
 [node name="HUD" type="CanvasLayer" parent="."]
+script = ExtResource("1_hud")
 
 [node name="Corner" type="VBoxContainer" parent="HUD"]
 offset_left = 24.0

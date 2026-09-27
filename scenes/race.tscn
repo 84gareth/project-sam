@@ -1,0 +1,67 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/race.gd" id="1_race"]
+[ext_resource type="PackedScene" path="res://scenes/track.tscn" id="2_track"]
+[ext_resource type="PackedScene" path="res://scenes/car.tscn" id="3_car"]
+[ext_resource type="Script" path="res://scripts/chase_camera.gd" id="4_cam"]
+[ext_resource type="Script" path="res://scripts/hud.gd" id="5_hud"]
+
+[node name="Race" type="Node3D"]
+script = ExtResource("1_race")
+
+[node name="Track" parent="." instance=ExtResource("2_track")]
+
+[node name="Car" parent="." instance=ExtResource("3_car")]
+unique_name_in_owner = true
+
+[node name="ChaseCamera" type="Camera3D" parent="."]
+unique_name_in_owner = true
+current = true
+fov = 70.0
+far = 2000.0
+script = ExtResource("4_cam")
+target_path = NodePath("../Car")
+
+[node name="HUD" type="CanvasLayer" parent="."]
+script = ExtResource("5_hud")
+
+[node name="Corner" type="VBoxContainer" parent="HUD"]
+offset_left = 24.0
+offset_top = 16.0
+offset_right = 424.0
+offset_bottom = 96.0
+
+[node name="TitleLabel" type="Label" parent="HUD/Corner"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.6)
+theme_override_constants/outline_size = 6
+theme_override_font_sizes/font_size = 32
+text = "Turbo Town"
+
+[node name="VersionLabel" type="Label" parent="HUD/Corner"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 0.8)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.6)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 16
+text = "v0.0.0"
+
+[node name="LapLabel" type="Label" parent="HUD"]
+unique_name_in_owner = true
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -300.0
+offset_top = 20.0
+offset_right = 300.0
+offset_bottom = 100.0
+grow_horizontal = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.7)
+theme_override_constants/outline_size = 10
+theme_override_font_sizes/font_size = 56
+text = "Lap 1 / 3"
+horizontal_alignment = 1

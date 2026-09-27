@@ -11,7 +11,7 @@ var _t: float = 0.0
 var _was_airborne: bool = false
 
 func _ready() -> void:
-	_main = load("res://scenes/main.tscn").instantiate()
+	_main = load("res://scenes/test_drive.tscn").instantiate()
 	add_child(_main)
 	_car = _main.get_node("%Car")
 

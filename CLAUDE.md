@@ -99,8 +99,8 @@ These rules are carried over from Project 2126
       4. **What's next**
       5. **Model and effort level required**, e.g. `Opus 5.5 · high`.
     - Never use the phrase "load-bearing". Say the actual thing.
-    - **Something to test? End with a launch block** (Gareth, 2026-09-26):
-      after the five headings, a `bash` code block that cds into the project
+    - **EVERY update ends with a launch block, the "link to play"** (Gareth,
+      2026-09-26, widened to every update 2026-09-27): after the five headings, a `bash` code block that cds into the project
       and runs `tools/playtest.sh` with the right arguments (a scene name to
       jump straight to it), so it launches with the Run button:
       ```bash
@@ -191,12 +191,20 @@ so, kindly.
   `set_anchors_and_offsets_preset()` when it should fill its parent.
 - **`PI` is built into Godot shaders.** Declaring it again is a compile
   error.
+- **Don't name functions or variables after GDScript built-ins** (`wrap`,
+  `len`, `sign`...). A method called `wrap(d)` compiled as a call to the
+  built-in `wrap()` and took the whole test file down (2026-09-27).
+- **A flat surface's colour can lie.** The grey road looked pale blue: that
+  was strong blue sky light, not a flipped face. A face wound the wrong way
+  (both sides drawn) shows up nearly BLACK instead. Materials on flat ground
+  have `metallic_specular = 0` / `SPECULAR = 0.0` so the sky can't wash them
+  out. Check new ground meshes in a windowed capture.
 - **Headless Godot can't read back from the GPU** (e.g. MultiMesh
   transforms come back as zeros). Keep your own copy of anything a test
   needs to check.
 
 ## Current status
-Updated 2026-09-26 (v0.2.2).
+Updated 2026-09-27 (v0.3.0).
 - **Phases 0-1 done.** The game is **Turbo Town**, a 3D crazy-car city race
   (`docs/pitch.md`). Roadmap to a first playable approved.
 - **Phase 2 (first drive) done (v0.2.2).** Sam: "Fun!" after asking for
@@ -204,4 +212,10 @@ Updated 2026-09-26 (v0.2.2).
   five ramps, chase camera. Xbox + keyboard (`scripts/controls.gd`, an
   autoload). Handling: `scripts/car_rules.gd`. Look-check:
   `tools/godot/capture_drive.tscn`.
-- **Next: Phase 3 (a track).** Interview Sam first.
+- **Phase 3 (a track) built, waiting for Sam (v0.3.0).** Sam drew the
+  track; `tools/trace_track.gd` turned the photo into `tracks/track_1.json`.
+  `scenes/race.tscn` is the main scene; the old ramp field is
+  `scenes/test_drive.tscn`. Look-check: `tools/godot/capture_race.tscn`.
+- **Sam's power-up ideas are logged in Phase 5** (jelly, water balloons
+  thrown forward or back, the worm that digs under the track).
+

@@ -19,7 +19,7 @@ five computer cars over three laps, fly off ramps and throw silly things.
 | Laps | 3 |
 | One race | About 3 minutes |
 | On the track | Ramps and jumps |
-| Throwables | Water balloons (splash, slows), jelly (stuck), banana skins (slip and spin). More later. |
+| Power-ups | Sam, 2026-09-27: **jelly** traps a racer for a few seconds; **water balloons** thrown in front OR behind make a racer spin out for a few seconds; **worm**: your car turns into a worm and digs under the track. Banana skins (slip and spin) from interview 1. |
 | Controls | Xbox controller, plus keyboard for now (Gareth, 2026-09-26) |
 
 ## The core loop (what has to be fun first)

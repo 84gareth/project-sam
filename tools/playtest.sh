@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Start Turbo Town in a window, the way Sam plays it.
 #
-#   tools/playtest.sh                 the game (scenes/main.tscn)
+#   tools/playtest.sh                 the game (the race on Sam's track)
 #   tools/playtest.sh <scene>         jump straight to one scene, by name in
 #                                     scenes/ (e.g. test_area) or a res:// path
 #   tools/playtest.sh <scene> -- ...  anything after -- goes to Godot as-is

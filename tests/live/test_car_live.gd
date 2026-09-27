@@ -6,7 +6,7 @@ var _main: Node
 var _car: CharacterBody3D
 
 func before_each() -> void:
-	_main = load("res://scenes/main.tscn").instantiate()
+	_main = load("res://scenes/test_drive.tscn").instantiate()
 	add_child(_main)
 	_car = _main.get_node("%Car")
 	await until(func(): return _car.is_on_floor(), "car settles on the ground")

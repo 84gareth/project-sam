@@ -26,15 +26,24 @@ Spec: `docs/first-drive-spec.md`.
 - ✅ Sam's playtests: "too slow!" (v0.2.1), "even faster!" (v0.2.2), then
   "Fun! Let's make a race track" (2026-09-26). Gate passed.
 
-## Phase 3: A track
-- A simple city loop with blocky buildings
-- 3 laps, a lap counter, a finish line
+## Phase 3: A track — built, waiting for Sam (v0.3.0)
+Spec: `docs/track-1-spec.md`. Sam drew the track himself.
+- ✅ Sam's drawing traced into a real track (`tools/trace_track.gd`)
+- ✅ Walls both sides, grass in the middle, blocky buildings outside
+- ✅ 3 laps, a lap counter, a chequered start/finish line
+- The old field with ramps is still there: `tools/playtest.sh test_drive`
+- Gate: Sam races it
 
 ## Phase 4: Racers
 - 5 computer cars, race positions, a results screen
 
-## Phase 5: Silly things
-- Pickups on the track: water balloons, jelly, banana skins
+## Phase 5: Power-ups (Sam's ideas, 2026-09-27)
+- Pickups on the track that give a power-up
+- Jelly: traps a racer for a few seconds
+- Water balloon: throw it in front or behind; the racer hit spins out for a
+  few seconds
+- Worm: your car turns into a worm and digs under the track
+- Banana skins (from interview 1)
 
 ## Phase 6: Choices
 - Pick your hero and your car's colour
