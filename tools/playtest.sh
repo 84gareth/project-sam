@@ -35,4 +35,13 @@ fi
 
 ( sleep 0.7; open "http://localhost:$PORT/$PAGE" ) &
 # Serve to the home network too, so the iPad can reach it. Ctrl+C stops it.
-exec python3 -m http.server "$PORT" --bind 0.0.0.0
+# "no-store" stops browsers keeping old copies of the game's files: a
+# stale js/main.js made "All aboard!" do nothing (2026-10-24).
+exec python3 -c '
+import http.server, sys
+class NoCache(http.server.SimpleHTTPRequestHandler):
+    def end_headers(self):
+        self.send_header("Cache-Control", "no-store")
+        super().end_headers()
+http.server.ThreadingHTTPServer(("0.0.0.0", int(sys.argv[1])), NoCache).serve_forever()
+' "$PORT"

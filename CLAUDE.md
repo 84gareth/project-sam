@@ -187,6 +187,11 @@ so, kindly.
 - **A test helper that searches (for a seed, say) must give up**, or a
   broken rule makes it loop forever and freezes the run. The runner has a
   120 s stopwatch for this since 2026-10-24; keep it.
+- **Browsers keep old copies of the game's files.** A stale `js/main.js`
+  next to a new `index.html` made "All aboard!" do nothing (2026-10-24).
+  `tools/playtest.sh` now sends `Cache-Control: no-store`. GitHub Pages
+  caches for up to 10 minutes: after a push, a hard refresh (Cmd+Shift+R)
+  or a short wait. If it keeps biting, version-stamp the imports.
 - **iPad Safari only speaks (and plays sound) after a tap.** Call `say()`
   and `drumRoll()` from tap handlers, never on a timer started earlier.
 - **Test the crash trap when changing the runner.** Without it, a test that
