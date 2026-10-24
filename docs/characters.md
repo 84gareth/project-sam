@@ -9,7 +9,7 @@ Gareth sends photos as Sam finishes them. Each is cropped to the drawing
 `assets/characters/<id>.jpg`, and listed as `picture` in
 `js/characters.js`. A test fails if a listed picture is missing.
 
-Done (6 of 22):
+Done (7 of 22):
 - Captain Puddle (2026-10-24: pirate hat with a "no water" sign, peg leg,
   skull shirt; re-photographed without the shadow)
 - Granny Gumdrop (2026-10-24: purple dress, hair in a bun, a bag of sweets)
@@ -17,6 +17,7 @@ Done (6 of 22):
 - Ruby Rails (2026-10-24: stripy driver's cap and overalls)
 - Chef Pepper (2026-10-24: chef's hat, a pie full of secret chillies)
 - Sir Reginald Waffle (2026-10-24: waffle armour, waffle shield, waffle sword)
+- Doctor Plaster (2026-10-24: a doctor's hat and coat with red crosses)
 
 | # | Name | About them |
 |---|------|-----------|

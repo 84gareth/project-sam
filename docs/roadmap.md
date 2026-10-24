@@ -31,13 +31,13 @@ Spec: `docs/start-spec.md`.
 - ✅ The game tells you if you're a Faithful or a Traitor (fair deal)
 - ✅ Gareth: "good start", then moved on to the castle
 
-## Phase 3: A day at the castle — built, waiting for Sam (v0.3.0)
+## Phase 3: A day at the castle ✅ (v0.3.0)
 - ✅ Castle and Round Table pictures (Gareth's, from Claude's prompts)
 - ✅ Chat: tap anyone, four questions, Traitors fib and blame
 - ✅ Round Table: tap your vote, everyone shows a chalkboard
 - ✅ Drum roll, then "I am a... FAITHFUL!"; next day; win or banished
 - ✅ Voices (the iPad's own), with an on/off button
-- Gate: Sam plays it on the iPad
+- ✅ Sam and Gareth: "We liked the first day!" (2026-10-24). Gate passed.
 Spec: `docs/castle-spec.md` (Sam's interview, 2026-10-24).
 The Round Table: chat to people (some act sneaky), everyone votes, the one
 banished shows if they were a Traitor. The core of the game: fun first.
@@ -58,4 +58,4 @@ you got to.
 Anything else for the look and sound, once the game is fun.
 
 ## Ongoing: Sam's character drawings
-Added as they come in. Done: 6 of 22 (Captain Puddle, Granny Gumdrop, Professor Fizz, Ruby Rails, Chef Pepper, Sir Reginald Waffle).
+Added as they come in. Done: 7 of 22 (Captain Puddle, Granny Gumdrop, Professor Fizz, Ruby Rails, Chef Pepper, Sir Reginald Waffle, Doctor Plaster).
