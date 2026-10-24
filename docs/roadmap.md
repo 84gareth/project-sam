@@ -24,14 +24,20 @@ draws some pictures"). Sam's drawings go in as they arrive, whatever the
 phase. Voices (the iPad's own) arrive with Phase 3, when people start
 talking.
 
-## Phase 2: Choose who you are — built, waiting for Sam (v0.2.1)
+## Phase 2: Choose who you are ✅ (v0.2.1)
 Spec: `docs/start-spec.md`.
 - ✅ The station screen with Sam's picture and a Start button
 - ✅ All 22 characters to pick from
 - ✅ The game tells you if you're a Faithful or a Traitor (fair deal)
-- Gate: Sam plays it on the iPad
+- ✅ Gareth: "good start", then moved on to the castle
 
-## Phase 3: A day at the castle
+## Phase 3: A day at the castle — built, waiting for Sam (v0.3.0)
+- ✅ Castle and Round Table pictures (Gareth's, from Claude's prompts)
+- ✅ Chat: tap anyone, four questions, Traitors fib and blame
+- ✅ Round Table: tap your vote, everyone shows a chalkboard
+- ✅ Drum roll, then "I am a... FAITHFUL!"; next day; win or banished
+- ✅ Voices (the iPad's own), with an on/off button
+- Gate: Sam plays it on the iPad
 Spec: `docs/castle-spec.md` (Sam's interview, 2026-10-24).
 The Round Table: chat to people (some act sneaky), everyone votes, the one
 banished shows if they were a Traitor. The core of the game: fun first.
@@ -52,4 +58,4 @@ you got to.
 Anything else for the look and sound, once the game is fun.
 
 ## Ongoing: Sam's character drawings
-Added as they come in. Done: 4 of 22 (Captain Puddle, Granny Gumdrop, Professor Fizz, Ruby Rails).
+Added as they come in. Done: 5 of 22 (Captain Puddle, Granny Gumdrop, Professor Fizz, Ruby Rails, Chef Pepper).

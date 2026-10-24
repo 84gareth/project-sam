@@ -134,3 +134,97 @@ button.big:active { transform: scale(0.97); }
 .ready-side.faithful { color: #7fc4f5; }
 .ready-side.traitor { color: #ff7b6b; }
 .ready-next { font-size: 20px; color: var(--muted); }
+
+/* 4. The castle: Sam and Gareth's picture behind everything. */
+.castle {
+  justify-content: flex-start;
+  background: url("../assets/castle.jpg") center / cover no-repeat;
+}
+.castle .cards, .table .cards { background: rgba(20, 22, 30, 0.55); border-radius: 14px; padding: 8px; box-sizing: border-box; }
+.topbar { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.topbar h2, .castle .hint, .fellows { text-shadow: 0 2px 6px #000; }
+.hint { margin: 0; font-size: 18px; }
+.fellows { margin: 0; font-size: 20px; font-weight: 700; color: #ff9b8c; background: rgba(0,0,0,0.5); padding: 6px 14px; border-radius: 10px; }
+button.small {
+  min-height: 48px;
+  padding: 8px 18px;
+  border: none;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #1c1f29;
+  font: 700 18px -apple-system, system-ui, sans-serif;
+}
+
+/* 5. A chat */
+.chat { background: #2a2433; }
+.chat .big-portrait { height: min(30vh, 220px); }
+.bubble {
+  max-width: 560px;
+  background: #fff;
+  color: #1c1f29;
+  border-radius: 20px;
+  padding: 14px 22px;
+  font-size: 22px;
+  font-weight: 600;
+}
+.bubble p { margin: 0; }
+.bubble-list { margin: 8px 0 0; padding: 0; list-style: none; font-size: 20px; }
+.questions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; max-width: 640px; width: 100%; }
+.question {
+  min-height: 60px;
+  border: none;
+  border-radius: 14px;
+  background: #3b5998;
+  color: #fff;
+  font: 700 19px -apple-system, system-ui, sans-serif;
+}
+.question:active { transform: scale(0.97); }
+
+/* 6-8. The Round Table room */
+.table {
+  justify-content: flex-start;
+  background: linear-gradient(rgba(10, 8, 6, 0.45), rgba(10, 8, 6, 0.45)),
+              url("../assets/round-table.jpg") center / cover no-repeat;
+}
+.table h2 { text-shadow: 0 2px 6px #000; }
+
+/* Chalkboards: dark board, wooden frame, chalky writing. */
+.boards {
+  flex: 1;
+  width: 100%;
+  overflow-y: auto;
+  touch-action: pan-y;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+  align-content: start;
+}
+.chalkboard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 8px 12px;
+  background: #2f3b33;
+  border: 6px solid #8a5a33;
+  border-radius: 6px;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.6);
+  animation: pop 0.25s ease-out;
+}
+.board-voter { font-size: 14px; color: #c8d0c8; }
+.chalk {
+  font-family: "Chalkboard SE", "Chalkboard", "Comic Sans MS", cursive;
+  font-size: 21px;
+  color: #f4f4ec;
+  text-align: center;
+}
+@keyframes pop { from { transform: scale(0.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.most-votes { margin: 0; font-size: 24px; font-weight: 700; text-shadow: 0 2px 6px #000; }
+
+/* 8. Banished */
+#screen-banished { justify-content: center; }
+.reveal { font-size: 44px; font-weight: 800; margin: 0; min-height: 56px; text-shadow: 0 3px 8px #000; }
+.reveal.faithful { color: #7fc4f5; }
+.reveal.traitor { color: #ff7b6b; }
+.game-over { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.game-over p { font-size: 26px; font-weight: 700; margin: 0; text-align: center; text-shadow: 0 2px 6px #000; }

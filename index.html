@@ -36,6 +36,60 @@
     <h2 id="ready-who"></h2>
     <p id="ready-side" class="ready-side"></p>
     <p class="ready-next">The train to the castle leaves soon...</p>
+    <button id="to-castle" class="big">All aboard!</button>
+  </section>
+
+  <!-- 4. The castle: chat to anyone (castle-ui.js). -->
+  <section id="screen-castle" class="screen castle" hidden>
+    <div class="topbar">
+      <h2 id="castle-day">Day 1 at the castle</h2>
+      <button id="voices" class="small">Voices: On</button>
+    </div>
+    <p id="fellows" class="fellows" hidden></p>
+    <p class="hint">Tap someone to chat.</p>
+    <div id="castle-cards" class="cards"></div>
+    <button id="to-table" class="big">Go to the Round Table</button>
+  </section>
+
+  <!-- 5. A chat: pick a question, they answer. -->
+  <section id="screen-chat" class="screen chat" hidden>
+    <div id="chat-picture" class="chat-picture"></div>
+    <h2 id="chat-name"></h2>
+    <div id="bubble" class="bubble" hidden>
+      <p id="bubble-text"></p>
+      <ol id="bubble-list" class="bubble-list" hidden></ol>
+    </div>
+    <div id="questions" class="questions"></div>
+    <button id="chat-back" class="big">Back</button>
+  </section>
+
+  <!-- 6. The Round Table: tap who you think is a Traitor. -->
+  <section id="screen-table" class="screen table" hidden>
+    <h2>Who do you think is a Traitor?</h2>
+    <div id="table-cards" class="cards"></div>
+    <button id="cast-vote" class="big" disabled>Write it on my chalkboard</button>
+  </section>
+
+  <!-- 7. Everyone shows their chalkboard. -->
+  <section id="screen-votes" class="screen table" hidden>
+    <h2>The votes</h2>
+    <div id="boards" class="boards"></div>
+    <p id="most-votes" class="most-votes" hidden></p>
+    <button id="to-reveal" class="big" hidden>Find out...</button>
+  </section>
+
+  <!-- 8. Banished: drum roll, then "I am a... FAITHFUL!" -->
+  <section id="screen-banished" class="screen table" hidden>
+    <div id="banished-picture"></div>
+    <h2 id="banished-name"></h2>
+    <p id="reveal" class="reveal"></p>
+    <div id="after-reveal" hidden>
+      <button id="next-day" class="big">Next day</button>
+    </div>
+    <div id="game-over" class="game-over" hidden>
+      <p id="game-over-text"></p>
+      <button id="play-again" class="big">Play again</button>
+    </div>
   </section>
 
   <script type="module" src="js/main.js"></script>

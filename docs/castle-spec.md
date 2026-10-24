@@ -10,7 +10,8 @@
 | Voting | **Tap their picture** at the Round Table |
 | Banished | **Drum roll, then tell**: "I am a... FAITHFUL!" Then they leave. |
 | Voices | **You choose**: a button turns voices on or off. Characters' talking is read aloud with the iPad's own voices. |
-| Castle picture | Claude writes a prompt; Gareth makes the picture to match the station |
+| Castle picture | Claude wrote a prompt; Gareth made it (`assets/castle.jpg`), plus the Round Table room (`assets/round-table.jpg`) |
+| Chalkboards | Sam: "they all need to have a chalk board for who theyre going to write down". Drawn by the game, not the picture: every vote is shown as a chalkboard |
 
 ## How the sneaky bits work (Claude's proposal; Sam to check by playing)
 Every computer player keeps a **suspect list**: everyone else, most
@@ -38,10 +39,18 @@ suspected first. That list is what they show you, and what they vote from.
    on). Chat to as many as you like, then "Go to the Round Table".
 3. **Round Table**: tap who you think is a Traitor. Everyone else votes
    too, one by one: "Captain Puddle votes for Max Muddle."
-4. **Banished**: the most votes leaves (a tie: the first tied player in
-   the vote order... to be decided by playing). Drum roll, then "I am a...
+4. **Banished**: the most votes leaves (a tie: a fair, seeded coin flip
+   between the tied players). Drum roll, then "I am a...
    FAITHFUL!" or "TRAITOR!"
 5. Back to a new day (the night train comes in Phase 4).
+
+## Balance as built (v0.3.0, measured over 300 computer-only games)
+Traitors vote with their team 60% of the time (always was too easy to
+spot: Faithfuls won in a median 5 days). Faithfuls who voted out a Faithful
+become +0.12 more suspicious to the others. Result: day 1 catches a Traitor
+about 7% of the time (a guess); days 2-6 about 38%; all three caught in a
+median 8 days. The Traitors can't win yet: that needs the night train
+(Phase 4). Numbers: `js/castle.js`; bands: `tests/unit/test_castle.js`.
 
 ## Testing it (balance measured, not vibed)
 The suspicion and voting rules live in pure code, so a test can play

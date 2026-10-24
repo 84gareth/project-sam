@@ -187,11 +187,13 @@ so, kindly.
 - **A test helper that searches (for a seed, say) must give up**, or a
   broken rule makes it loop forever and freezes the run. The runner has a
   120 s stopwatch for this since 2026-10-24; keep it.
+- **iPad Safari only speaks (and plays sound) after a tap.** Call `say()`
+  and `drumRoll()` from tap handlers, never on a timer started earlier.
 - **Test the crash trap when changing the runner.** Without it, a test that
   crashes partway can look like a pass (learned in Project 2126).
 
 ## Current status
-Updated 2026-10-24 (v0.2.5).
+Updated 2026-10-24 (v0.3.0).
 - **Phase 0 (web setup) done.** Tests in headless Chrome; GitHub Pages;
   Turbo Town archived.
 - **Phase 1 done.** The game: like The Traitors, starting at Havenbrook
@@ -200,7 +202,9 @@ Updated 2026-10-24 (v0.2.5).
 - **Phase 2 (choose who you are) built, waiting for Sam (v0.2.1).**
   Station, character picker, then the game TELLS you your side (fair deal,
   Sam's change). Rules in `js/game.js`.
-- **Phase 3 interviewed** (`docs/castle-spec.md`); building it is next.
-- **Roadmap OK'd by Gareth.** Sam draws the 22 pictures as we go (4 of 22
+- **Phase 3 (a day at the castle) built, waiting for Sam (v0.3.0).** Rules
+  in `js/castle.js` (pure, balance-tested); screens in `js/castle-ui.js`;
+  voices `js/voice.js`; drum roll `js/sound.js`. `?fast=1` skips pauses.
+- **Roadmap OK'd by Gareth.** Sam draws the 22 pictures as we go (5 of 22
   in: how to add one is in `docs/characters.md`); voices
   are the iPad's own (Web Speech), arriving with Phase 3.
