@@ -161,7 +161,8 @@ function tapPerson(id) {
 function placeNames(ids) {
   const layer = $("names");
   for (const el of [...layer.children]) if (!ids.includes(el.dataset.id)) el.remove();
-  const box = $("stage").getBoundingClientRect();
+  // The stage's own size (not its size on screen, which shrinks on phones).
+  const box = { width: $("stage").clientWidth, height: $("stage").clientHeight };
   const placed = [];
   const order = [...ids].sort((a, b) => pos(a).x - pos(b).x);
   for (const id of order) {

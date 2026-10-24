@@ -15,231 +15,241 @@
   <!-- STAMP (tools/stamp.py writes this; don't edit by hand) -->
   <script type="importmap">{
   "imports": {
-    "./js/castle-ui.js": "./js/castle-ui.js?v=0.11.1",
-    "./js/castle.js": "./js/castle.js?v=0.11.1",
-    "./js/characters.js": "./js/characters.js?v=0.11.1",
-    "./js/dialogue.js": "./js/dialogue.js?v=0.11.1",
-    "./js/game.js": "./js/game.js?v=0.11.1",
-    "./js/main.js": "./js/main.js?v=0.11.1",
-    "./js/mission-more.js": "./js/mission-more.js?v=0.11.1",
-    "./js/mission-ui.js": "./js/mission-ui.js?v=0.11.1",
-    "./js/missions.js": "./js/missions.js?v=0.11.1",
-    "./js/puppets.js": "./js/puppets.js?v=0.11.1",
-    "./js/sound.js": "./js/sound.js?v=0.11.1",
-    "./js/ui.js": "./js/ui.js?v=0.11.1",
-    "./js/version.js": "./js/version.js?v=0.11.1",
-    "./js/voice.js": "./js/voice.js?v=0.11.1"
+    "./js/castle-ui.js": "./js/castle-ui.js?v=0.12.0",
+    "./js/castle.js": "./js/castle.js?v=0.12.0",
+    "./js/characters.js": "./js/characters.js?v=0.12.0",
+    "./js/dialogue.js": "./js/dialogue.js?v=0.12.0",
+    "./js/fit.js": "./js/fit.js?v=0.12.0",
+    "./js/game.js": "./js/game.js?v=0.12.0",
+    "./js/main.js": "./js/main.js?v=0.12.0",
+    "./js/mission-more.js": "./js/mission-more.js?v=0.12.0",
+    "./js/mission-ui.js": "./js/mission-ui.js?v=0.12.0",
+    "./js/missions.js": "./js/missions.js?v=0.12.0",
+    "./js/puppets.js": "./js/puppets.js?v=0.12.0",
+    "./js/sound.js": "./js/sound.js?v=0.12.0",
+    "./js/ui.js": "./js/ui.js?v=0.12.0",
+    "./js/version.js": "./js/version.js?v=0.12.0",
+    "./js/voice.js": "./js/voice.js?v=0.12.0"
   }
 }</script>
-  <link rel="stylesheet" href="css/style.css?v=0.11.1">
+  <link rel="stylesheet" href="css/style.css?v=0.12.0">
   <!-- /STAMP -->
 </head>
 <body>
   <!-- 1. The station: Sam's picture and a Start button. -->
-  <section id="screen-station" class="screen station">
-    <img id="station-picture" src="assets/station.webp" alt="Havenbrook Station">
-    <div class="station-panel">
-      <h1 id="title">Project Sam</h1>
-      <button id="start" class="big">Start</button>
-      <button id="debug" class="big" hidden>Test a mission</button>
-      <p id="version">v0.0.0</p>
-    </div>
-  </section>
-
-  <!-- 2. Who do you want to be? -->
-  <section id="screen-pick" class="screen pick" hidden>
-    <h2>Who do you want to be?</h2>
-    <div id="cards" class="cards"></div>
-    <button id="choose" class="big" disabled>Choose</button>
-  </section>
-
-  <!-- 3. Who you are, and your secret: Faithful or Traitor. The castle
-       comes next (Phase 3). -->
-  <section id="screen-ready" class="screen ready" hidden>
-    <div id="ready-badge" class="badge big-badge"></div>
-    <h2 id="ready-who"></h2>
-    <p id="ready-side" class="ready-side"></p>
-    <p class="ready-next">The train to the castle leaves soon...</p>
-    <button id="to-castle" class="big">All aboard!</button>
-  </section>
-
-  <!-- 3b. The train ride to the castle (the steam train sound plays here). -->
-  <section id="screen-train" class="screen train" hidden>
-    <h2 class="train-text">All aboard! The train is taking you to the castle...</h2>
-  </section>
-
-  <!-- 4. The castle: walk around the rooms as a paper puppet (castle-ui.js,
-       puppets.js). Tap the floor to walk, a door to change room, someone to
-       chat. -->
-  <section id="screen-castle" class="screen castle" hidden>
-    <div id="stage" class="stage">
-      <img id="room-picture" class="room-picture" alt="">
-      <div id="puppets" class="puppets"></div>
-      <!-- Names in their own layer on top, spaced apart: easy to tap. -->
-      <div id="names" class="names"></div>
-      <button id="door-left" class="door door-left"></button>
-      <button id="door-right" class="door door-right"></button>
-    </div>
-    <div class="topbar castle-top">
-      <h2 id="castle-day">Day 1 at the castle</h2>
-      <button id="voices" class="small">Voices: On</button>
-    </div>
-    <p id="fellows" class="fellows" hidden></p>
-    <p id="room-name" class="room-name"></p>
-    <p class="hint walk-hint">Tap the floor to walk. Tap someone to chat.</p>
-    <button id="to-table" class="big table-button">Go to the Round Table</button>
-  </section>
-
-  <!-- 5. A chat: pick a question, they answer. -->
-  <section id="screen-chat" class="screen chat" hidden>
-    <div id="chat-picture" class="chat-picture"></div>
-    <h2 id="chat-name"></h2>
-    <div id="bubble" class="bubble" hidden>
-      <p id="bubble-text"></p>
-      <ol id="bubble-list" class="bubble-list" hidden></ol>
-    </div>
-    <div id="questions" class="questions"></div>
-    <button id="chat-back" class="big">Back</button>
-  </section>
-
-  <!-- 5a. Joining two people who are chatting. -->
-  <section id="screen-join" class="screen chat" hidden>
-    <div id="join-pictures" class="join-pictures"></div>
-    <h2 id="join-names"></h2>
-    <div class="bubble"><p><b id="join-who"></b> <span id="join-text"></span></p></div>
-    <div id="join-actions" class="join-actions"></div>
-    <button id="join-back" class="big">Back</button>
-  </section>
-
-  <!-- 5b. Round Table talk: people accuse and defend; Sam joins in. -->
-  <!-- The slow-motion walk to the Round Table, every day (Sam). -->
-  <section id="screen-walk" class="screen table walk" hidden>
-    <h2 id="walk-title">The Round Table</h2>
-    <div id="walk-line" class="walk-line"></div>
-  </section>
-
-  <section id="screen-talk" class="screen table" hidden>
-    <h2>The Round Table</h2>
-    <div id="talk-lines" class="talk-lines"></div>
-    <div id="talk-options" class="questions" hidden></div>
-    <button id="to-vote" class="big" hidden>Time to vote</button>
-  </section>
-
-  <!-- 6. The Round Table: tap who you think is a Traitor. -->
-  <section id="screen-table" class="screen table" hidden>
-    <h2>Who do you think is a Traitor?</h2>
-    <div id="table-cards" class="cards"></div>
-    <button id="cast-vote" class="big" disabled>Write it on my chalkboard</button>
-  </section>
-
-  <!-- 7. Everyone shows their chalkboard. -->
-  <section id="screen-votes" class="screen table" hidden>
-    <h2>The votes</h2>
-    <div id="boards" class="boards"></div>
-    <p id="tally" class="tally" hidden></p>
-    <p id="most-votes" class="most-votes" hidden></p>
-    <button id="to-reveal" class="big" hidden>Find out...</button>
-  </section>
-
-  <!-- 8. Banished: drum roll, then "I am a... FAITHFUL!" -->
-  <section id="screen-banished" class="screen table" hidden>
-    <div id="banished-picture"></div>
-    <h2 id="banished-name"></h2>
-    <p id="reveal" class="reveal"></p>
-    <div id="after-reveal" hidden>
-      <button id="next-day" class="big">Night falls...</button>
-    </div>
-    <div id="game-over" class="game-over" hidden>
-      <p id="game-over-text"></p>
-      <button id="play-again" class="big">Play again</button>
-    </div>
-  </section>
-
-  <!-- 9. Night, for a Faithful: wait... is there a letter? -->
-  <section id="screen-night" class="screen night" hidden>
-    <h2 id="night-title">Night falls...</h2>
-    <p id="night-text" class="night-text">The Traitors are meeting in secret.</p>
-    <div id="letter" class="letter" hidden>
-      <p>By order of the Traitors,</p>
-      <p id="letter-big" class="letter-big">you have been murdered.</p>
-    </div>
-    <button id="to-breakfast" class="big" hidden>Go to breakfast</button>
-    <div id="night-over" class="game-over" hidden>
-      <button id="night-play-again" class="big">Play again</button>
-    </div>
-  </section>
-
-  <!-- 10. Night, for a Traitor: the secret meeting. You pick. -->
-  <section id="screen-traitors" class="screen traitors-room" hidden>
-    <h2>The Traitors' secret meeting</h2>
-    <div id="traitor-ideas" class="ideas"></div>
-    <p id="meeting-hint" class="hint">Who will the Traitors murder tonight? You pick.</p>
-    <div id="victim-cards" class="cards"></div>
-    <button id="murder" class="big" disabled>Send the letter</button>
-  </section>
-
-  <!-- 11. Breakfast: people arrive in little groups. Who's missing? -->
-  <!-- Debug menu (address ends ?debug): play any mission on its own. -->
-  <section id="screen-debug" class="screen mission" hidden>
-    <h2>Test a mission</h2>
-    <div id="debug-missions" class="questions"></div>
-    <button id="debug-back" class="big">Back</button>
-  </section>
-
-  <!-- Today's mission (docs/missions.md). -->
-  <section id="screen-mission" class="screen mission" hidden>
-    <h2 id="mission-name"></h2>
-    <p id="mission-how" class="mission-how"></p>
-    <p id="mission-status" class="mission-status"></p>
-    <div id="bells" class="bells" hidden></div>
-    <div id="pies" class="pies" hidden></div>
-    <div id="catapult" class="catapult" hidden>
-      <div id="wall" class="wall"><div id="belt" class="belt"></div><div class="crosshair"></div></div>
-      <p id="stones" class="stones"></p>
-      <button id="fire" class="big">Fire!</button>
-    </div>
-    <div id="mission-play" class="mission-play" hidden></div>
-    <div id="cooking" class="cooking" hidden>
-      <div class="diner"><div id="diner-picture"></div><p id="diner-clue" class="diner-clue"></p></div>
-      <div id="trucks" class="trucks"></div>
-      <button id="serve" class="big" disabled>Serve dinner!</button>
-    </div>
-    <button id="mission-go" class="big">Start the mission</button>
-    <div id="mission-result" class="mission-result" hidden>
-      <p id="mission-score"></p>
-      <p id="mission-pot"></p>
-      <p id="mission-extra"></p>
-      <p id="mission-shield"></p>
-      <button id="mission-done" class="big">Go to the castle</button>
-    </div>
-  </section>
-
-  <section id="screen-breakfast" class="screen breakfast" hidden>
-    <h2>Breakfast</h2>
-    <div id="arrivals" class="arrivals"></div>
-    <!-- The missing one, in a big panel; a red X is drawn across them. -->
-    <div id="crossout" class="crossout" hidden>
-      <div class="crossout-frame">
-        <div id="crossout-picture"></div>
-        <svg class="red-x" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-          <line x1="6" y1="6" x2="94" y2="94" pathLength="1"/>
-          <line x1="94" y1="6" x2="6" y2="94" pathLength="1"/>
-        </svg>
+  <!-- The whole game, designed at iPad size and shrunk evenly to fit
+       smaller screens (phones), by js/fit.js. -->
+  <div id="app">
+    <section id="screen-station" class="screen station">
+      <img id="station-picture" src="assets/station.webp" alt="Havenbrook Station">
+      <div class="station-panel">
+        <h1 id="title">Project Sam</h1>
+        <button id="start" class="big">Start</button>
+        <button id="debug" class="big" hidden>Test a mission</button>
+        <p id="version">v0.0.0</p>
       </div>
-      <p id="missing" class="most-votes"></p>
-    </div>
-    <!-- Then everyone: the ones who have gone are crossed out. -->
-    <div id="gone-box" class="gone-box" hidden>
-      <p class="gone-title">Everyone at the castle</p>
-      <div id="gone" class="gone-row"></div>
-    </div>
-    <button id="start-day" class="big" hidden>Start the day</button>
-    <div id="breakfast-over" class="game-over" hidden>
-      <p id="breakfast-over-text"></p>
-      <button id="breakfast-play-again" class="big">Play again</button>
-    </div>
-  </section>
+    </section>
 
-  <script type="module" src="js/main.js?v=0.11.1"></script>
+    <!-- 2. Who do you want to be? -->
+    <section id="screen-pick" class="screen pick" hidden>
+      <h2>Who do you want to be?</h2>
+      <div id="cards" class="cards"></div>
+      <button id="choose" class="big" disabled>Choose</button>
+    </section>
+
+    <!-- 3. Who you are, and your secret: Faithful or Traitor. The castle
+         comes next (Phase 3). -->
+    <section id="screen-ready" class="screen ready" hidden>
+      <div id="ready-badge" class="badge big-badge"></div>
+      <h2 id="ready-who"></h2>
+      <p id="ready-side" class="ready-side"></p>
+      <p class="ready-next">The train to the castle leaves soon...</p>
+      <button id="to-castle" class="big">All aboard!</button>
+    </section>
+
+    <!-- 3b. The train ride to the castle (the steam train sound plays here). -->
+    <section id="screen-train" class="screen train" hidden>
+      <h2 class="train-text">All aboard! The train is taking you to the castle...</h2>
+    </section>
+
+    <!-- 4. The castle: walk around the rooms as a paper puppet (castle-ui.js,
+         puppets.js). Tap the floor to walk, a door to change room, someone to
+         chat. -->
+    <section id="screen-castle" class="screen castle" hidden>
+      <div id="stage" class="stage">
+        <img id="room-picture" class="room-picture" alt="">
+        <div id="puppets" class="puppets"></div>
+        <!-- Names in their own layer on top, spaced apart: easy to tap. -->
+        <div id="names" class="names"></div>
+        <button id="door-left" class="door door-left"></button>
+        <button id="door-right" class="door door-right"></button>
+      </div>
+      <div class="topbar castle-top">
+        <h2 id="castle-day">Day 1 at the castle</h2>
+        <button id="voices" class="small">Voices: On</button>
+      </div>
+      <p id="fellows" class="fellows" hidden></p>
+      <p id="room-name" class="room-name"></p>
+      <p class="hint walk-hint">Tap the floor to walk. Tap someone to chat.</p>
+      <button id="to-table" class="big table-button">Go to the Round Table</button>
+    </section>
+
+    <!-- 5. A chat: pick a question, they answer. -->
+    <section id="screen-chat" class="screen chat" hidden>
+      <div id="chat-picture" class="chat-picture"></div>
+      <h2 id="chat-name"></h2>
+      <div id="bubble" class="bubble" hidden>
+        <p id="bubble-text"></p>
+        <ol id="bubble-list" class="bubble-list" hidden></ol>
+      </div>
+      <div id="questions" class="questions"></div>
+      <button id="chat-back" class="big">Back</button>
+    </section>
+
+    <!-- 5a. Joining two people who are chatting. -->
+    <section id="screen-join" class="screen chat" hidden>
+      <div id="join-pictures" class="join-pictures"></div>
+      <h2 id="join-names"></h2>
+      <div class="bubble"><p><b id="join-who"></b> <span id="join-text"></span></p></div>
+      <div id="join-actions" class="join-actions"></div>
+      <button id="join-back" class="big">Back</button>
+    </section>
+
+    <!-- 5b. Round Table talk: people accuse and defend; Sam joins in. -->
+    <!-- The slow-motion walk to the Round Table, every day (Sam). -->
+    <section id="screen-walk" class="screen table walk" hidden>
+      <h2 id="walk-title">The Round Table</h2>
+      <div id="walk-line" class="walk-line"></div>
+    </section>
+
+    <section id="screen-talk" class="screen table" hidden>
+      <h2>The Round Table</h2>
+      <div id="talk-lines" class="talk-lines"></div>
+      <div id="talk-options" class="questions" hidden></div>
+      <button id="to-vote" class="big" hidden>Time to vote</button>
+    </section>
+
+    <!-- 6. The Round Table: tap who you think is a Traitor. -->
+    <section id="screen-table" class="screen table" hidden>
+      <h2>Who do you think is a Traitor?</h2>
+      <div id="table-cards" class="cards"></div>
+      <button id="cast-vote" class="big" disabled>Write it on my chalkboard</button>
+    </section>
+
+    <!-- 7. Everyone shows their chalkboard. -->
+    <section id="screen-votes" class="screen table" hidden>
+      <h2>The votes</h2>
+      <div id="boards" class="boards"></div>
+      <p id="tally" class="tally" hidden></p>
+      <p id="most-votes" class="most-votes" hidden></p>
+      <button id="to-reveal" class="big" hidden>Find out...</button>
+    </section>
+
+    <!-- 8. Banished: drum roll, then "I am a... FAITHFUL!" -->
+    <section id="screen-banished" class="screen table" hidden>
+      <div id="banished-picture"></div>
+      <h2 id="banished-name"></h2>
+      <p id="reveal" class="reveal"></p>
+      <div id="after-reveal" hidden>
+        <button id="next-day" class="big">Night falls...</button>
+      </div>
+      <div id="game-over" class="game-over" hidden>
+        <p id="game-over-text"></p>
+        <button id="play-again" class="big">Play again</button>
+      </div>
+    </section>
+
+    <!-- 9. Night, for a Faithful: wait... is there a letter? -->
+    <section id="screen-night" class="screen night" hidden>
+      <h2 id="night-title">Night falls...</h2>
+      <p id="night-text" class="night-text">The Traitors are meeting in secret.</p>
+      <div id="letter" class="letter" hidden>
+        <p>By order of the Traitors,</p>
+        <p id="letter-big" class="letter-big">you have been murdered.</p>
+      </div>
+      <button id="to-breakfast" class="big" hidden>Go to breakfast</button>
+      <div id="night-over" class="game-over" hidden>
+        <button id="night-play-again" class="big">Play again</button>
+      </div>
+    </section>
+
+    <!-- 10. Night, for a Traitor: the secret meeting. You pick. -->
+    <section id="screen-traitors" class="screen traitors-room" hidden>
+      <h2>The Traitors' secret meeting</h2>
+      <div id="traitor-ideas" class="ideas"></div>
+      <p id="meeting-hint" class="hint">Who will the Traitors murder tonight? You pick.</p>
+      <div id="victim-cards" class="cards"></div>
+      <button id="murder" class="big" disabled>Send the letter</button>
+    </section>
+
+    <!-- 11. Breakfast: people arrive in little groups. Who's missing? -->
+    <!-- Debug menu (address ends ?debug): play any mission on its own. -->
+    <section id="screen-debug" class="screen mission" hidden>
+      <h2>Test a mission</h2>
+      <div id="debug-missions" class="questions"></div>
+      <button id="debug-back" class="big">Back</button>
+    </section>
+
+    <!-- Today's mission (docs/missions.md). -->
+    <section id="screen-mission" class="screen mission" hidden>
+      <h2 id="mission-name"></h2>
+      <p id="mission-how" class="mission-how"></p>
+      <p id="mission-status" class="mission-status"></p>
+      <div id="bells" class="bells" hidden></div>
+      <div id="pies" class="pies" hidden></div>
+      <div id="catapult" class="catapult" hidden>
+        <div id="wall" class="wall"><div id="belt" class="belt"></div><div class="crosshair"></div></div>
+        <p id="stones" class="stones"></p>
+        <button id="fire" class="big">Fire!</button>
+      </div>
+      <div id="mission-play" class="mission-play" hidden></div>
+      <div id="cooking" class="cooking" hidden>
+        <div class="diner"><div id="diner-picture"></div><p id="diner-clue" class="diner-clue"></p></div>
+        <div id="trucks" class="trucks"></div>
+        <button id="serve" class="big" disabled>Serve dinner!</button>
+      </div>
+      <button id="mission-go" class="big">Start the mission</button>
+      <div id="mission-result" class="mission-result" hidden>
+        <p id="mission-score"></p>
+        <p id="mission-pot"></p>
+        <p id="mission-extra"></p>
+        <p id="mission-shield"></p>
+        <button id="mission-done" class="big">Go to the castle</button>
+      </div>
+    </section>
+
+    <section id="screen-breakfast" class="screen breakfast" hidden>
+      <h2>Breakfast</h2>
+      <div id="arrivals" class="arrivals"></div>
+      <!-- The missing one, in a big panel; a red X is drawn across them. -->
+      <div id="crossout" class="crossout" hidden>
+        <div class="crossout-frame">
+          <div id="crossout-picture"></div>
+          <svg class="red-x" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+            <line x1="6" y1="6" x2="94" y2="94" pathLength="1"/>
+            <line x1="94" y1="6" x2="6" y2="94" pathLength="1"/>
+          </svg>
+        </div>
+        <p id="missing" class="most-votes"></p>
+      </div>
+      <!-- Then everyone: the ones who have gone are crossed out. -->
+      <div id="gone-box" class="gone-box" hidden>
+        <p class="gone-title">Everyone at the castle</p>
+        <div id="gone" class="gone-row"></div>
+      </div>
+      <button id="start-day" class="big" hidden>Start the day</button>
+      <div id="breakfast-over" class="game-over" hidden>
+        <p id="breakfast-over-text"></p>
+        <button id="breakfast-play-again" class="big">Play again</button>
+      </div>
+    </section>
+  </div>
+  <!-- Phones held upright: please turn sideways. -->
+  <div id="turn" class="turn" hidden>
+    <div class="turn-phone"></div>
+    <p>Turn your phone sideways to play!</p>
+  </div>
+
+  <script type="module" src="js/main.js?v=0.12.0"></script>
 </body>
 </html>

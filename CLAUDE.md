@@ -43,6 +43,12 @@ These rules are carried over from Project 2126
   a file (`tools/playtest.sh` serves it).
 - **Plays on Sam's iPad, in Safari.** Touch controls only (no keyboard, no
   mouse hover). Design for a landscape iPad first; check portrait too.
+- **Phones too (v0.12.0):** everything sits in `#app`, which `js/fit.js`
+  shrinks evenly below 760x680, so a phone held sideways looks like the
+  iPad, smaller. Phones held upright get "turn sideways". So in CSS use
+  `cqw`/`cqh` (the game box), never `vw`/`vh` (the real screen), and
+  measure with `clientWidth` (not `getBoundingClientRect`) when placing
+  things in px. Check new screens at 750x340 too.
 - **Published with GitHub Pages:** https://84gareth.github.io/project-sam/
   (the repo is PUBLIC since 2026-10-24, Gareth's call, like his other web
   games). Every push to `main` updates it within a minute or two. Never put
@@ -210,7 +216,7 @@ so, kindly.
   crashes partway can look like a pass (learned in Project 2126).
 
 ## Current status
-Updated 2026-10-24 (v0.11.0).
+Updated 2026-10-24 (v0.12.0).
 - **Phase 0 (web setup) done.** Tests in headless Chrome; GitHub Pages;
   Turbo Town archived.
 - **Phase 1 done.** The game: like The Traitors, starting at Havenbrook

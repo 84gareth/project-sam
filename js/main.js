@@ -1,6 +1,7 @@
 // The page: the station, picking who you are, and your secret. Then the
 // castle (castle-ui.js). The rules live in game.js and castle.js; page
 // files only draw and listen.
+import "./fit.js";
 import { GAME_NAME, VERSION } from "./version.js";
 import { CHARACTERS } from "./characters.js";
 import { newGame, TRAITOR } from "./game.js";

@@ -36,3 +36,27 @@ test("a Home Screen icon (the castle) for the iPad", async () => {
   assert.eq(img.naturalWidth, 180);
   assert.eq(img.naturalHeight, 180);
 });
+
+// Phones (Gareth, 2026-10-24: "bordering on unplayable on iPhone").
+import { fitScale, turnSideways } from "../../js/fit.js";
+
+test("the game shrinks evenly to fit a phone held sideways", async () => {
+  assert.eq(fitScale(1024, 768), 1, "an iPad isn't shrunk");
+  assert.eq(fitScale(768, 1024), 1, "nor an iPad held upright");
+  const page = await openPage("../index.html?fast=1", 750, 340);
+  const doc = page.document;
+  await until(() => doc.getElementById("version").textContent !== "v0.0.0", "page script ran");
+  assert.near(Number(doc.getElementById("app").style.getPropertyValue("--fit")), 0.5, 1e-9);
+  const start = doc.getElementById("start").getBoundingClientRect();
+  assert.ok(start.bottom <= 340 && start.right <= 750 && start.top >= 0, "Start is on the screen");
+  assert.ok(doc.getElementById("turn").hidden, "no 'turn sideways' message");
+  assert.ok(doc.documentElement.scrollHeight <= 340, "no scrolling");
+});
+
+test("a phone held upright is asked to turn sideways", async () => {
+  assert.ok(turnSideways(390, 760));
+  assert.notOk(turnSideways(768, 1024), "not an iPad");
+  const page = await openPage("../index.html?fast=1", 390, 760);
+  await until(() => page.document.getElementById("version").textContent !== "v0.0.0", "page script ran");
+  assert.notOk(page.document.getElementById("turn").hidden);
+});
