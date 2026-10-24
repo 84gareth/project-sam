@@ -598,10 +598,9 @@ test("Secret Code: crack all three words", async () => {
   assert.eq(await result(doc), "You cracked 3 out of 3 secret words!");
 });
 
-test("Garden Maze: walk out of the maze", async () => {
+test("Garden Maze: steer out with the joystick", async () => {
   const { page, doc, box } = await playMission("maze");
   const m = makeMaze(page.game);
-  // The way out, found square by square.
   const key = ([x, y]) => `${x},${y}`;
   const from = new Map([[key(m.start), null]]);
   const queue = [m.start];
@@ -616,10 +615,28 @@ test("Garden Maze: walk out of the maze", async () => {
   }
   const path = [];
   for (let at = m.exit; at; at = from.get(key(at))) path.unshift(at);
-  await until(() => box.querySelector(".maze-cell"), "the maze");
-  box.querySelector('.maze-cell[data-x="1"][data-y="1"]').click();   // not next door: nothing happens
-  assert.eq(box.dataset.at, "0,0");
-  for (const [x, y] of path.slice(1)) box.querySelector(`.maze-cell[data-x="${x}"][data-y="${y}"]`).click();
+  await until(() => box.querySelector(".joystick"), "the joystick");
+  const stick = box.querySelector(".joystick");
+  const r = stick.getBoundingClientRect();
+  const push = (type, x, y) => stick.dispatchEvent(new page.PointerEvent(type, {
+    bubbles: true, pointerId: 1, clientX: r.left + r.width / 2 + x * r.width / 2, clientY: r.top + r.height / 2 + y * r.height / 2,
+  }));
+  push("pointerdown", 0, 0);
+  const pos = () => box.dataset.pos.split(",").map(Number);
+  // Steer to the middle of each square in turn.
+  for (const [x, y] of path.slice(1)) {
+    await until(() => {
+      if (visible(doc, "mission-result")) return true;
+      const [px, py] = pos();
+      const dx = x + 0.5 - px, dy = y + 0.5 - py;
+      if (Math.hypot(dx, dy) < 0.08) return true;
+      const len = Math.max(Math.abs(dx), Math.abs(dy));
+      push("pointermove", Math.abs(dx) > 0.04 ? Math.sign(dx) * Math.min(1, len * 4) : 0, Math.abs(dy) > 0.04 ? Math.sign(dy) * Math.min(1, len * 4) : 0);
+      return false;
+    }, `square ${x},${y}`, 8000);
+    if (visible(doc, "mission-result")) break;
+  }
+  push("pointerup", 0, 0);
   assert.eq(await result(doc), "You found the way out!");
 });
 

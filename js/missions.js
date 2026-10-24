@@ -318,8 +318,49 @@ export function makeMaze(game) {
     seen.add(`${nx},${ny}`);
     stack.push([nx, ny]);
   }
-  return { walls, start: [0, 0], exit: [MAZE_W - 1, MAZE_H - 1] };
+  // Start and way out in opposite corners, a different pair each time.
+  const corners = [[0, 0], [MAZE_W - 1, 0], [0, MAZE_H - 1], [MAZE_W - 1, MAZE_H - 1]];
+  const start = corners[Math.floor(r() * corners.length)];
+  const exit = [MAZE_W - 1 - start[0], MAZE_H - 1 - start[1]];
+  return { walls, start, exit };
 }
+
+// Smooth walking (Gareth: "an onscreen joystick with smooth movement").
+// You're a round counter of radius MAZE_R in square units; position {x, y}
+// (the middle of square [i, j] is i + 0.5, j + 0.5). Move by (dx, dy): you
+// can't pass a hedge, and can only go into the next square when you're
+// lined up with the gap (no squeezing round corners).
+export const MAZE_R = 0.28, MAZE_SPEED = 3;   // squares a second
+function slide(maze, pos, d, axis) {
+  const along = axis === "x" ? pos.x : pos.y;
+  const across = axis === "x" ? pos.y : pos.x;
+  const cell = Math.floor(along), lane = Math.floor(across);
+  const lined = across - MAZE_R >= lane - 1e-9 && across + MAZE_R <= lane + 1 + 1e-9;
+  const wall = (cx, cy, side) => cy < 0 || cy >= MAZE_H || cx < 0 || cx >= MAZE_W || maze.walls[cy][cx][side];
+  const [i, j] = axis === "x" ? [cell, lane] : [lane, cell];
+  let to = along + d;
+  if (d > 0) {
+    const blocked = !lined || wall(i, j, axis === "x" ? "e" : "s");
+    if (blocked) to = Math.min(to, cell + 1 - MAZE_R);
+    else to = Math.min(to, cell + 2 - MAZE_R);
+  } else if (d < 0) {
+    const blocked = !lined || wall(i, j, axis === "x" ? "w" : "n");
+    if (blocked) to = Math.max(to, cell + MAZE_R);
+    else to = Math.max(to, cell - 1 + MAZE_R);
+  }
+  return axis === "x" ? { x: to, y: pos.y } : { x: pos.x, y: to };
+}
+export function mazeMove(maze, pos, dx, dy) {
+  let p = { ...pos };
+  // Small steps, so a fast move can't jump a hedge.
+  const steps = Math.max(1, Math.ceil(Math.max(Math.abs(dx), Math.abs(dy)) / 0.2));
+  for (let k = 0; k < steps; k++) {
+    p = slide(maze, p, dx / steps, "x");
+    p = slide(maze, p, dy / steps, "y");
+  }
+  return p;
+}
+export const mazeSquare = (pos) => [Math.floor(pos.x), Math.floor(pos.y)];
 // Can you step from (x, y) to the square next door at (nx, ny)?
 export function canStep(maze, [x, y], [nx, ny]) {
   const dx = nx - x, dy = ny - y;

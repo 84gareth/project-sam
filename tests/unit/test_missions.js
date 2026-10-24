@@ -1,6 +1,6 @@
 // Missions: the day's mission, everyone's scores, the pot and the shield.
 import { test, assert } from "../framework.js";
-import { newGame } from "../../js/game.js";
+import { newGame, makeRandom } from "../../js/game.js";
 import { arriveAtCastle, stillIn, isTraitor, murderIdeas, night, roundTable, computerVote } from "../../js/castle.js";
 import {
   MISSIONS, SKILLS, missionOrder, todaysMission, computerScore, finishMission,
@@ -364,5 +364,78 @@ test("giving up scores nothing (and hits nobody, and finds no shield)", () => {
     const r = flopResult(g, stillIn(g), m);
     assert.ne(r.shield, "dot", m.id);
     if (m.id === "catapults") assert.eq(g.upForMurder.ids.includes("dot"), r.hit.includes("dot"));
+  }
+});
+
+// ─── Garden Maze: smooth walking ────────────────────────────────────────────
+import { mazeMove, mazeSquare, MAZE_R } from "../../js/missions.js";
+
+// The squares from start to the way out.
+function mazePath(m) {
+  const key = ([x, y]) => `${x},${y}`;
+  const from = new Map([[key(m.start), null]]);
+  const queue = [m.start];
+  while (queue.length) {
+    const at = queue.shift();
+    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      const n = [at[0] + dx, at[1] + dy];
+      if (n[0] < 0 || n[1] < 0 || n[0] >= MAZE_W || n[1] >= MAZE_H || from.has(key(n)) || !canStep(m, at, n)) continue;
+      from.set(key(n), at);
+      queue.push(n);
+    }
+  }
+  const path = [];
+  for (let at = m.exit; at; at = from.get(key(at))) path.unshift(at);
+  return path;
+}
+
+test("Garden Maze: start and way out are opposite corners, and change", () => {
+  const starts = new Set();
+  for (let seed = 1; seed <= 30; seed++) {
+    const m = makeMaze(castle(seed));
+    assert.eq(m.exit, [MAZE_W - 1 - m.start[0], MAZE_H - 1 - m.start[1]]);
+    assert.ok([0, MAZE_W - 1].includes(m.start[0]) && [0, MAZE_H - 1].includes(m.start[1]));
+    starts.add(m.start.join(","));
+  }
+  assert.gt(starts.size, 2);
+});
+
+test("Garden Maze: smooth walking never goes through a hedge", () => {
+  for (let seed = 1; seed <= 20; seed++) {
+    const m = makeMaze(castle(seed));
+    const r = makeRandom(seed);
+    let pos = { x: m.start[0] + 0.5, y: m.start[1] + 0.5 };
+    for (let k = 0; k < 2000; k++) {
+      const before = mazeSquare(pos);
+      pos = mazeMove(m, pos, (r() - 0.5) * 0.4, (r() - 0.5) * 0.4);
+      const after = mazeSquare(pos);
+      if (after.join() !== before.join()) assert.ok(canStep(m, before, after), `seed ${seed}: ${before} to ${after}`);
+      assert.ok(pos.x >= MAZE_R - 1e-9 && pos.x <= MAZE_W - MAZE_R + 1e-9 && pos.y >= MAZE_R - 1e-9 && pos.y <= MAZE_H - MAZE_R + 1e-9);
+    }
+  }
+});
+
+test("Garden Maze: walking square to square along the way out gets you out", () => {
+  for (let seed = 1; seed <= 10; seed++) {
+    const m = makeMaze(castle(seed));
+    let pos = { x: m.start[0] + 0.5, y: m.start[1] + 0.5 };
+    for (const [x, y] of mazePath(m).slice(1)) {
+      for (let k = 0; k < 40 && mazeSquare(pos).join() !== `${x},${y}`; k++) {
+        pos = mazeMove(m, pos, Math.sign(x + 0.5 - pos.x) * 0.1, Math.sign(y + 0.5 - pos.y) * 0.1);
+      }
+      pos = { x: x + 0.5, y: y + 0.5 };   // settle in the middle
+    }
+    assert.eq(mazeSquare(pos), m.exit);
+  }
+});
+
+test("Garden Maze: a hedge stops you at its edge", () => {
+  const m = makeMaze(castle(1));
+  // Find a square with a hedge on its right.
+  for (let y = 0; y < MAZE_H; y++) for (let x = 0; x < MAZE_W; x++) {
+    if (!m.walls[y][x].e) continue;
+    const p = mazeMove(m, { x: x + 0.5, y: y + 0.5 }, 3, 0);
+    assert.near(p.x, x + 1 - MAZE_R, 1e-9);
+    return;
   }
 });

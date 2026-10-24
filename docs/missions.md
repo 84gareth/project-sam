@@ -77,8 +77,9 @@ has gone, there's no note.
   you get their note.
 - **Secret Code** (puzzle): a key of coloured shapes and letters; spell
   three secret words from their shapes. Three wrong letters lose a word.
-- **Garden Maze** (puzzle): tap the next square to walk out of the hedge
-  maze within a minute. Part-way counts for some.
+- **Garden Maze** (puzzle): steer a counter out of the hedge maze with an
+  on-screen joystick, within a minute (Gareth, v0.12.5: smooth movement;
+  start and way out in random opposite corners). Part-way counts for some.
 - **Lost Keys** (hunting): find 5 keys hidden in the library in 40 seconds.
 - **Muddy Footprints** (hunting, clue): remember the boot print; at three
   places the trail splits; pick the matching print. Two right and you find

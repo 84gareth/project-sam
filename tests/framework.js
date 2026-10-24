@@ -57,8 +57,14 @@ export async function until(predicate, label = "", timeoutMs = 5000) {
 }
 
 // Load the real game page in an iPad-sized frame. Returns its window.
+// Only one game page runs at a time: each new one closes the last, so old
+// pages' timers (puppets walking, catapults sliding) don't slow later tests
+// down until they time out (2026-10-24: flaky castle tests).
+let lastFrame = null;
 export async function openPage(path = "../index.html", width = 1024, height = 768) {
+  if (lastFrame) lastFrame.remove();
   const frame = document.createElement("iframe");
+  lastFrame = frame;
   frame.style.width = width + "px";
   frame.style.height = height + "px";
   document.body.appendChild(frame);

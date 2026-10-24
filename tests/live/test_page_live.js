@@ -5,7 +5,8 @@ import { VERSION, GAME_NAME } from "../../js/version.js";
 test("page shows the name and version", async () => {
   const page = await openPage();
   const doc = page.document;
-  await until(() => doc.getElementById("version").textContent !== "v0.0.0", "page script ran");
+  // The first page of the run loads everything cold: give it longer.
+  await until(() => doc.getElementById("version").textContent !== "v0.0.0", "page script ran", 15000);
   assert.eq(doc.getElementById("title").textContent, GAME_NAME);
   assert.eq(doc.getElementById("version").textContent, "v" + VERSION);
   assert.eq(doc.title, GAME_NAME);

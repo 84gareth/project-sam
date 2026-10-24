@@ -28,7 +28,17 @@ done
 
 # A private web server on a free port, stopped when this script ends.
 PORT="$(python3 -c 'import socket; s = socket.socket(); s.bind(("127.0.0.1", 0)); print(s.getsockname()[1])')"
-python3 -m http.server "$PORT" --bind 127.0.0.1 >/dev/null 2>&1 &
+# Its queue holds 128 waiting requests, not the usual 5: the page loads ~15
+# files at once, and a turned-away module stopped the page starting now and
+# then (2026-10-24).
+python3 -c '
+import http.server, sys
+class Server(http.server.ThreadingHTTPServer):
+    request_queue_size = 128
+class Quiet(http.server.SimpleHTTPRequestHandler):
+    def log_message(self, *args): pass
+Server(("127.0.0.1", int(sys.argv[1])), Quiet).serve_forever()
+' "$PORT" >/dev/null 2>&1 &
 SERVER=$!
 # A throwaway Chrome profile, so this never touches the Chrome you use.
 PROFILE="$(mktemp -d)"

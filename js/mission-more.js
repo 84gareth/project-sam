@@ -2,7 +2,7 @@
 // draw in and finishes with a score from 0 to 1. Rules come from
 // missions.js; this file draws and listens.
 import {
-  whereRounds, jumbleWords, noteFrom, secretCode, CODE_TRIES, makeMaze, canStep, mazeScore,
+  whereRounds, jumbleWords, noteFrom, secretCode, CODE_TRIES, makeMaze, mazeMove, mazeSquare, MAZE_SPEED, mazeScore,
   MAZE_W, MAZE_H, MAZE_SECONDS, keySpots, KEYS, KEYS_SECONDS, footprintTrail, footprintNote,
   galleryRounds, treasureSpot, treasureTap, treasureScore, TREASURE_TAPS, lightsTray, lightsScore,
   PIECES, LIGHTS_SECONDS, gone,
@@ -225,42 +225,75 @@ async function code(ctx) {
 
 // ─── Garden Maze ────────────────────────────────────────────────────────────
 
+// A joystick: drag the knob; `read()` gives the push as {x, y}, each -1..1.
+function joystick() {
+  const base = el("div", "joystick");
+  const knob = el("div", "knob");
+  base.append(knob);
+  let push = { x: 0, y: 0 };
+  let id = null;
+  const move = (e) => {
+    const r = base.getBoundingClientRect();
+    let x = (e.clientX - (r.left + r.width / 2)) / (r.width / 2);
+    let y = (e.clientY - (r.top + r.height / 2)) / (r.height / 2);
+    const len = Math.hypot(x, y);
+    if (len > 1) { x /= len; y /= len; }
+    push = { x, y };
+    knob.style.transform = `translate(${x * 60}px, ${y * 60}px)`;
+  };
+  const stop = () => { id = null; push = { x: 0, y: 0 }; knob.style.transform = ""; };
+  base.addEventListener("pointerdown", (e) => { id = e.pointerId; base.setPointerCapture?.(id); move(e); });
+  base.addEventListener("pointermove", (e) => { if (e.pointerId === id) move(e); });
+  base.addEventListener("pointerup", stop);
+  base.addEventListener("pointercancel", stop);
+  return { el: base, read: () => push };
+}
+
 function maze(ctx) {
   const { game, box } = ctx;
   const m = makeMaze(game);
-  let at = [...m.start];
+  let pos = { x: m.start[0] + 0.5, y: m.start[1] + 0.5 };
   const grid = el("div", "maze");
   grid.style.gridTemplateColumns = `repeat(${MAZE_W}, 1fr)`;
-  const cells = [];
   for (let y = 0; y < MAZE_H; y++) {
     for (let x = 0; x < MAZE_W; x++) {
-      const c = button("maze-cell");
+      const c = el("div", "maze-cell");
       const w = m.walls[y][x];
       c.style.borderTopWidth = w.n ? "6px" : "0";
       c.style.borderRightWidth = w.e ? "6px" : "0";
       c.style.borderBottomWidth = w.s ? "6px" : "0";
       c.style.borderLeftWidth = w.w ? "6px" : "0";
-      c.dataset.x = x;
-      c.dataset.y = y;
       if (x === m.exit[0] && y === m.exit[1]) c.classList.add("maze-exit");
-      c.onclick = () => {
-        if (!canStep(m, at, [x, y])) return;
-        at = [x, y];
-        draw();
-        if (x === m.exit[0] && y === m.exit[1]) ctx.finish(1, "You found the way out!");
-      };
-      cells.push(c);
       grid.append(c);
     }
   }
+  const token = el("div", "maze-token");
+  grid.append(token);
   const draw = () => {
-    for (const c of cells) c.classList.toggle("maze-me", Number(c.dataset.x) === at[0] && Number(c.dataset.y) === at[1]);
-    box.dataset.at = at.join(",");
+    token.style.left = `${(pos.x / MAZE_W) * 100}%`;
+    token.style.top = `${(pos.y / MAZE_H) * 100}%`;
+    box.dataset.pos = `${pos.x.toFixed(3)},${pos.y.toFixed(3)}`;
   };
   draw();
-  box.replaceChildren(grid);
-  countdown(ctx, MAZE_SECONDS, "Tap the square next to you to walk.", () => {
-    const score = mazeScore(m, at);
+  const stick = joystick();
+  const row = el("div", "maze-row");
+  row.append(stick.el, grid);
+  box.replaceChildren(row);
+  let last = performance.now();
+  ctx.every(16, () => {
+    const now = performance.now();
+    const dt = Math.min(0.05, (now - last) / 1000);
+    last = now;
+    const p = stick.read();
+    if (!p.x && !p.y) return;
+    const speed = MAZE_SPEED * (FAST ? 4 : 1);   // tests walk faster
+    pos = mazeMove(m, pos, p.x * speed * dt, p.y * speed * dt);
+    draw();
+    const [sx, sy] = mazeSquare(pos);
+    if (sx === m.exit[0] && sy === m.exit[1]) ctx.finish(1, "You found the way out!");
+  });
+  countdown(ctx, MAZE_SECONDS, "Use the joystick to walk.", () => {
+    const score = mazeScore(m, mazeSquare(pos));
     ctx.finish(score, score > 0.5 ? "Time's up! You were nearly out." : "Time's up! Lost in the hedges.");
   });
 }
