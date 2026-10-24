@@ -42,7 +42,8 @@ export const CHARACTERS = [
     picture: "assets/characters/stan.jpg" },
   { id: "ivy", name: "Ivy Inkwell", about: "Writes stories.", colour: "#2e86c1",
     picture: "assets/characters/ivy.jpg" },
-  { id: "max", name: "Max Muddle", about: "Always gets lost.", colour: "#a04000" },
+  { id: "max", name: "Max Muddle", about: "Always gets lost.", colour: "#a04000",
+    picture: "assets/characters/max.jpg" },
   { id: "olive", name: "Olive Oddsocks", about: "Never wears socks that match.", colour: "#808b38" },
   { id: "barry", name: "Barry Banjo", about: "Plays the banjo. Badly.", colour: "#ca6f1e" },
 ];

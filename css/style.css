@@ -460,3 +460,30 @@ button.small {
 .puppet-chat i:nth-child(2) { animation-delay: 0.15s; }
 .puppet-chat i:nth-child(3) { animation-delay: 0.3s; }
 @keyframes dot { 0%, 60%, 100% { transform: translateY(0); } 30% { transform: translateY(-6px); } }
+
+/* Name tags: their own layer above all puppets, big enough to tap. */
+.names { position: absolute; inset: 0; pointer-events: none; z-index: 1500; }
+.name-tag {
+  position: absolute;
+  pointer-events: auto;
+  min-height: 28px;
+  padding: 3px 10px;
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  border-radius: 14px;
+  background: rgba(20, 22, 30, 0.85);
+  color: #fff;
+  font: 700 14px -apple-system, system-ui, sans-serif;
+  white-space: nowrap;
+}
+.name-tag.me { background: var(--accent); color: #1c1f29; border-color: #fff; }
+.join-actions { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+
+/* The train ride to the castle: the station picture, gently rolling. */
+.train {
+  background: linear-gradient(rgba(20, 22, 30, 0.25), rgba(20, 22, 30, 0.25)),
+              url("../assets/station.webp") center / cover no-repeat;
+  justify-content: flex-end;
+  animation: chuff 0.5s ease-in-out infinite alternate;
+}
+.train-text { margin-bottom: 40px; background: rgba(20, 22, 30, 0.75); padding: 14px 24px; border-radius: 16px; }
+@keyframes chuff { from { background-position: 50% 50%; } to { background-position: 50.6% 50.3%; } }

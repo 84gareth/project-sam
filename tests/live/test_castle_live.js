@@ -23,6 +23,7 @@ async function toCastle(seed) {
   doc.querySelectorAll("#cards .card")[4].click();
   doc.getElementById("choose").click();
   doc.getElementById("to-castle").click();
+  await until(() => !doc.getElementById("screen-castle").hidden, "the train ride arrives at the castle", 8000);
   return { page, doc };
 }
 const visible = (doc, id) => !doc.getElementById(id).hidden;
@@ -292,7 +293,7 @@ test("join two chatting Traitors as a Faithful: they send you away", async () =>
   await until(() => doc.querySelector(`.puppet[data-id="${a}"]`), "they're in the hall");
   doc.querySelector(`.puppet[data-id="${a}"]`).click();
   assert.ok(visible(doc, "screen-join"), "Sam joins their chat");
-  assert.notOk(visible(doc, "join-chat"), "not welcome");
+  assert.eq(doc.querySelectorAll("#join-actions .join-chat").length, 0, "not welcome: nobody to chat to");
   assert.gt(doc.getElementById("join-text").textContent.length, 0);
   assert.eq(doc.querySelectorAll("#join-pictures img.cutout, #join-pictures .badge").length, 2, "both of them, cut out");
 });
@@ -306,4 +307,52 @@ test("talking to someone shows their cut-out puppet", async () => {
   doc.querySelector('.puppet[data-id="puddle"]').click();
   assert.ok(visible(doc, "screen-chat"));
   assert.ok(doc.querySelector("#chat-picture img.cutout"), "the cut-out, not the framed portrait");
+});
+
+test("a welcoming group: Sam can pick anyone in it to talk to", async () => {
+  const { page, doc } = await toCastle(seedFor("pepper", FAITHFUL));
+  const { joinChat } = await import("../../js/castle.js");
+  const faithful = page.game.players.filter((p) => p.side === FAITHFUL && p.id !== "pepper").map((p) => p.id);
+  let pair = null;
+  for (let i = 0; i < faithful.length - 1 && !pair; i++) {
+    if (joinChat(page.game, faithful[i], faithful[i + 1]).welcome) pair = [faithful[i], faithful[i + 1]];
+  }
+  const [a, b] = pair;
+  for (const [id, other, x] of [[a, b, 0.4], [b, a, 0.5]]) {
+    Object.assign(page.world.people[id], { room: "hall", mode: "chat", timer: 99, with: other, x, y: 0.85 });
+  }
+  await until(() => doc.querySelector(`.name-tag[data-id="${a}"]`), "their name tags");
+  doc.querySelector(`.name-tag[data-id="${b}"]`).click();
+  assert.ok(visible(doc, "screen-join"));
+  const buttons = [...doc.querySelectorAll("#join-actions .join-chat")].map((x) => x.dataset.id).sort();
+  assert.eq(buttons, [a, b].sort(), "a button for each of them");
+  doc.querySelector(`#join-actions .join-chat[data-id="${b}"]`).click();
+  assert.ok(visible(doc, "screen-chat"));
+  assert.eq(doc.getElementById("chat-name").textContent, (await import("../../js/characters.js")).CHARACTERS.find((c) => c.id === b).name);
+});
+
+test("name tags never overlap, even in a crowd", async () => {
+  const { page, doc } = await toCastle(seedFor("pepper", FAITHFUL));
+  const ids = Object.keys(page.world.people).slice(0, 6);
+  ids.forEach((id, i) => Object.assign(page.world.people[id], { room: "hall", mode: "chat", with: "pepper", timer: 99, x: 0.45 + i * 0.01, y: 0.85 }));
+  await until(() => ids.every((id) => doc.querySelector(`.name-tag[data-id="${id}"]`)), "all six name tags");
+  await new Promise((r) => setTimeout(r, 200));
+  const rects = ids.map((id) => doc.querySelector(`.name-tag[data-id="${id}"]`).getBoundingClientRect());
+  for (let i = 0; i < rects.length; i++) for (let j = i + 1; j < rects.length; j++) {
+    const a = rects[i], b = rects[j];
+    const overlap = a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
+    assert.notOk(overlap, `${ids[i]} and ${ids[j]} overlap`);
+  }
+});
+
+test("All aboard! plays the train ride before the castle", async () => {
+  const page = await openPage(`../index.html?seed=1&fast=1`);
+  const doc = page.document;
+  await until(() => doc.querySelectorAll(".card").length === 22, "cards built");
+  doc.getElementById("start").click();
+  doc.querySelectorAll("#cards .card")[4].click();
+  doc.getElementById("choose").click();
+  doc.getElementById("to-castle").click();
+  assert.ok(visible(doc, "screen-train"), "the train ride shows first");
+  await until(() => visible(doc, "screen-castle"), "then the castle", 8000);
 });

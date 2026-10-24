@@ -39,6 +39,11 @@
     <button id="to-castle" class="big">All aboard!</button>
   </section>
 
+  <!-- 3b. The train ride to the castle (the steam train sound plays here). -->
+  <section id="screen-train" class="screen train" hidden>
+    <h2 class="train-text">All aboard! The train is taking you to the castle...</h2>
+  </section>
+
   <!-- 4. The castle: walk around the rooms as a paper puppet (castle-ui.js,
        puppets.js). Tap the floor to walk, a door to change room, someone to
        chat. -->
@@ -46,6 +51,8 @@
     <div id="stage" class="stage">
       <img id="room-picture" class="room-picture" alt="">
       <div id="puppets" class="puppets"></div>
+      <!-- Names in their own layer on top, spaced apart: easy to tap. -->
+      <div id="names" class="names"></div>
       <button id="door-left" class="door door-left"></button>
       <button id="door-right" class="door door-right"></button>
     </div>
@@ -76,7 +83,7 @@
     <div id="join-pictures" class="join-pictures"></div>
     <h2 id="join-names"></h2>
     <div class="bubble"><p><b id="join-who"></b> <span id="join-text"></span></p></div>
-    <button id="join-chat" class="big">Chat</button>
+    <div id="join-actions" class="join-actions"></div>
     <button id="join-back" class="big">Back</button>
   </section>
 

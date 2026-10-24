@@ -47,8 +47,12 @@ $("version").textContent = "v" + VERSION;
 buildCards();
 $("start").addEventListener("click", () => show("screen-pick"));
 $("choose").addEventListener("click", () => pickedId && startGame());
-$("to-castle").addEventListener("click", () => {
-  play("train");   // Sam: a train whistle for All aboard!
+// All aboard! A short train ride with the steam train sound (Sam), THEN
+// the castle (Gareth: the sound was playing after you'd arrived).
+$("to-castle").addEventListener("click", async () => {
+  show("screen-train");
+  narrate("All aboard! The train is taking you to the castle.");
+  await play("train");
   goToCastle(window.game);
 });
 // The first tap switches sound on (iPad rule); every button tap clicks.

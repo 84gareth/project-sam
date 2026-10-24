@@ -120,27 +120,63 @@ function puppetEl(id) {
     paper.classList.add("puppet-badge");
     body.append(paper);
   }
-  const label = document.createElement("span");
-  label.className = "puppet-name";
-  label.textContent = id === game.playerId ? "You" : c.name;
   // A big speech bubble with bouncing dots when they're chatting.
   const dots = document.createElement("span");
   dots.className = "puppet-chat";
   for (let i = 0; i < 3; i++) dots.append(document.createElement("i"));
-  el.append(dots, body, label);
-  if (id !== game.playerId) {
-    el.addEventListener("click", (e) => {
-      e.stopPropagation();
-      const p = world.people[id];
-      // Chatting to someone else? Then Sam joins their chat.
-      joinTarget = p.mode === "chat" && p.with && p.with !== game.playerId ? [id, p.with] : null;
-      if (FAST) return joinTarget ? openJoin(...joinTarget) : openChat(id);
-      chatTarget = id;
-      walkUpTo(world, id);
-    });
-  }
+  el.append(dots, body);
+  if (id !== game.playerId) el.addEventListener("click", (e) => { e.stopPropagation(); tapPerson(id); });
   return el;
 }
+
+// Tapping a person (their puppet or their name): walk up and chat, or join
+// their chat if they're talking to someone else.
+function tapPerson(id) {
+  const p = world.people[id];
+  joinTarget = p.mode === "chat" && p.with && p.with !== game.playerId ? [id, p.with] : null;
+  if (FAST) return joinTarget ? openJoin(...joinTarget) : openChat(id);
+  chatTarget = id;
+  walkUpTo(world, id);
+}
+
+// Name tags, in their own layer above every puppet (Gareth: "should be
+// possible to click on their names cleanly"). Each sits under its puppet's
+// feet; if it would overlap another, it moves down a row.
+function placeNames(ids) {
+  const layer = $("names");
+  for (const el of [...layer.children]) if (!ids.includes(el.dataset.id)) el.remove();
+  const box = $("stage").getBoundingClientRect();
+  const placed = [];
+  const order = [...ids].sort((a, b) => pos(a).x - pos(b).x);
+  for (const id of order) {
+    let tag = layer.querySelector(`[data-id="${id}"]`);
+    if (!tag) {
+      tag = document.createElement("button");
+      tag.className = "name-tag" + (id === game.playerId ? " me" : "");
+      tag.dataset.id = id;
+      tag.textContent = id === game.playerId ? "You" : character(id).name;
+      if (id !== game.playerId) tag.addEventListener("click", (e) => { e.stopPropagation(); tapPerson(id); });
+      layer.append(tag);
+    }
+    const p = pos(id);
+    const w = tag.offsetWidth || 90;
+    const h = tag.offsetHeight || 26;
+    const x = Math.min(Math.max(p.x * box.width - w / 2, 2), box.width - w - 2);
+    const clash = (y) => placed.some((r) => x < r.x + r.w + 4 && x + w + 4 > r.x && y < r.y + r.h + 2 && y + h + 2 > r.y);
+    // Under the feet first, then further down while it fits in the room,
+    // then up over the puppet.
+    let y = p.y * box.height + 4;
+    while (clash(y) && y + 2 * h + 3 <= box.height) y += h + 3;
+    if (clash(y) || y + h > box.height) {
+      y = p.y * box.height - h - 4;
+      while (clash(y) && y > 0) y -= h + 3;
+    }
+    placed.push({ x, y, w, h });
+    tag.style.left = `${x}px`;
+    tag.style.top = `${y}px`;
+  }
+}
+const pos = (id) => (id === game.playerId ? world.me : world.people[id]);
 
 // Draw the room Sam is in, and everyone in it, where they are now.
 function render() {
@@ -154,6 +190,7 @@ function render() {
     $("room-picture").src = r.picture;
     $("room-name").textContent = r.name;
     $("puppets").replaceChildren();
+    $("names").replaceChildren();
   }
   const count = (rm) => (rm ? peopleIn(world, rm, here).length : 0);
   const roomName = (rm) => ROOMS.find((x) => x.id === rm).name;
@@ -179,6 +216,7 @@ function render() {
     el.classList.toggle("flip", p.facing === "left");
     el.classList.toggle("chatting", p.mode === "chat" && id !== chatTarget);
   }
+  placeNames(ids);
 }
 
 function openChat(id) {
@@ -215,9 +253,19 @@ function openJoin(a, b) {
   $("join-names").textContent = `${character(a).name} and ${character(b).name}`;
   $("join-who").textContent = character(j.speaker).name + ":";
   $("join-text").textContent = j.text;
-  $("join-chat").hidden = !j.welcome;
-  $("join-chat").textContent = `Chat to ${character(j.speaker).name}`;
-  $("join-chat").onclick = () => openChat(j.speaker);
+  // Welcome? Then Sam can talk to anyone in the group (Gareth).
+  const actions = $("join-actions");
+  actions.replaceChildren();
+  if (j.welcome) {
+    for (const id of [a, b]) {
+      const btn = document.createElement("button");
+      btn.className = "big join-chat";
+      btn.dataset.id = id;
+      btn.textContent = `Chat to ${character(id).name}`;
+      btn.addEventListener("click", () => openChat(id));
+      actions.append(btn);
+    }
+  }
   if (!j.welcome) {
     // Not wanted: they finish up and walk off.
     for (const id of [a, b]) if (world.people[id]) world.people[id].timer = 0.5;
