@@ -335,7 +335,7 @@ test("Traitors whisper the truth to a Traitor Sam, and fib to a Faithful Sam", (
 });
 
 // ─── Round Table talk ───────────────────────────────────────────────────────
-import { tableTalk, talkOptions, playerSays, TALK_SWAY } from "../../js/castle.js";
+import { tableTalk, talkOptions, playerSays, TALK_SWAY, QUIET_RISK } from "../../js/castle.js";
 
 test("Round Table talk: two or three accusations, and the accused stick up for themselves", () => {
   const counts = new Set();
@@ -352,12 +352,38 @@ test("Round Table talk: two or three accusations, and the accused stick up for t
   assert.eq(counts.size, 2, "sometimes two, sometimes three");
 });
 
-test("Sam's options: agree, stick up for someone, or stay quiet", () => {
-  const g = castle(4);
-  const opts = talkOptions(g, tableTalk(g));
-  assert.ok(opts.length >= 3 && opts.length <= 4);
-  assert.ok(opts.some((o) => o.kind === "accuse"));
-  assert.ok(opts.some((o) => o.kind === "quiet"));
+test("Sam's options: four, always an accusation, staying quiet last; lots of variety", () => {
+  const kinds = new Set(), texts = new Set();
+  for (let seed = 1; seed <= 40; seed++) {
+    const g = castle(seed);
+    const talk = tableTalk(g);
+    const opts = talkOptions(g, talk);
+    assert.eq(opts.length, 4, `seed ${seed}`);
+    assert.ok(opts.some((o) => o.kind === "accuse"));
+    assert.eq(opts[3].kind, "quiet");
+    if (talk.some((t) => t.names[0] === "dot")) assert.ok(opts.some((o) => o.kind === "defend" && o.target === "dot"), "accused: Sam can stick up for himself");
+    for (const o of opts) { kinds.add(o.kind); texts.add(o.text); }
+  }
+  assert.eq([...kinds].sort(), ["accuse", "calm", "defend", "question", "quiet"]);
+  assert.gt(texts.size, 60, `${texts.size} different things to say`);
+});
+
+test("staying quiet is risky: honest players suspect Sam more, and someone says so", () => {
+  const g = castle(6);
+  const honest = computers(g).filter((id) => !isTraitor(g, id));
+  const before = honest.map((h) => g.scores[h].dot);
+  const reply = playerSays(g, { kind: "quiet", target: null });
+  honest.forEach((h, i) => assert.near(g.scores[h].dot, before[i] + QUIET_RISK, 1e-9, h));
+  assert.ok(reply.text.includes("Detective Dot"), reply.text);
+  assert.eq(reply.names, ["dot"]);
+});
+
+test("calming everyone down makes Sam look a little better", () => {
+  const g = castle(6);
+  const h = computers(g).find((id) => !isTraitor(g, id));
+  const before = g.scores[h].dot;
+  playerSays(g, { kind: "calm", target: null });
+  assert.lt(g.scores[h].dot, before + 1e-9);
 });
 
 test("accusing someone makes honest players more suspicious of them", () => {

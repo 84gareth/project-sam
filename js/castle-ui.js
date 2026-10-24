@@ -361,12 +361,16 @@ async function roundTableTalk() {
     const b = document.createElement("button");
     b.className = "question";
     b.textContent = o.text;
-    b.addEventListener("click", () => {
-      playerSays(game, o);
+    b.addEventListener("click", async () => {
+      const reply = playerSays(game, o);
       opts.hidden = true;
       if (o.kind !== "quiet") {
         lines.append(talkLine(game.playerId, o.text, "You"));
-        say(o.text, game.playerId);
+        await say(o.text, game.playerId);
+      }
+      if (reply) {
+        lines.append(talkLine(reply.speaker, reply.text));
+        say(reply.text, reply.speaker, { queue: true });
       }
       $("to-vote").hidden = false;
     });

@@ -121,6 +121,7 @@ async function talkThenTable(doc) {
   if (doc.getElementById("screen-talk").hidden) doc.getElementById("to-table").click();
   await until(() => !doc.getElementById("talk-options").hidden, "the Round Table talk", 8000);
   doc.querySelector("#talk-options .question").click();
+  await until(() => !doc.getElementById("to-vote").hidden, "Sam has spoken");
   doc.getElementById("to-vote").click();
 }
 
@@ -300,8 +301,8 @@ test("Round Table talk: people accuse and defend, then Sam joins in", async () =
   const opts = doc.querySelectorAll("#talk-options .question");
   assert.ok(opts.length >= 3, "options to join in");
   opts[0].click();
-  assert.eq(doc.querySelector("#talk-lines .talk-line:last-child b").textContent, "You: ", "Sam's line appears");
-  assert.ok(visible(doc, "to-vote"));
+  await until(() => visible(doc, "to-vote"), "then the vote");
+  assert.ok([...doc.querySelectorAll("#talk-lines .talk-line b")].some((b) => b.textContent === "You: "), "Sam's line appears");
   doc.getElementById("to-vote").click();
   assert.ok(visible(doc, "screen-table"));
 });
@@ -668,4 +669,16 @@ test("Lights Out: put all nine pieces back", async () => {
     box.querySelector(`.slot[data-slot="${i}"]`).click();
   }
   assert.eq(await result(doc), "You built the whole shield in the dark!");
+});
+
+test("staying quiet at the Round Table: someone notices", async () => {
+  const { doc } = await toCastle(seedFor("pepper", FAITHFUL));
+  doc.getElementById("to-table").click();
+  await until(() => visible(doc, "talk-options"), "Sam's turn to speak", 8000);
+  const before = doc.querySelectorAll("#talk-lines .talk-line").length;
+  doc.querySelector("#talk-options .question:last-child").click();
+  await until(() => visible(doc, "to-vote"), "then the vote");
+  const lines = doc.querySelectorAll("#talk-lines .talk-line");
+  assert.eq(lines.length, before + 1, "one reply, no line from Sam");
+  assert.ok(lines[lines.length - 1].textContent.includes("Chef Pepper"), "they say Sam's name");
 });

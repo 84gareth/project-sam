@@ -483,44 +483,112 @@ export function tableTalk(game) {
   return talk;
 }
 
-// What Sam can say: agree with an accusation, stick up for someone, or stay
-// quiet. If Sam was accused, he can defend himself.
+// What Sam can say at the Round Table: four choices, picked at random each
+// day from lots of kinds (Gareth: "more random options"): agree with an
+// accusation, stick up for someone, stick up for himself, point at someone
+// nobody has mentioned, ask someone a hard question, calm everyone down, or
+// stay quiet. Staying quiet is risky (Gareth): people get suspicious.
 export function talkOptions(game, talk) {
+  const me = game.playerId;
   const accused = talk.filter((t) => t.names.length > 0).map((t) => t.names[0]);
-  const options = [];
   const r = rng(game, "options", game.day);
-  for (const a of accused.slice(0, 2)) {
-    if (a === game.playerId) {
-      options.push({ kind: "defend", target: a, text: pickOne(["I'm a Faithful! It's not me!", "Me? I've been trying to catch the Traitors all day!", "Check my votes! I'm Faithful!"], r) });
-    } else {
-      const n = nameOf(a);
-      options.push({ kind: "accuse", target: a, text: pickOne([`I agree. It's ${n}!`, `I've had my eye on ${n} too.`, `${n} is a Traitor. I'm sure of it!`, `Yes! ${n} has been so sneaky.`], r) });
-    }
+  const others = stillIn(game).filter((id) => id !== me && !accused.includes(id));
+  const someone = () => others.splice(Math.floor(r() * others.length), 1)[0];
+  const pool = [];
+  for (const a of accused.filter((a) => a !== me)) {
+    const n = nameOf(a);
+    pool.push({ kind: "accuse", target: a, text: pickOne([
+      `I agree. It's ${n}!`, `I've had my eye on ${n} too.`, `${n} is a Traitor. I'm sure of it!`,
+      `Yes! ${n} has been so sneaky.`, `${n}, you're not fooling me!`, `I saw ${n} whispering. Very suspicious!`,
+    ], r) });
+    pool.push({ kind: "defend", target: a, text: pickOne([
+      `Leave ${n} alone. I trust them.`, `I don't think it's ${n}.`, `${n} has been helpful all day. It's not them.`,
+      `${n}? No way. Look somewhere else.`, `I'd bet my socks ${n} is Faithful.`,
+    ], r) });
   }
-  const other = accused.find((a) => a !== game.playerId);
-  if (other) {
-    const n = nameOf(other);
-    options.push({ kind: "defend", target: other, text: pickOne([`Leave ${n} alone. I trust them.`, `I don't think it's ${n}.`, `${n} has been helpful all day. It's not them.`], r) });
+  if (others.length) {
+    const n = nameOf(someone());
+    const target = stillIn(game).find((id) => nameOf(id) === n);
+    pool.push({ kind: "accuse", target, text: pickOne([
+      `Nobody's talking about ${n}. Why so quiet, ${n}?`, `What about ${n}? I've got a funny feeling.`,
+      `${n} keeps changing their story. I don't like it.`,
+    ], r) });
   }
-  options.push({ kind: "quiet", target: null, text: pickOne(["Stay quiet and watch...", "Say nothing. Just listen.", "Keep my thoughts to myself."], r) });
-  return options.slice(0, 4);
+  if (others.length) {
+    const target = someone();
+    const n = nameOf(target);
+    pool.push({ kind: "question", target, text: pickOne([
+      `${n}, who did you vote for yesterday? And why?`, `${n}, where were you last night?`,
+      `${n}, look me in the eye. Are you a Traitor?`,
+    ], r) });
+  }
+  pool.push({ kind: "calm", target: null, text: pickOne([
+    "Everyone calm down! Let's think about this.", "Can we all just take a deep breath?",
+    "Let's look at the votes, not just shout names.",
+  ], r) });
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(r() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  const options = [];
+  if (accused.includes(me)) {
+    options.push({ kind: "defend", target: me, text: pickOne([
+      "I'm a Faithful! It's not me!", "Me? I've been trying to catch the Traitors all day!",
+      "Check my votes! I'm Faithful!", "You've got the wrong person. I promise!",
+    ], r) });
+  }
+  // At least one accusation, then whatever came up.
+  const firstAccuse = pool.find((o) => o.kind === "accuse");
+  if (firstAccuse) options.push(firstAccuse);
+  for (const o of pool) if (options.length < 3 && !options.includes(o)) options.push(o);
+  options.push({ kind: "quiet", target: null, text: pickOne([
+    "Stay quiet and watch...", "Say nothing. Just listen.", "Keep my thoughts to myself.",
+  ], r) });
+  return options;
 }
 
-// Sam speaks. Honest players listen a little: an accusation makes them
-// more suspicious of that person, sticking up for someone less. The one Sam
-// accused starts to suspect Sam back.
+// What Sam says changes what the honest players think. Returns a reply
+// someone makes straight away, or null.
 export const TALK_SWAY = 0.12;
+export const QUIET_RISK = 0.1;
 export function playerSays(game, option) {
-  if (option.kind === "quiet") return;
-  for (const b of brains(game)) {
-    if (isTraitor(game, b) || b === option.target) continue;
-    const s = game.scores[b];
-    if (option.target === game.playerId) continue;
-    s[option.target] = Math.max(0, s[option.target] + (option.kind === "accuse" ? TALK_SWAY : -TALK_SWAY));
+  const me = game.playerId;
+  const honest = brains(game).filter((b) => !isTraitor(game, b));
+  const r = rng(game, "says", game.day, option.kind);
+  const nudge = (who, by) => {
+    for (const b of honest) if (b !== who) game.scores[b][who] = Math.max(0, game.scores[b][who] + by);
+  };
+  switch (option.kind) {
+    case "accuse":
+      nudge(option.target, TALK_SWAY);
+      if (game.scores[option.target]) game.scores[option.target][me] += 0.15;
+      return null;
+    case "question":
+      nudge(option.target, TALK_SWAY / 2);
+      if (game.scores[option.target]) game.scores[option.target][me] += 0.08;
+      return { speaker: option.target, names: [], text: inCharacter(option.target, pickOne([
+        "Why are you asking ME? Ask someone else!", "That's none of your business!",
+        "I... erm... I don't remember.", "I'm Faithful! How many times?",
+      ], r), r) };
+    case "defend":
+      if (option.target === me) nudge(me, -TALK_SWAY / 2);
+      else nudge(option.target, -TALK_SWAY);
+      return null;
+    case "calm":
+      nudge(me, -0.04);
+      return null;
+    case "quiet": {
+      // Silence is suspicious: someone says so.
+      nudge(me, QUIET_RISK);
+      const speaker = pickOne(brains(game), r);
+      const n = nameOf(me);
+      return { speaker, names: [me], text: inCharacter(speaker, pickOne([
+        `You've gone very quiet, ${n}...`, `Nothing to say, ${n}? Interesting.`,
+        `Why so quiet, ${n}? Traitors keep quiet, you know.`, `Hmm. ${n} isn't saying much today.`,
+      ], r), r) };
+    }
   }
-  if (option.kind === "accuse" && game.scores[option.target]) {
-    game.scores[option.target][game.playerId] += 0.15;
-  }
+  return null;
 }
 
 // ─── Recruiting (Sam, 2026-10-24) ───────────────────────────────────────────
