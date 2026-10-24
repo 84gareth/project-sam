@@ -59,15 +59,18 @@ Real recordings for every tap, the chalkboards, the drum roll, the reveal
 (crying and booing for a Faithful, cheering for a Traitor), the night and
 the letter: `docs/sound-spec.md`.
 
-## Phase 4.5: Walk around the castle (paper puppets)
+## Phase 4.5: Walk around the castle (paper puppets) — built (v0.6.0)
 Agreed 2026-10-24 (Sam: "actually move around the castle and actually see
 the other characters moving around"; Gareth picked paper puppets). Sam's
 drawings cut out like stickers, wobbling as they walk through side-on rooms.
-- Tap where to go; tap someone to chat
+- ✅ Tap where to go; tap someone to chat (`js/puppets.js`, pure, tested)
 - ✅ Rooms: great hall, library, garden, kitchen (Gareth's pictures,
   `assets/rooms/`)
-- Others walk room to room and sometimes chat to each other
-- Characters without a drawing yet: a cut-out of their coloured circle
+- ✅ Others walk room to room and sometimes stop to chat ("..." bubbles)
+- ✅ Characters without a drawing yet: their coloured circle as a paper badge
+- ✅ Drawings cut out like stickers (`tools/image-fix/cutout.gd` ->
+  `assets/puppets/`); they wobble as they walk
+- Gate: Sam plays it
 
 ## Phase 5: Missions and the prize pot
 Mini-games in the day that win money for the pot.

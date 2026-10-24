@@ -21,17 +21,30 @@ async function toCastle(seed) {
 }
 const visible = (doc, id) => !doc.getElementById(id).hidden;
 
-test("the train takes you to the castle: everyone else is there to chat to", async () => {
-  const { doc } = await toCastle(seedFor("pepper", FAITHFUL));
+test("the train takes you to the castle: everyone else is walking round its rooms", async () => {
+  const { page, doc } = await toCastle(seedFor("pepper", FAITHFUL));
   assert.ok(visible(doc, "screen-castle"));
   assert.eq(doc.getElementById("castle-day").textContent, "Day 1 at the castle");
-  assert.eq(doc.querySelectorAll("#castle-cards .card").length, 21, "21 others");
+  assert.eq(Object.keys(page.world.people).length, 21, "21 others in the castle");
+  assert.eq(doc.getElementById("room-name").textContent, "Great hall", "Sam starts in the great hall");
+  await until(() => doc.querySelectorAll(".puppet:not(.me)").length > 0, "puppets in the room");
+  const here = Object.entries(page.world.people).filter(([, p]) => p.room === "hall").length;
+  assert.eq(doc.querySelectorAll(".puppet:not(.me)").length, here, "everyone in the hall is drawn");
+  assert.eq(doc.querySelectorAll(".puppet.me").length, 1, "and Sam");
   assert.notOk(visible(doc, "fellows"), "a Faithful doesn't see any Traitors");
+});
+
+test("a door takes you into the next room", async () => {
+  const { page, doc } = await toCastle(seedFor("pepper", FAITHFUL));
+  doc.getElementById("door-right").click();
+  await until(() => page.world.me.room === "library", "walked into the library", 8000);
+  await until(() => doc.getElementById("room-name").textContent === "Library", "the library is shown");
 });
 
 test("chat: tap someone, ask all four questions, they answer", async () => {
   const { page, doc } = await toCastle(seedFor("pepper", FAITHFUL));
-  doc.querySelector("#castle-cards .card").click();
+  await until(() => doc.querySelector(".puppet:not(.me)"), "someone to chat to");
+  doc.querySelector(".puppet:not(.me)").click();
   assert.ok(visible(doc, "screen-chat"));
   const buttons = doc.querySelectorAll("#questions .question");
   assert.eq(buttons.length, 4);
@@ -52,8 +65,9 @@ test("a Traitor sees the other two Traitors", async () => {
   assert.ok(visible(doc, "fellows"));
   const others = page.game.players.filter((p) => p.side === TRAITOR && p.id !== "pepper");
   assert.eq(others.length, 2);
+  const { CHARACTERS } = await import("../../js/characters.js");
   for (const o of others) {
-    const name = doc.querySelector(`#castle-cards .card[data-id="${o.id}"] .card-name`).textContent;
+    const name = CHARACTERS.find((c) => c.id === o.id).name;
     assert.ok(doc.getElementById("fellows").textContent.includes(name), name);
   }
 });
@@ -117,9 +131,10 @@ test("Round Table: vote, everyone shows a chalkboard, drum roll, reveal, next da
   assert.eq(gone, [out.banished, murdered].sort(), "the banished and the murdered, greyed out with a red X");
   doc.getElementById("start-day").click();
   assert.eq(doc.getElementById("castle-day").textContent, "Day 2 at the castle");
-  assert.eq(doc.querySelectorAll("#castle-cards .card").length, 19, "two fewer to chat to");
-  assert.notOk(doc.querySelector(`#castle-cards .card[data-id="${out.banished}"]`), "the banished one has gone");
-  assert.notOk(doc.querySelector(`#castle-cards .card[data-id="${murdered}"]`), "the murdered one has gone");
+  await until(() => doc.querySelector(".puppet.me"), "back in the castle");
+  for (const gone of [out.banished, murdered]) {
+    assert.notOk(doc.querySelector(`.puppet[data-id="${gone}"]`), `${gone} has gone from the castle`);
+  }
 });
 
 test("a Faithful who is murdered gets the letter", async () => {
@@ -173,7 +188,8 @@ test("every chat answer is spoken, in that character's own voice every time", as
   const { voiceFor } = await import("../../js/voice.js");
   const { page, doc } = await toCastle(seedFor("pepper", FAITHFUL));
   const said = listen(page);
-  const cardEl = doc.querySelector("#castle-cards .card");
+  await until(() => doc.querySelector(".puppet:not(.me)"), "someone to chat to");
+  const cardEl = doc.querySelector(".puppet:not(.me)");
   const id = cardEl.dataset.id;
   cardEl.click();
   for (const b of doc.querySelectorAll("#questions .question")) b.click();

@@ -194,11 +194,14 @@ so, kindly.
   or a short wait. If it keeps biting, version-stamp the imports.
 - **iPad Safari only speaks (and plays sound) after a tap.** Call `say()`
   and `drumRoll()` from tap handlers, never on a timer started earlier.
+- **Browsers pause animation frames in hidden or off-screen pages**, and
+  headless Chrome may never send them. The puppet castle has a backup
+  timer that keeps it moving; the test frame sits on-screen at 2% opacity.
 - **Test the crash trap when changing the runner.** Without it, a test that
   crashes partway can look like a pass (learned in Project 2126).
 
 ## Current status
-Updated 2026-10-24 (v0.5.4).
+Updated 2026-10-24 (v0.6.0).
 - **Phase 0 (web setup) done.** Tests in headless Chrome; GitHub Pages;
   Turbo Town archived.
 - **Phase 1 done.** The game: like The Traitors, starting at Havenbrook
@@ -213,9 +216,10 @@ Updated 2026-10-24 (v0.5.4).
 - **Sound effects (v0.5.0)**: real Mixkit recordings, `docs/sound-spec.md`.
   Every line is voiced, plus a storyteller; Traitors whisper to a Traitor
   Sam (v0.5.2). Panels are see-through so the pictures show.
-- **Next: walk around the castle as paper puppets** (Sam and Gareth's
-  pick). Sam's answers: tap where to go; rooms are the great hall, library,
-  garden and kitchen; others wander and sometimes chat to each other.
+- **The paper puppet castle (v0.6.0)**: walk the kitchen, great hall,
+  library and garden (`js/puppets.js` rules, rendering in `castle-ui.js`).
+  New drawings need a cut-out too: run `tools/image-fix/cutout.gd` for
+  them (see `docs/characters.md`).
 - **Phase 4 (the night) built, waiting for Sam (v0.4.0).** Traitors'
   meeting, the letter, breakfast; tactical voting (`docs/night-spec.md`).
 - **Roadmap OK'd by Gareth.** Sam draws the 22 pictures as we go (14 of 22

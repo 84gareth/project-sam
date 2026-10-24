@@ -4,7 +4,11 @@ Made up by Claude, 2026-10-24. Sam approved every one: "put all of them
 in the game!!!" The game's copy is `js/characters.js`.
 
 ## Sam's drawings
-Gareth sends photos as Sam finishes them. Messy backgrounds: `clean_paper.gd`
+Gareth sends photos as Sam finishes them. Every new drawing also needs its
+puppet cut-out for the castle:
+`Godot --headless --path tools/image-fix --script res://cutout.gd -- "$PWD" <id>`
+(run from the project folder; run it under bash, as zsh won't split a list
+of ids). Messy backgrounds: `clean_paper.gd`
 keeps only pen (dark) and crayon (colourful) and makes the rest plain paper;
 `fix_edge.gd` paints out a cut line; `paint_rect.gd` a box (all in
 `tools/image-fix/`). Each is cropped to the drawing

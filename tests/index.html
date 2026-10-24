@@ -5,7 +5,9 @@
   <title>Tests</title>
   <style>
     body { font: 14px/1.4 ui-monospace, Menlo, monospace; margin: 16px; }
-    iframe { position: absolute; left: -10000px; }
+    /* On screen but almost invisible: browsers pause animation in frames
+       placed off-screen, and the puppet castle needs it. */
+    iframe { position: fixed; left: 0; top: 0; opacity: 0.02; pointer-events: none; z-index: -1; }
   </style>
 </head>
 <body>
@@ -18,6 +20,7 @@
       "unit/test_game.js",
       "unit/test_castle.js",
       "unit/test_voice.js",
+      "unit/test_puppets.js",
       "live/test_page_live.js",
       "live/test_start_live.js",
       "live/test_castle_live.js",

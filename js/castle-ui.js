@@ -5,16 +5,24 @@ import {
   arriveAtCastle, answer, roundTable, winner, stillIn, isTraitor, QUESTIONS,
   night, murderIdeas, breakfastGroups, tableTalk, talkOptions, playerSays,
 } from "./castle.js";
-import { $, show, badge, card, character, wait } from "./ui.js";
+import { $, show, badge, card, character, wait, FAST } from "./ui.js";
+import {
+  ROOMS, FLOOR, createWorld, step, tapTo, walkUpTo, nextTo, neighbour, peopleIn,
+} from "./puppets.js";
 import { say, narrate, voicesOn, setVoices } from "./voice.js";
 import { drumRoll, play } from "./sound.js";
 
 let game = null;
 let tableVote = null;
 
+let world = null;
+let chatTarget = null;
+
 export function goToCastle(g) {
   game = arriveAtCastle(g);
   window.game = game;
+  world = createWorld(game, Math.random);
+  window.world = world;
   showVoicesButton();
   startDay();
 }
@@ -34,18 +42,128 @@ function startDay() {
   } else {
     $("fellows").hidden = true;
   }
-  const cards = $("castle-cards");
-  cards.replaceChildren();
-  for (const id of stillIn(game).filter((id) => id !== me)) {
-    const el = card(character(id), "Tap to chat");
-    el.addEventListener("click", () => openChat(id));
-    cards.append(el);
-  }
+  backToCastle();
+}
+
+// ─── The paper puppet castle ────────────────────────────────────────────────
+
+let shownRoom = null;
+let looping = false;
+let lastTime = 0;
+
+function backToCastle() {
+  chatTarget = null;
   show("screen-castle");
+  render();
+  if (!looping) {
+    looping = true;
+    lastTime = performance.now();
+    requestAnimationFrame(tick);
+  }
+}
+
+// A backup: if the browser stops sending animation frames (a hidden or
+// headless page), keep the castle moving anyway.
+setInterval(() => {
+  if (looping && performance.now() - lastTime > 150) tick(performance.now(), true);
+}, 100);
+
+function tick(now, fromBackup = false) {
+  if ($("screen-castle").hidden) { looping = false; return; }
+  const dt = Math.min(0.1, (now - lastTime) / 1000);
+  lastTime = now;
+  step(world, stillIn(game), dt, Math.random);
+  if (chatTarget && nextTo(world, chatTarget)) {
+    const id = chatTarget;
+    chatTarget = null;
+    openChat(id);
+  }
+  render();
+  if (!fromBackup) requestAnimationFrame(tick);
+}
+
+// One puppet: Sam's cut-out drawing (or a paper badge until he draws them),
+// with their name underneath.
+function puppetEl(id) {
+  const c = character(id);
+  const el = document.createElement("div");
+  el.className = "puppet" + (id === game.playerId ? " me" : "");
+  el.dataset.id = id;
+  const body = document.createElement("div");
+  body.className = "puppet-body";
+  if (c.picture) {
+    const img = document.createElement("img");
+    img.src = `assets/puppets/${id}.png`;
+    img.alt = c.name;
+    img.draggable = false;
+    body.append(img);
+  } else {
+    const paper = badge(c);
+    paper.classList.add("puppet-badge");
+    body.append(paper);
+  }
+  const label = document.createElement("span");
+  label.className = "puppet-name";
+  label.textContent = id === game.playerId ? "You" : c.name;
+  const dots = document.createElement("span");
+  dots.className = "puppet-chat";
+  dots.textContent = "...";
+  el.append(dots, body, label);
+  if (id !== game.playerId) {
+    el.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (FAST) return openChat(id);
+      chatTarget = id;
+      walkUpTo(world, id);
+    });
+  }
+  return el;
+}
+
+// Draw the room Sam is in, and everyone in it, where they are now.
+function render() {
+  const room = world.me.room;
+  const left = neighbour(room, "left");
+  const right = neighbour(room, "right");
+  const here = stillIn(game);
+  if (room !== shownRoom) {
+    shownRoom = room;
+    const r = ROOMS.find((x) => x.id === room);
+    $("room-picture").src = r.picture;
+    $("room-name").textContent = r.name;
+    $("puppets").replaceChildren();
+  }
+  const count = (rm) => (rm ? peopleIn(world, rm, here).length : 0);
+  const roomName = (rm) => ROOMS.find((x) => x.id === rm).name;
+  $("door-left").hidden = !left;
+  $("door-right").hidden = !right;
+  if (left) $("door-left").textContent = `< ${roomName(left)} (${count(left)})`;
+  if (right) $("door-right").textContent = `${roomName(right)} (${count(right)}) >`;
+
+  const ids = [...peopleIn(world, room, here), game.playerId];
+  const box = $("puppets");
+  for (const el of [...box.children]) if (!ids.includes(el.dataset.id)) el.remove();
+  for (const id of ids) {
+    let el = box.querySelector(`[data-id="${id}"]`);
+    if (!el) { el = puppetEl(id); box.append(el); }
+    const p = id === game.playerId ? world.me : world.people[id];
+    const depth = (p.y - FLOOR.top) / (FLOOR.bottom - FLOOR.top);
+    el.style.left = `${p.x * 100}%`;
+    el.style.top = `${p.y * 100}%`;
+    el.style.height = `${(0.34 + 0.12 * depth) * 100}%`;
+    el.style.zIndex = String(Math.round(p.y * 1000));
+    const moving = id === game.playerId ? p.walking : p.mode === "walk";
+    el.classList.toggle("walking", moving);
+    el.classList.toggle("flip", p.facing === "left");
+    el.classList.toggle("chatting", p.mode === "chat" && id !== chatTarget);
+  }
 }
 
 function openChat(id) {
   const c = character(id);
+  // They stop to talk while you chat.
+  const them = world && world.people[id];
+  if (them) { them.mode = "chat"; them.timer = 3; them.with = game.playerId; }
   $("chat-picture").replaceChildren(badge(c, true));
   $("chat-name").textContent = c.name;
   $("bubble").hidden = true;
@@ -393,8 +511,15 @@ $("voices").addEventListener("click", () => {
 });
 $("chat-back").addEventListener("click", () => {
   if (window.speechSynthesis) window.speechSynthesis.cancel();
-  show("screen-castle");
+  backToCastle();
 });
+// Tap the floor to walk; a door to change room.
+$("stage").addEventListener("click", (e) => {
+  const box = $("stage").getBoundingClientRect();
+  tapTo(world, (e.clientX - box.left) / box.width, (e.clientY - box.top) / box.height);
+});
+$("door-left").addEventListener("click", (e) => { e.stopPropagation(); tapTo(world, 0, world.me.y); });
+$("door-right").addEventListener("click", (e) => { e.stopPropagation(); tapTo(world, 1, world.me.y); });
 $("to-table").addEventListener("click", roundTableTalk);
 $("to-vote").addEventListener("click", goToTable);
 $("cast-vote").addEventListener("click", castVote);

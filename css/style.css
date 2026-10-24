@@ -363,3 +363,59 @@ button.small {
 .talk-bubble { margin: 0; background: rgba(255, 255, 255, 0.92); color: #1c1f29; padding: 10px 16px; border-radius: 16px; font-size: 19px; }
 /* Votes so far, during the chalkboards */
 .tally { position: fixed; left: 50%; top: 40%; transform: translate(-50%, -50%); margin: 0; background: rgba(15, 20, 15, 0.92); border: 6px solid #8a5a33; border-radius: 10px; padding: 18px 28px; font: 28px "Chalkboard SE", "Chalkboard", "Comic Sans MS", cursive; color: #f4f4ec; text-align: center; animation: pop 0.3s ease-out; max-width: 80vw; }
+
+/* ─── The paper puppet castle ───────────────────────────────────────────── */
+.castle { background: #0d0f14; padding: 0; justify-content: center; }
+/* The room picture at its own shape (16:9), as big as fits; puppets are
+   placed in fractions of it, so feet land on the floor at any screen size. */
+.stage {
+  position: relative;
+  width: min(100vw, calc(100vh * 16 / 9));
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  touch-action: none;
+}
+.room-picture { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; user-select: none; -webkit-user-drag: none; }
+.puppets { position: absolute; inset: 0; }
+.puppet {
+  position: absolute;
+  transform: translate(-50%, -100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+}
+.puppet-body { height: 100%; display: flex; align-items: flex-end; transform-origin: 50% 100%; }
+.puppet-body img { height: 100%; filter: drop-shadow(0 4px 3px rgba(0, 0, 0, 0.55)); }
+.puppet.flip .puppet-body img { transform: scaleX(-1); }
+.puppet-badge { width: 70px; height: 70px; font-size: 26px; border: 4px solid #f4f1ea; box-shadow: 0 4px 6px rgba(0,0,0,0.5); }
+/* Paper puppets wobble side to side as they walk. */
+.puppet.walking .puppet-body { animation: waddle 0.45s ease-in-out infinite; }
+@keyframes waddle {
+  0%, 100% { transform: rotate(-6deg) translateY(0); }
+  50% { transform: rotate(6deg) translateY(-4%); }
+}
+.puppet-name { margin-top: 2px; font-size: 12px; font-weight: 700; white-space: nowrap; background: rgba(0, 0, 0, 0.55); padding: 1px 6px; border-radius: 8px; }
+.puppet.me .puppet-name { background: var(--accent); color: #1c1f29; }
+.puppet-chat { visibility: hidden; position: absolute; top: -8px; background: #fff; color: #1c1f29; font-weight: 800; padding: 0 8px; border-radius: 10px; }
+.puppet.chatting .puppet-chat { visibility: visible; animation: pop 0.3s ease-out; }
+.door {
+  position: absolute;
+  top: 55%;
+  min-height: 52px;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 12px;
+  background: rgba(20, 22, 30, 0.75);
+  color: #fff;
+  font: 700 16px -apple-system, system-ui, sans-serif;
+  z-index: 2000;   /* always above the puppets */
+}
+.door-left { left: 6px; }
+.door-right { right: 6px; }
+/* The words sit over the picture, top and bottom. */
+.castle-top { position: absolute; top: max(8px, env(safe-area-inset-top)); left: 12px; right: 12px; width: auto; }
+.castle .fellows { position: absolute; top: 60px; }
+.room-name { position: absolute; top: 64px; right: 16px; margin: 0; font-size: 20px; font-weight: 700; text-shadow: 0 2px 6px #000; }
+.walk-hint { position: absolute; bottom: 86px; text-shadow: 0 2px 6px #000; }
+.table-button { position: absolute; bottom: max(14px, env(safe-area-inset-bottom)); }

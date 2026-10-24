@@ -39,16 +39,24 @@
     <button id="to-castle" class="big">All aboard!</button>
   </section>
 
-  <!-- 4. The castle: chat to anyone (castle-ui.js). -->
+  <!-- 4. The castle: walk around the rooms as a paper puppet (castle-ui.js,
+       puppets.js). Tap the floor to walk, a door to change room, someone to
+       chat. -->
   <section id="screen-castle" class="screen castle" hidden>
-    <div class="topbar">
+    <div id="stage" class="stage">
+      <img id="room-picture" class="room-picture" alt="">
+      <div id="puppets" class="puppets"></div>
+      <button id="door-left" class="door door-left"></button>
+      <button id="door-right" class="door door-right"></button>
+    </div>
+    <div class="topbar castle-top">
       <h2 id="castle-day">Day 1 at the castle</h2>
       <button id="voices" class="small">Voices: On</button>
     </div>
     <p id="fellows" class="fellows" hidden></p>
-    <p class="hint">Tap someone to chat.</p>
-    <div id="castle-cards" class="cards"></div>
-    <button id="to-table" class="big">Go to the Round Table</button>
+    <p id="room-name" class="room-name"></p>
+    <p class="hint walk-hint">Tap the floor to walk. Tap someone to chat.</p>
+    <button id="to-table" class="big table-button">Go to the Round Table</button>
   </section>
 
   <!-- 5. A chat: pick a question, they answer. -->
