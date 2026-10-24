@@ -21,4 +21,24 @@ Yes:
 
 No: Memory Match, Train Timetable.
 
-Still to come: 2 more missions, Sam's own ideas.
+## Sam's own missions (2026-10-24)
+
+In Sam's words, then his answers:
+
+- **Cooking Challenge** (Sam): "3 trucks with healthy stuff, meat, and
+  dessert. You have to cook a meal and there's a secret box in each truck
+  that contains a shield. If you have a least favourite food that gets used
+  then you get money."
+  Every character has a least favourite food. Cook it for them, you get money.
+- **Catapults** (Sam): "fire catapults at pictures of the other players, if
+  you hit them they're up for murder that night. There's a shield and if you
+  hit it nobody gets it." Everyone fires.
+  Open: who wins the shield if nobody hits it?
+- **Lights Out** (Sam): "the lights go out in a room and the traitors have
+  to build a picture of a shield from pieces without seeing it properly."
+  Everyone builds, Faithfuls too; the best builder wins the shield.
+
+## How many
+
+13 missions for 12 days: each game picks 12 at random, so one is left out
+each time (Sam and Gareth: "We might add more later").
