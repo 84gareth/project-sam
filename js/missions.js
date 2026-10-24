@@ -73,7 +73,7 @@ function rng(game, ...parts) {
 }
 
 // The missions this game plays, in order (a seeded shuffle of the built
-// ones; with 13 built, 12 of them).
+// ones: 11 of the 13, one for each of days 2 to 12).
 export function missionOrder(game) {
   const pool = MISSIONS.filter((m) => m.built);
   const r = rng(game, "missions");
@@ -81,12 +81,14 @@ export function missionOrder(game) {
     const j = Math.floor(r() * (i + 1));
     [pool[i], pool[j]] = [pool[j], pool[i]];
   }
-  return pool.slice(0, DAYS);
+  return pool.slice(0, DAYS - 1);
 }
 
+// No mission on day 1 (Gareth, 2026-10-24): days 2 to 12 have one each.
 export function todaysMission(game) {
+  if (game.day < 2) return null;
   const order = missionOrder(game);
-  return order[(game.day - 1) % order.length];
+  return order[(game.day - 2) % order.length];
 }
 
 // A computer player's score today, 0 to 1: skill plus luck.

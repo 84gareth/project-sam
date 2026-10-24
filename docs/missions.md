@@ -92,6 +92,11 @@ has gone, there's no note.
   flicker while you put its 9 pieces back (tap a piece, then its place).
   45 seconds. Everyone builds; the best builder wins the shield.
 
+## No mission on day 1 (Gareth, v0.11.1)
+
+Day 1 goes straight to the castle. Days 2 to 12 have a mission each, so a
+game plays 11 of the 13.
+
 ## How many
 
 13 missions for 12 days: each game picks 12 at random, so one is left out

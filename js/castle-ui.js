@@ -33,9 +33,11 @@ export function goToCastle(g) {
 
 // ─── Chatting ───────────────────────────────────────────────────────────────
 
-// Each day starts with its mission, then the castle.
+// Each day from day 2 starts with its mission, then the castle.
+// (No mission on day 1: Gareth.)
 function startDay() {
-  startMission(game, enterCastle);
+  if (game.day === 1) enterCastle();
+  else startMission(game, enterCastle);
 }
 
 function enterCastle() {

@@ -32,8 +32,7 @@ async function toCastle(seed) {
   doc.querySelectorAll("#cards .card")[4].click();
   doc.getElementById("choose").click();
   doc.getElementById("to-castle").click();
-  await until(() => !doc.getElementById("screen-mission").hidden, "the train ride arrives at the mission", 8000);
-  await flopMission(page, doc);
+  await until(() => !doc.getElementById("screen-castle").hidden, "the train ride arrives at the castle (no mission on day 1)", 8000);
   return { page, doc };
 }
 
@@ -377,34 +376,22 @@ test("All aboard! plays the train ride before the castle", async () => {
   doc.getElementById("choose").click();
   doc.getElementById("to-castle").click();
   assert.ok(visible(doc, "screen-train"), "the train ride shows first");
-  await until(() => visible(doc, "screen-mission"), "then the day's mission", 8000);
-  await flopMission(page, doc);
-  assert.ok(visible(doc, "screen-castle"), "then the castle");
+  await until(() => visible(doc, "screen-castle"), "then the castle: no mission on day 1", 8000);
 });
 
-// Find a seed whose day-1 mission is `id`.
-function missionSeed(id) {
-  for (let seed = 1; seed <= 1000; seed++) {
-    const g = arriveAtCastle(newGame("pepper", seed));
-    if (todaysMission(g).id === id) return seed;
-  }
-  throw new Error(`no seed starts with ${id}`);
-}
-
-async function toMission(seed) {
-  const page = await openPage(`../index.html?seed=${seed}&fast=1`);
+// Straight to one mission, through the debug menu.
+async function toMission(id, seed = 3) {
+  const page = await openPage(`../index.html?debug&seed=${seed}&fast=1`);
   const doc = page.document;
-  await until(() => doc.querySelectorAll(".card").length === 22, "cards built");
-  doc.getElementById("start").click();
-  doc.querySelectorAll("#cards .card")[4].click();
-  doc.getElementById("choose").click();
-  doc.getElementById("to-castle").click();
-  await until(() => visible(doc, "screen-mission"), "the mission", 8000);
+  await until(() => visible(doc, "debug"), "the Test a mission button");
+  doc.getElementById("debug").click();
+  doc.querySelector(`#debug-missions [data-mission="${id}"]`).click();
+  assert.ok(visible(doc, "screen-mission"));
   return { page, doc };
 }
 
 test("Castle Bells: ring every tune back right and you win the shield", async () => {
-  const { page, doc } = await toMission(missionSeed("bells"));
+  const { page, doc } = await toMission("bells");
   assert.ok(doc.getElementById("mission-name").textContent.includes("Castle Bells"));
   doc.getElementById("mission-go").click();
   const tune = bellTune(page.game);
@@ -419,11 +406,11 @@ test("Castle Bells: ring every tune back right and you win the shield", async ()
   assert.gt(page.game.pot, 0);
   assert.ok(doc.getElementById("mission-pot").textContent.includes("£"));
   doc.getElementById("mission-done").click();
-  assert.ok(visible(doc, "screen-castle"));
+  assert.ok(visible(doc, "screen-debug"), "back to the test menu");
 });
 
 test("Chilli Pie Shuffle: follow the chilli pie three times", async () => {
-  const { page, doc } = await toMission(missionSeed("pies"));
+  const { page, doc } = await toMission("pies");
   assert.ok(doc.getElementById("mission-name").textContent.includes("Chilli Pie"));
   doc.getElementById("mission-go").click();
   for (let round = 0; round < 3; round++) {
@@ -519,7 +506,7 @@ test("everyone walks to the Round Table in slow motion, to drums", async () => {
 });
 
 test("Catapults: whoever is under the red line when you fire gets hit, and is up for murder", async () => {
-  const { page, doc } = await toMission(missionSeed("catapults"));
+  const { page, doc } = await toMission("catapults");
   doc.getElementById("mission-go").click();
   const wall = doc.getElementById("wall");
   const hit = [];
@@ -535,7 +522,7 @@ test("Catapults: whoever is under the red line when you fire gets hit, and is up
 });
 
 test("Catapults: hit the shield and it breaks", async () => {
-  const { page, doc } = await toMission(missionSeed("catapults"));
+  const { page, doc } = await toMission("catapults");
   doc.getElementById("mission-go").click();
   const wall = doc.getElementById("wall");
   await until(() => wall.dataset.aim === "shield", "the shield lined up", 20000);
@@ -548,7 +535,7 @@ test("Catapults: hit the shield and it breaks", async () => {
 });
 
 test("Cooking: cook their hated food and find the shield", async () => {
-  const { page, doc } = await toMission(missionSeed("cooking"));
+  const { page, doc } = await toMission("cooking");
   doc.getElementById("mission-go").click();
   const diner = cookingDiner(page.game, stillIn(page.game));
   assert.ok(doc.getElementById("diner-clue").textContent.includes(HATES[diner][1]), "the clue shows");
@@ -567,7 +554,7 @@ test("Cooking: cook their hated food and find the shield", async () => {
 // ─── The other nine missions, played well ───────────────────────────────────
 
 async function playMission(id) {
-  const { page, doc } = await toMission(missionSeed(id));
+  const { page, doc } = await toMission(id);
   doc.getElementById("mission-go").click();
   return { page, doc, box: doc.querySelector("#mission-play .mission-box") };
 }

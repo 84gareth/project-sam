@@ -24,12 +24,16 @@ test("all 13 of Sam's missions are listed, and every game plays them in its own 
   assert.gt(orders.size, 1, "different games, different orders");
 });
 
-test("there's a mission every day", () => {
+test("a mission every day from day 2, all different; none on day 1", () => {
   const g = castle(3);
-  for (let day = 1; day <= 12; day++) {
+  assert.eq(todaysMission(g), null, "day 1");
+  const seen = new Set();
+  for (let day = 2; day <= 12; day++) {
     g.day = day;
     assert.ok(todaysMission(g).built);
+    seen.add(todaysMission(g).id);
   }
+  assert.eq(seen.size, 11);
 });
 
 test("everyone has a skill entry, and Max Muddle is bad at memory", () => {
@@ -51,13 +55,14 @@ test("good players score better than bad ones, on average", () => {
 
 test("the pot grows, and the best player wins the shield", () => {
   const g = castle(5);
+  g.day = 2;
   const r = finishMission(g, 1, stillIn(g));
   assert.eq(r.scores.length, 22, "everyone still in plays");
   assert.eq(r.shield, r.scores[0][0], "best score wins it");
   assert.gt(r.won, 0);
   assert.eq(r.won % 500, 0, "rounded to £500");
   assert.eq(g.pot, r.won);
-  g.day = 2;
+  g.day = 3;
   const r2 = finishMission(g, 0, stillIn(g));
   assert.eq(g.pot, r.won + r2.won, "the pot adds up");
   assert.ne(r2.shield, "dot", "a score of 0 doesn't win");
@@ -65,6 +70,7 @@ test("the pot grows, and the best player wins the shield", () => {
 
 test("a perfect Sam wins the shield", () => {
   const g = castle(8);
+  g.day = 2;
   assert.eq(finishMission(g, 1.01, stillIn(g)).shield, "dot");
 });
 
@@ -217,11 +223,11 @@ function fewDaysIn(seed) {
   return g;
 }
 
-test("all 13 missions are built, and a game plays 12 of them", () => {
+test("all 13 missions are built, and a game plays 11 of them", () => {
   assert.ok(MISSIONS.every((m) => m.built && m.how));
   const order = missionOrder(castle(1));
-  assert.eq(order.length, 12);
-  assert.eq(new Set(order.map((m) => m.id)).size, 12, "no repeats");
+  assert.eq(order.length, 11);
+  assert.eq(new Set(order.map((m) => m.id)).size, 11, "no repeats");
 });
 
 test("notes: from people who've gone, murdered first; naming who they suspected", () => {
