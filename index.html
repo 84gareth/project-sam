@@ -84,11 +84,46 @@
     <h2 id="banished-name"></h2>
     <p id="reveal" class="reveal"></p>
     <div id="after-reveal" hidden>
-      <button id="next-day" class="big">Next day</button>
+      <button id="next-day" class="big">Night falls...</button>
     </div>
     <div id="game-over" class="game-over" hidden>
       <p id="game-over-text"></p>
       <button id="play-again" class="big">Play again</button>
+    </div>
+  </section>
+
+  <!-- 9. Night, for a Faithful: wait... is there a letter? -->
+  <section id="screen-night" class="screen night" hidden>
+    <h2 id="night-title">Night falls...</h2>
+    <p id="night-text" class="night-text">The Traitors are meeting in secret.</p>
+    <div id="letter" class="letter" hidden>
+      <p>By order of the Traitors,</p>
+      <p class="letter-big">you have been murdered.</p>
+    </div>
+    <button id="to-breakfast" class="big" hidden>Go to breakfast</button>
+    <div id="night-over" class="game-over" hidden>
+      <button id="night-play-again" class="big">Play again</button>
+    </div>
+  </section>
+
+  <!-- 10. Night, for a Traitor: the secret meeting. You pick. -->
+  <section id="screen-traitors" class="screen traitors-room" hidden>
+    <h2>The Traitors' secret meeting</h2>
+    <div id="traitor-ideas" class="ideas"></div>
+    <p class="hint">Who will the Traitors murder tonight? You pick.</p>
+    <div id="victim-cards" class="cards"></div>
+    <button id="murder" class="big" disabled>Send the letter</button>
+  </section>
+
+  <!-- 11. Breakfast: people arrive in little groups. Who's missing? -->
+  <section id="screen-breakfast" class="screen breakfast" hidden>
+    <h2>Breakfast</h2>
+    <div id="arrivals" class="arrivals"></div>
+    <p id="missing" class="most-votes" hidden></p>
+    <button id="start-day" class="big" hidden>Start the day</button>
+    <div id="breakfast-over" class="game-over" hidden>
+      <p id="breakfast-over-text"></p>
+      <button id="breakfast-play-again" class="big">Play again</button>
     </div>
   </section>
 

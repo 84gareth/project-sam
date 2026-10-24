@@ -43,9 +43,14 @@ The Round Table: chat to people (some act sneaky), everyone votes, the one
 banished shows if they were a Traitor. The core of the game: fun first.
 Characters speak with the iPad's own voices.
 
-## Phase 4: The night train
-The Traitors send someone home on the train each night. If Sam is a
-Traitor, he helps choose.
+## Phase 4: The night — built, waiting for Sam (v0.4.0)
+Spec: `docs/night-spec.md`.
+- ✅ The Traitors' secret meeting; Sam picks if he's a Traitor
+- ✅ The letter: "By order of the Traitors, you have been murdered."
+- ✅ Breakfast in little groups; who never came?
+- ✅ Tactical voting (Gareth's request): crowd, staying safe, unsure
+- Pictures for the Traitors' room and breakfast (prompts given)
+- Gate: Sam plays it
 
 ## Phase 5: Missions and the prize pot
 Mini-games in the day that win money for the pot.

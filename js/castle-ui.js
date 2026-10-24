@@ -3,6 +3,7 @@
 import { TRAITOR, FAITHFUL } from "./game.js";
 import {
   arriveAtCastle, answer, roundTable, winner, stillIn, isTraitor, QUESTIONS,
+  night, murderIdeas, breakfastGroups,
 } from "./castle.js";
 import { $, show, badge, card, character, wait } from "./ui.js";
 import { say, voicesOn, setVoices } from "./voice.js";
@@ -167,6 +168,106 @@ function gameOver(text) {
   $("game-over").hidden = false;
 }
 
+// ─── The night ──────────────────────────────────────────────────────────────
+
+let victimPick = null;
+
+async function goNight() {
+  const me = game.playerId;
+  if (game.playerSide === TRAITOR) return traitorsMeeting();
+  // A Faithful waits in their room... is there a letter?
+  $("night-title").textContent = "Night falls...";
+  $("night-text").textContent = "The Traitors are meeting in secret.";
+  $("letter").hidden = true;
+  $("to-breakfast").hidden = true;
+  $("night-over").hidden = true;
+  show("screen-night");
+  const victim = night(game);
+  await wait(1800);
+  if (victim === me) {
+    $("night-text").textContent = "There's a letter under your door...";
+    await wait(1200);
+    $("letter").hidden = false;
+    $("night-over").hidden = false;
+  } else {
+    $("night-text").textContent = "Phew! No letter for you tonight.";
+    $("to-breakfast").hidden = false;
+  }
+}
+
+// Sam is a Traitor: the other Traitors give ideas, Sam picks.
+function traitorsMeeting() {
+  victimPick = null;
+  $("murder").disabled = true;
+  const ideas = murderIdeas(game);
+  const fellows = stillIn(game).filter((id) => id !== game.playerId && isTraitor(game, id));
+  const box = $("traitor-ideas");
+  box.replaceChildren();
+  fellows.forEach((f, i) => {
+    const idea = character(ideas[Math.min(i, ideas.length - 1)]).name;
+    const p = document.createElement("p");
+    p.className = "idea";
+    p.textContent = `${character(f).name}: "Let's pick ${idea}. They're getting close to us!"`;
+    box.append(p);
+  });
+  if (fellows.length === 0) {
+    const p = document.createElement("p");
+    p.className = "idea";
+    p.textContent = "You're the last Traitor. It's all up to you!";
+    box.append(p);
+  }
+  const cards = $("victim-cards");
+  cards.replaceChildren();
+  for (const id of ideas) {
+    const el = card(character(id), null);
+    el.addEventListener("click", () => {
+      victimPick = id;
+      for (const other of cards.children) other.classList.toggle("picked", other === el);
+      $("murder").disabled = false;
+    });
+    cards.append(el);
+  }
+  show("screen-traitors");
+}
+
+// Breakfast: little groups walk in. The murdered one never comes.
+async function breakfast(victim) {
+  const arrivals = $("arrivals");
+  arrivals.replaceChildren();
+  $("missing").hidden = true;
+  $("start-day").hidden = true;
+  $("breakfast-over").hidden = true;
+  show("screen-breakfast");
+  for (const group of breakfastGroups(game)) {
+    await wait(900);
+    const row = document.createElement("div");
+    row.className = "arrival";
+    for (const id of group) {
+      const who = document.createElement("div");
+      who.className = "arrival-person";
+      who.append(badge(character(id)));
+      const name = document.createElement("span");
+      name.textContent = id === game.playerId ? "You" : character(id).name;
+      who.append(name);
+      row.append(who);
+    }
+    arrivals.append(row);
+  }
+  await wait(1200);
+  const name = character(victim).name;
+  $("missing").textContent = `${name} never came to breakfast. ${name} was murdered by the Traitors!`;
+  $("missing").hidden = false;
+  const won = winner(game);
+  if (won) {
+    const traitors = game.players.filter((p) => p.side === TRAITOR).map((p) => character(p.id).name);
+    $("breakfast-over-text").textContent =
+      `${won === FAITHFUL ? "The Faithfuls win!" : "The Traitors win!"} The Traitors were ${traitors.join(", ")}.`;
+    $("breakfast-over").hidden = false;
+  } else {
+    $("start-day").hidden = false;
+  }
+}
+
 // ─── Buttons ────────────────────────────────────────────────────────────────
 
 $("voices").addEventListener("click", () => {
@@ -179,5 +280,12 @@ $("chat-back").addEventListener("click", () => {
 });
 $("to-table").addEventListener("click", goToTable);
 $("cast-vote").addEventListener("click", castVote);
-$("next-day").addEventListener("click", startDay);
-$("play-again").addEventListener("click", () => location.reload());
+$("next-day").addEventListener("click", goNight);
+$("murder").addEventListener("click", () => {
+  if (victimPick) breakfast(night(game, victimPick));
+});
+$("to-breakfast").addEventListener("click", () => breakfast(game.history[game.history.length - 1].murdered));
+$("start-day").addEventListener("click", startDay);
+for (const id of ["play-again", "night-play-again", "breakfast-play-again"]) {
+  $(id).addEventListener("click", () => location.reload());
+}

@@ -228,3 +228,43 @@ button.small {
 .reveal.traitor { color: #ff7b6b; }
 .game-over { display: flex; flex-direction: column; align-items: center; gap: 12px; }
 .game-over p { font-size: 26px; font-weight: 700; margin: 0; text-align: center; text-shadow: 0 2px 6px #000; }
+
+/* 9-10. Night: the Traitors' room (castle picture, dark, until Gareth's
+   own picture arrives), and the letter. */
+.night, .traitors-room {
+  justify-content: center;
+  background: linear-gradient(rgba(8, 4, 16, 0.78), rgba(8, 4, 16, 0.78)),
+              url("../assets/castle.jpg") center / cover no-repeat;
+}
+.traitors-room { justify-content: flex-start; }
+.traitors-room .cards { background: rgba(40, 0, 0, 0.45); border-radius: 14px; padding: 8px; box-sizing: border-box; }
+.night-text { font-size: 26px; margin: 0; text-align: center; }
+.letter {
+  background: #f3ead2;
+  color: #3a1d12;
+  padding: 24px 40px;
+  border-radius: 6px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.7);
+  font-family: "Snell Roundhand", "Apple Chancery", Georgia, serif;
+  font-size: 30px;
+  text-align: center;
+  transform: rotate(-2deg);
+  animation: pop 0.4s ease-out;
+}
+.letter p { margin: 4px 0; }
+.letter-big { font-size: 40px; font-weight: 700; color: #8b1a1a; }
+.ideas { display: flex; flex-direction: column; gap: 6px; width: 100%; max-width: 760px; }
+.idea { margin: 0; background: rgba(120, 10, 10, 0.75); padding: 8px 14px; border-radius: 10px; font-size: 19px; }
+
+/* 11. Breakfast (Round Table room picture, in the morning). */
+.breakfast {
+  justify-content: flex-start;
+  background: linear-gradient(rgba(60, 40, 10, 0.35), rgba(60, 40, 10, 0.35)),
+              url("../assets/round-table.jpg") center / cover no-repeat;
+}
+.breakfast h2 { text-shadow: 0 2px 6px #000; }
+.arrivals { flex: 1; width: 100%; overflow-y: auto; touch-action: pan-y; display: flex; flex-wrap: wrap; gap: 10px; align-content: flex-start; justify-content: center; }
+.arrival { display: flex; gap: 8px; background: rgba(20, 22, 30, 0.75); padding: 8px 10px; border-radius: 14px; animation: pop 0.3s ease-out; }
+.arrival-person { display: flex; flex-direction: column; align-items: center; gap: 4px; width: 92px; font-size: 14px; font-weight: 700; text-align: center; }
+.arrival-person .portrait { height: 64px; }
+.arrival-person .badge { width: 48px; height: 48px; font-size: 18px; }

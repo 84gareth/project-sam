@@ -98,22 +98,78 @@ export function answer(game, id, question) {
       return say(r() < 0.5 ? "No way! I'm a Faithful." : "Me? No! I'm Faithful, I promise.");
     }
     case "vote": {
-      const pick = promisedVote(game, id);
-      return say(`I'll vote for ${nameOf(pick)}.`, [pick]);
+      const plan = sneaky ? traitorPlan(game, id) : votePlan(game, id);
+      const [a, b] = plan.names.map(nameOf);
+      const lines = {
+        honest: [`I'll vote for ${a}. I really think it's them.`, `${a}. I'm sure of it!`],
+        crowd: [`Lots of people are going for ${a}, so I will too.`, `Probably ${a}. Everyone's saying it.`],
+        safe: [`${a}. I don't want people looking at ME!`, `I'll go with ${a}. Better them than me...`],
+        unsure: [`I can't decide! ${a}... or maybe ${b}.`, `Hmm. ${a} or ${b}? I'll decide at the table.`],
+      }[plan.reason];
+      return say(lines[Math.floor(r() * lines.length)], plan.names);
     }
   }
   throw new Error(`no question "${question}"`);
 }
 
-// Who `id` says they'll vote for. Traitors fib about half the time: they
-// promise one name and then vote with the other Traitors.
+// Who most people have at the top of their list today: the one heading
+// for the most votes.
+export function frontRunners(game) {
+  const tops = {};
+  for (const b of brains(game)) {
+    const t = suspectList(game, b)[0];
+    tops[t] = (tops[t] || 0) + 1;
+  }
+  return Object.keys(tops).sort((a, b) => tops[b] - tops[a] || (a < b ? -1 : 1));
+}
+
+// A Faithful's plan for the Round Table (Gareth, 2026-10-24: "more intrigue,
+// tactical play, picking someone they think might get more votes to save
+// them"). Faithfuls never fib: they vote the way they say. Reasons:
+// - honest: the top of their own list;
+// - crowd:  the front-runner, if it is in their own top 3 (no wasted vote);
+// - safe:   people suspect THEM, so they pile on the front-runner to stay safe;
+// - unsure: torn between their top two; they pick the first at the table.
+// Returns { vote, reason, names } (names: who they'll mention when asked).
+export const VOTE_REASONS = { honest: 0.5, crowd: 0.25, safe: 0.1, unsure: 0.15 };
+export function votePlan(game, id) {
+  const list = suspectList(game, id);
+  const r = rng(game, "plan", game.day, id);
+  const roll = r();
+  const runners = frontRunners(game).filter((x) => x !== id);
+  const runner = runners[0] ?? list[0];
+  const suspectsMe = frontRunners(game).slice(0, 3).includes(id);
+  let reason = "honest";
+  if (roll < VOTE_REASONS.unsure) reason = "unsure";
+  else if (roll < VOTE_REASONS.unsure + VOTE_REASONS.crowd && list.slice(0, 3).includes(runner)) reason = "crowd";
+  else if (roll < VOTE_REASONS.unsure + VOTE_REASONS.crowd + VOTE_REASONS.safe && suspectsMe) reason = "safe";
+  const vote = reason === "crowd" || reason === "safe" ? runner : list[0];
+  const names = reason === "unsure" ? [list[0], list[1]] : [vote];
+  return { vote, reason, names };
+}
+
+// Who `id` says they'll vote for (the first name they mention). Faithfuls
+// mean it. Traitors fib about half the time: they promise one name and then
+// vote with the other Traitors.
 export function promisedVote(game, id) {
-  if (!isTraitor(game, id)) return suspectList(game, id)[0];
+  if (!isTraitor(game, id)) return votePlan(game, id).vote;
+  return traitorPlan(game, id).names[0];
+}
+
+// A Traitor's plan: what they'll say (with a reason, like a Faithful) and
+// how they'll really vote.
+function traitorPlan(game, id) {
   const r = rng(game, "promise", game.day, id);
   const target = traitorTarget(game);
-  if (r() < 0.5) return target;
-  const others = suspectList(game, id).filter((o) => o !== target && !isTraitor(game, o));
-  return others[Math.floor(r() * Math.min(LIST_LENGTH, others.length))] ?? target;
+  let said = target;
+  if (r() >= 0.5) {
+    const others = suspectList(game, id).filter((o) => o !== target && !isTraitor(game, o));
+    said = others[Math.floor(r() * Math.min(LIST_LENGTH, others.length))] ?? target;
+  }
+  const reasons = ["honest", "crowd", "unsure"];
+  const reason = reasons[Math.floor(r() * reasons.length)];
+  const other = suspectList(game, id).find((o) => o !== said && !isTraitor(game, o)) ?? said;
+  return { vote: computerVote(game, id), reason, names: reason === "unsure" ? [said, other] : [said] };
 }
 
 // How a computer player really votes. Traitors usually gang up on today's
@@ -121,7 +177,7 @@ export function promisedVote(game, id) {
 // too easy to spot.
 export const TRAITOR_TEAM_VOTE = 0.6;
 export function computerVote(game, id) {
-  if (!isTraitor(game, id)) return suspectList(game, id)[0];
+  if (!isTraitor(game, id)) return votePlan(game, id).vote;
   const r = rng(game, "vote", game.day, id);
   return r() < TRAITOR_TEAM_VOTE ? traitorTarget(game) : suspectList(game, id)[0];
 }
@@ -175,4 +231,53 @@ export function winner(game) {
   if (traitors === 0) return FAITHFUL;
   if (traitors >= left.length - traitors) return TRAITOR;
   return null;
+}
+
+// ─── The night (docs/night-spec.md) ─────────────────────────────────────────
+
+// How dangerous each Faithful is to the Traitors: how much they already
+// suspect the Traitors. Sam (if he's a Faithful) has no list, so the
+// Traitors guess at him.
+function threat(game, id) {
+  const traitors = stillIn(game).filter((t) => isTraitor(game, t));
+  if (!game.scores[id]) return 0.3 + rng(game, "guess", game.day, id)() * 0.6;
+  return traitors.reduce((sum, t) => sum + game.scores[id][t], 0);
+}
+
+// Who the Traitors would murder tonight, most wanted first.
+export function murderIdeas(game) {
+  return stillIn(game)
+    .filter((id) => !isTraitor(game, id))
+    .sort((a, b) => threat(game, b) - threat(game, a) || (a < b ? -1 : 1));
+}
+
+// The night: the Traitors murder a Faithful. If Sam is a Traitor still in
+// the game, he picks (`playerPick`); otherwise the computer Traitors pick
+// the most dangerous Faithful. Returns the murdered player's id.
+export function night(game, playerPick = null) {
+  const samPicks = game.playerSide === TRAITOR && player(game, game.playerId).inGame;
+  const victim = samPicks && playerPick ? playerPick : murderIdeas(game)[0];
+  if (isTraitor(game, victim)) throw new Error("Traitors can't murder a Traitor");
+  player(game, victim).inGame = false;
+  game.history[game.history.length - 1].murdered = victim;
+  return victim;
+}
+
+// Breakfast: everyone still in arrives in little groups of 2 or 3, in a
+// seeded order. The murdered one never comes.
+export function breakfastGroups(game) {
+  const people = stillIn(game);
+  const r = rng(game, "breakfast", game.day);
+  for (let i = people.length - 1; i > 0; i--) {
+    const j = Math.floor(r() * (i + 1));
+    [people[i], people[j]] = [people[j], people[i]];
+  }
+  const groups = [];
+  while (people.length > 0) {
+    // Groups of 2 or 3, never leaving someone to walk in alone.
+    const n = people.length;
+    const size = n <= 3 ? n : n === 4 ? 2 : n === 5 ? (r() < 0.5 ? 2 : 3) : r() < 0.5 ? 2 : 3;
+    groups.push(people.splice(0, size));
+  }
+  return groups;
 }

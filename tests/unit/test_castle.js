@@ -3,8 +3,9 @@
 import { test, assert } from "../framework.js";
 import { newGame, TRAITOR, FAITHFUL } from "../../js/game.js";
 import {
-  arriveAtCastle, suspectList, answer, promisedVote, computerVote,
+  arriveAtCastle, suspectList, votePlan, answer, promisedVote, computerVote,
   traitorTarget, roundTable, winner, stillIn, isTraitor, QUESTIONS, LIST_LENGTH,
+  night, murderIdeas, breakfastGroups,
 } from "../../js/castle.js";
 
 const castle = (seed, me = "dot") => arriveAtCastle(newGame(me, seed));
@@ -60,16 +61,43 @@ test("everyone says they're not a Traitor", () => {
   }
 });
 
-test("Faithfuls are honest: they vote how they said, for the top of their list", () => {
+test("Faithfuls never fib: they vote how they said", () => {
   for (let seed = 1; seed <= 30; seed++) {
     const g = castle(seed);
     for (const id of computers(g).filter((id) => !isTraitor(g, id))) {
-      const top = suspectList(g, id)[0];
-      assert.eq(promisedVote(g, id), top);
-      assert.eq(computerVote(g, id), top);
-      assert.eq(answer(g, id, "suspect").names[0], top);
+      assert.eq(computerVote(g, id), promisedVote(g, id), `${id} seed ${seed}`);
+      assert.eq(answer(g, id, "suspect").names[0], suspectList(g, id)[0], "suspect = top of their list");
     }
   }
+});
+
+test("Faithfuls vote tactically sometimes: with the crowd, or to keep themselves safe", () => {
+  const reasons = {};
+  let notTop = 0, total = 0;
+  for (let seed = 1; seed <= 100; seed++) {
+    const g = castle(seed);
+    for (const id of computers(g).filter((id) => !isTraitor(g, id))) {
+      const plan = votePlan(g, id);
+      reasons[plan.reason] = (reasons[plan.reason] || 0) + 1;
+      total++;
+      if (plan.vote !== suspectList(g, id)[0]) notTop++;
+    }
+  }
+  for (const r of ["honest", "crowd", "safe", "unsure"]) assert.gt(reasons[r] || 0, 0, `some ${r} votes: ${JSON.stringify(reasons)}`);
+  assert.gt(notTop / total, 0.05, `${notTop}/${total} vote for someone not top of their list`);
+  assert.lt(notTop / total, 0.5, `${notTop}/${total}`);
+});
+
+test("'Who will you vote for?' has lots of different answers", () => {
+  const shapes = new Set();
+  for (let seed = 1; seed <= 40; seed++) {
+    const g = castle(seed);
+    for (const id of computers(g)) {
+      // The answer's shape, with names blanked out.
+      shapes.add(answer(g, id, "vote").text.replace(/[A-Z][a-zA-Z]+(?: [A-Z][a-zA-Z]+)*/g, "X"));
+    }
+  }
+  assert.gt(shapes.size, 5, `${shapes.size} different answers`);
 });
 
 test("Traitors sometimes fib: say one name, vote for another", () => {
@@ -162,4 +190,80 @@ test("balance: day 1 is a guess; later days catch more Traitors; it takes a whil
   assert.gt(s.median, 5, "catching all three takes a while: " + tag);
   assert.lt(s.median, 13, "but not forever: " + tag);
   assert.lt(s.max, 22, "every game ends: " + tag);
+});
+
+// ─── The night ──────────────────────────────────────────────────────────────
+
+test("the Traitors murder a Faithful, never a Traitor", () => {
+  for (let seed = 1; seed <= 100; seed++) {
+    const g = castle(seed);
+    roundTable(g, stillIn(g).find((id) => id !== "dot"));
+    if (winner(g)) continue;
+    const victim = night(g);
+    assert.notOk(isTraitor(g, victim), `seed ${seed}`);
+    assert.notOk(stillIn(g).includes(victim), "they've gone");
+    assert.eq(g.history[0].murdered, victim, "remembered");
+  }
+});
+
+test("a Traitor Sam picks who is murdered", () => {
+  for (let seed = 1; seed <= 3000; seed++) {
+    const g = castle(seed);
+    if (g.playerSide !== TRAITOR) continue;
+    roundTable(g, murderIdeas(g)[0]);
+    if (winner(g) || !stillIn(g).includes("dot")) continue;
+    const pick = murderIdeas(g)[3];
+    assert.eq(night(g, pick), pick);
+    return;
+  }
+  assert.ok(false, "no game found where Sam is a Traitor still in");
+});
+
+test("murder ideas are only Faithfuls still in the game", () => {
+  const g = castle(11);
+  for (const id of murderIdeas(g)) {
+    assert.notOk(isTraitor(g, id));
+    assert.ok(stillIn(g).includes(id));
+  }
+});
+
+test("breakfast: everyone still in arrives once, in groups of 2 or 3", () => {
+  for (let seed = 1; seed <= 50; seed++) {
+    const g = castle(seed);
+    const n = 22 - (seed % 15);
+    for (const p of g.players.slice(n)) p.inGame = false;
+    const groups = breakfastGroups(g);
+    assert.eq(groups.flat().sort(), stillIn(g).sort(), `seed ${seed}`);
+    for (const grp of groups) assert.ok(grp.length >= 2 && grp.length <= 3, `group of ${grp.length}`);
+  }
+});
+
+test("the Traitors win when they're as many as the Faithfuls", () => {
+  const g = castle(2);
+  const keep = [...traitorsOf(g), ...stillIn(g).filter((id) => !isTraitor(g, id)).slice(0, 3)];
+  for (const p of g.players) p.inGame = keep.includes(p.id);
+  assert.eq(winner(g), TRAITOR);
+});
+
+test("balance with nights: Faithfuls win most games, but not all; a game lasts days", () => {
+  const N = 300;
+  let faithfulWins = 0;
+  const days = [];
+  for (let seed = 1; seed <= N; seed++) {
+    const g = arriveAtCastle(newGame("dot", seed), { everyone: true });
+    let d = 0;
+    while (!winner(g) && d < 30) {
+      roundTable(g, null);
+      d++;
+      if (!winner(g)) night(g);
+    }
+    if (winner(g) === FAITHFUL) faithfulWins++;
+    days.push(d);
+  }
+  days.sort((a, b) => a - b);
+  const tag = `Faithfuls win ${(faithfulWins / N * 100).toFixed(0)}%, median ${days[N >> 1]} days, longest ${days[N - 1]}`;
+  assert.gt(faithfulWins / N, 0.55, tag);
+  assert.lt(faithfulWins / N, 0.85, tag);
+  assert.gt(days[N >> 1], 5, tag);
+  assert.lt(days[N >> 1], 13, tag);
 });
