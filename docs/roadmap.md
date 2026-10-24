@@ -32,6 +32,7 @@ Spec: `docs/start-spec.md`.
 - Gate: Sam plays it on the iPad
 
 ## Phase 3: A day at the castle
+Spec: `docs/castle-spec.md` (Sam's interview, 2026-10-24).
 The Round Table: chat to people (some act sneaky), everyone votes, the one
 banished shows if they were a Traitor. The core of the game: fun first.
 Characters speak with the iPad's own voices.
