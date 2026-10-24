@@ -72,6 +72,13 @@ drawings cut out like stickers, wobbling as they walk through side-on rooms.
   `assets/puppets/`); they wobble as they walk
 - Gate: Sam plays it
 
+## Recruiting ✅ (v0.6.2)
+Sam, 2026-10-24: on the first night the Traitors recruit a 4th instead of
+murdering. A Traitor Sam picks (the others suggest people nobody
+suspects); otherwise the computer Traitors pick, and if they pick Sam he
+becomes a Traitor (no choice). Whoever is picked says yes. Balance stays in
+band with four Traitors.
+
 ## Phase 5: Missions and the prize pot
 Mini-games in the day that win money for the pot.
 
@@ -83,4 +90,4 @@ you got to.
 Anything else for the look and sound, once the game is fun.
 
 ## Ongoing: Sam's character drawings
-Added as they come in. Done: 15 of 22 (Captain Puddle, Granny Gumdrop, Professor Fizz, Ruby Rails, Chef Pepper, Sir Reginald Waffle, Doctor Plaster, Lola Loud, Farmer Fern, Detective Dot, Benny Biscuit, Madame Mystic, Tiny Tom, Zara Zoom, Mr Grumble).
+Added as they come in. Done: 16 of 22 (Captain Puddle, Granny Gumdrop, Professor Fizz, Ruby Rails, Chef Pepper, Sir Reginald Waffle, Doctor Plaster, Lola Loud, Farmer Fern, Detective Dot, Benny Biscuit, Madame Mystic, Tiny Tom, Zara Zoom, Mr Grumble, Penny Pockets).

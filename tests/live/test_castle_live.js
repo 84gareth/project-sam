@@ -1,7 +1,13 @@
 // A day at the castle on the real page: chat, vote with chalkboards, reveal.
 import { test, assert, openPage, until } from "../framework.js";
 import { newGame, TRAITOR, FAITHFUL } from "../../js/game.js";
-import { arriveAtCastle, roundTable, night, winner, stillIn } from "../../js/castle.js";
+import {
+  arriveAtCastle, roundTable, night, winner, stillIn, recruit, tableTalk, talkOptions, playerSays,
+} from "../../js/castle.js";
+
+// Sam's words at the Round Table sway the others, so rehearsals must say them too.
+const sayFirst = (g) => playerSays(g, talkOptions(g, tableTalk(g))[0]);
+const sayQuiet = (g) => { const o = talkOptions(g, tableTalk(g)); playerSays(g, o[o.length - 1]); };
 
 function seedFor(id, side) {
   for (let seed = 1; seed <= 10000; seed++) if (newGame(id, seed).playerSide === side) return seed;
@@ -83,9 +89,10 @@ function nightSeed(side, want) {
   for (let seed = 1; seed <= 5000; seed++) {
     if (newGame("pepper", seed).playerSide !== side) continue;
     const g = arriveAtCastle(newGame("pepper", seed));
+    sayFirst(g);
     roundTable(g, "puddle");
     if (winner(g) || !stillIn(g).includes("pepper")) continue;
-    if (side === TRAITOR || want(night(g))) return seed;
+    if (side === TRAITOR || want(recruit(g))) return seed;
   }
   throw new Error("no seed found");
 }
@@ -127,45 +134,86 @@ test("Round Table: vote, everyone shows a chalkboard, drum roll, reveal, next da
   await until(() => visible(doc, "to-breakfast") || visible(doc, "night-over"), "the night passes");
   doc.getElementById("to-breakfast").click();
   await until(() => visible(doc, "start-day") || visible(doc, "breakfast-over"), "breakfast", 8000);
-  const murdered = page.game.history[0].murdered;
-  assert.ok(doc.getElementById("missing").textContent.includes("never came to breakfast"));
-  assert.eq(doc.querySelectorAll("#arrivals .arrival-person").length, 20, "20 came to breakfast");
+  assert.ok(page.game.history[0].recruited, "night 1: the Traitors recruited someone");
+  assert.notOk(page.game.history[0].murdered, "and nobody was murdered");
+  assert.ok(doc.getElementById("missing").textContent.includes("Nobody was murdered"));
+  assert.eq(doc.querySelectorAll("#arrivals .arrival-person").length, 21, "all 21 came to breakfast");
   assert.ok(doc.getElementById("crossout").hidden, "the crossed-out panel has made way for everyone");
   assert.eq(doc.querySelectorAll("#gone .arrival-person").length, 22, "everyone on the list");
   const gone = [...doc.querySelectorAll("#gone .gone-person")].map((g) => g.dataset.id).sort();
-  assert.eq(gone, [out.banished, murdered].sort(), "the banished and the murdered, greyed out with a red X");
+  assert.eq(gone, [out.banished], "only the banished one is crossed out");
   doc.getElementById("start-day").click();
   assert.eq(doc.getElementById("castle-day").textContent, "Day 2 at the castle");
   await until(() => doc.querySelector(".puppet.me"), "back in the castle");
-  for (const gone of [out.banished, murdered]) {
-    assert.notOk(doc.querySelector(`.puppet[data-id="${gone}"]`), `${gone} has gone from the castle`);
-  }
+  assert.notOk(doc.querySelector(`.puppet[data-id="${out.banished}"]`), "the banished one has gone from the castle");
 });
 
-test("a Faithful who is murdered gets the letter", async () => {
-  const { doc } = await toCastle(nightSeed(FAITHFUL, (v) => v === "pepper"));
+test("night 1: if the Traitors recruit Sam, a letter makes him a Traitor", async () => {
+  const { page, doc } = await toCastle(nightSeed(FAITHFUL, (v) => v === "pepper"));
   await voteAndReveal(doc);
   doc.getElementById("next-day").click();
   await until(() => visible(doc, "letter"), "the letter", 8000);
   assert.ok(doc.getElementById("letter").textContent.includes("By order of the Traitors"));
-  assert.ok(doc.getElementById("letter").textContent.includes("you have been murdered"));
-  assert.ok(visible(doc, "night-over"), "Play again");
-  assert.notOk(visible(doc, "to-breakfast"), "no breakfast for you");
+  assert.ok(doc.getElementById("letter").textContent.includes("you are now a Traitor"));
+  assert.eq(page.game.playerSide, TRAITOR);
+  assert.ok(visible(doc, "to-breakfast"), "then breakfast, as a Traitor");
 });
 
-test("a Traitor goes to the secret meeting and picks who is murdered", async () => {
+test("a Faithful who is murdered (night 2) gets the letter", async () => {
+  // A seed where the night-1 recruit isn't Sam and night 2 murders Sam.
+  let seed = 0;
+  for (let s = 1; s <= 5000 && !seed; s++) {
+    if (newGame("pepper", s).playerSide !== FAITHFUL) continue;
+    const g = arriveAtCastle(newGame("pepper", s));
+    sayFirst(g);
+    roundTable(g, "puddle");
+    if (winner(g) || !stillIn(g).includes("pepper") || recruit(g) === "pepper") continue;
+    sayQuiet(g);
+    roundTable(g, stillIn(g).find((id) => id !== "pepper"));
+    if (winner(g) || !stillIn(g).includes("pepper")) continue;
+    if (night(g) === "pepper") seed = s;
+  }
+  assert.gt(seed, 0, "found a game");
+  const { doc } = await toCastle(seed);
+  await voteAndReveal(doc);
+  doc.getElementById("next-day").click();
+  await until(() => visible(doc, "to-breakfast"), "no letter on night 1", 8000);
+  doc.getElementById("to-breakfast").click();
+  await until(() => visible(doc, "start-day"), "breakfast", 8000);
+  doc.getElementById("start-day").click();
+  // Day 2: the Round Table picks the first person still on the list.
+  doc.getElementById("to-table").click();
+  await until(() => visible(doc, "talk-options"), "the talk", 8000);
+  doc.querySelector("#talk-options .question:last-child").click();
+  doc.getElementById("to-vote").click();
+  [...doc.querySelectorAll("#table-cards .card")].find((c) => c.dataset.id !== "pepper").click();
+  doc.getElementById("cast-vote").click();
+  await until(() => visible(doc, "to-reveal"), "the chalkboards", 20000);
+  doc.getElementById("to-reveal").click();
+  await until(() => visible(doc, "after-reveal") || visible(doc, "game-over"), "the reveal", 8000);
+  if (visible(doc, "game-over")) return;   // the game ended at the table instead
+  doc.getElementById("next-day").click();
+  await until(() => visible(doc, "letter"), "the letter", 8000);
+  assert.ok(doc.getElementById("letter").textContent.includes("you have been murdered"));
+  assert.ok(visible(doc, "night-over"), "Play again");
+});
+
+test("a Traitor goes to the secret meeting and picks who to recruit (night 1)", async () => {
   const { page, doc } = await toCastle(nightSeed(TRAITOR));
   await voteAndReveal(doc);
   doc.getElementById("next-day").click();
   assert.ok(visible(doc, "screen-traitors"), "the secret meeting");
   assert.gt(doc.querySelectorAll("#traitor-ideas .idea").length, 0, "the others give ideas");
+  assert.ok(doc.getElementById("meeting-hint").textContent.includes("recruit"), "it's the recruiting night");
   assert.ok(doc.getElementById("murder").disabled, "pick first");
   const pick = doc.querySelectorAll("#victim-cards .card")[2];
   pick.click();
   doc.getElementById("murder").click();
   await until(() => visible(doc, "start-day") || visible(doc, "breakfast-over"), "breakfast", 8000);
-  assert.eq(page.game.history[0].murdered, pick.dataset.id, "Sam's pick was murdered");
+  assert.eq(page.game.history[0].recruited, pick.dataset.id, "Sam's pick joined the Traitors");
+  assert.eq(page.game.players.find((p) => p.id === pick.dataset.id).side, TRAITOR);
   for (const id of [...doc.querySelectorAll("#victim-cards .card")].map((c) => c.dataset.id)) {
+    if (id === pick.dataset.id) continue;
     assert.eq(page.game.players.find((p) => p.id === id).side, FAITHFUL, "only Faithfuls to pick from");
   }
 });
@@ -214,7 +262,7 @@ test("at the secret meeting, each Traitor says their idea out loud", async () =>
   const said = listen(page);
   doc.getElementById("next-day").click();
   const ideas = [...doc.querySelectorAll("#traitor-ideas .idea")];
-  const spoken = said.filter((s) => s.text.startsWith("Let's pick"));
+  const spoken = said.filter((s) => s.text.startsWith("Let's"));
   assert.eq(spoken.length, ideas.length, "one spoken line per idea");
   const fellows = page.game.players.filter((p) => p.side === TRAITOR && p.id !== "pepper" && p.inGame);
   spoken.forEach((s, i) => assert.near(s.pitch, voiceFor(fellows[i].id).pitch, 1e-6, "in their own voice"));

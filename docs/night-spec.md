@@ -35,3 +35,9 @@ the same kinds of answers but fib about half the time.
 Balance (300 computer-only games): the Faithfuls win about 60% (72% before
 tactical voting; following the crowd let the Traitors steer them too much
 until it was limited to a top-3 suspect). A game lasts about 9 days.
+
+## Recruiting (Sam, later the same day, v0.6.2)
+Night 1 is a recruiting night, not a murder: see `docs/roadmap.md`. A
+recruited Sam gets a letter: "By order of the Traitors, you are now a
+Traitor! Your fellow Traitors are ...". Breakfast after it: "Everyone came
+to breakfast! Nobody was murdered last night... strange!"

@@ -258,7 +258,7 @@ test("balance with nights: Faithfuls win most games, but not all; a game lasts d
     while (!winner(g) && d < 30) {
       roundTable(g, null);
       d++;
-      if (!winner(g)) night(g);
+      if (!winner(g)) (isRecruitNight(g) ? recruit(g) : night(g));
     }
     if (winner(g) === FAITHFUL) faithfulWins++;
     days.push(d);
@@ -321,4 +321,54 @@ test("accusing someone makes honest players more suspicious of them", () => {
   const before = honest.map((h) => g.scores[h][target]);
   playerSays(g, { kind: "accuse", target });
   honest.forEach((h, i) => assert.near(g.scores[h][target], before[i] + TALK_SWAY, 1e-9, h));
+});
+
+// ─── Recruiting on the first night ──────────────────────────────────────────
+import { isRecruitNight, recruit, recruitIdeas } from "../../js/castle.js";
+
+test("the first night recruits a fourth Traitor instead of a murder", () => {
+  for (let seed = 1; seed <= 60; seed++) {
+    const g = castle(seed);
+    roundTable(g, stillIn(g).find((id) => id !== "dot"));
+    if (winner(g)) continue;
+    assert.ok(isRecruitNight(g), "night 1 is the recruiting night");
+    const before = stillIn(g).length;
+    const traitorsBefore = stillIn(g).filter((id) => isTraitor(g, id)).length;
+    const who = recruit(g);
+    assert.ok(isTraitor(g, who), "they've joined");
+    assert.eq(stillIn(g).filter((id) => isTraitor(g, id)).length, traitorsBefore + 1, "one more Traitor");
+    assert.eq(stillIn(g).length, before, "nobody murdered");
+    assert.notOk(isRecruitNight(g), "only once");
+    if (who !== "dot") {
+      const top = suspectList(g, who).slice(0, LIST_LENGTH);
+      assert.notOk(top.some((o) => isTraitor(g, o)), "the new Traitor's list points at Faithfuls now");
+    }
+  }
+});
+
+test("if the Traitors recruit Sam, he becomes a Traitor", () => {
+  for (let seed = 1; seed <= 3000; seed++) {
+    const g = castle(seed);
+    if (g.playerSide !== FAITHFUL) continue;
+    roundTable(g, stillIn(g).find((id) => id !== "dot"));
+    if (winner(g) || !stillIn(g).includes("dot")) continue;
+    if (recruitIdeas(g)[0] !== "dot") continue;
+    recruit(g);
+    assert.eq(g.playerSide, TRAITOR);
+    return;
+  }
+  assert.ok(false, "never found a game where Sam was recruited");
+});
+
+test("a Traitor Sam picks who joins", () => {
+  for (let seed = 1; seed <= 3000; seed++) {
+    const g = castle(seed);
+    if (g.playerSide !== TRAITOR) continue;
+    roundTable(g, recruitIdeas(g)[0]);
+    if (winner(g) || !stillIn(g).includes("dot")) continue;
+    const pick = recruitIdeas(g)[2];
+    assert.eq(recruit(g, pick), pick);
+    return;
+  }
+  assert.ok(false, "no game found");
 });

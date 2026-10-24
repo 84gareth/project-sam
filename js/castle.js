@@ -374,3 +374,42 @@ export function playerSays(game, option) {
     game.scores[option.target][game.playerId] += 0.15;
   }
 }
+
+// ─── Recruiting (Sam, 2026-10-24) ───────────────────────────────────────────
+// On the first night the Traitors don't murder anyone: they recruit a
+// fourth Traitor. If Sam is a Traitor he picks (the others suggest); if
+// not, the computer Traitors pick, and they might pick Sam, who then just
+// becomes a Traitor (Sam: "Yes, no choice"). Whoever is picked says yes.
+
+export const isRecruitNight = (game) => game.history.length === 1 && !game.recruited;
+
+// Who the Traitors would like to recruit, best first: Faithfuls nobody
+// suspects much, so the new Traitor blends in.
+export function recruitIdeas(game) {
+  const honest = brains(game).filter((id) => !isTraitor(game, id));
+  const suspicion = (f) => honest.reduce((sum, h) => sum + (h === f ? 0 : game.scores[h][f]), 0);
+  return stillIn(game)
+    .filter((id) => !isTraitor(game, id))
+    .sort((a, b) => suspicion(a) - suspicion(b) || (a < b ? -1 : 1));
+}
+
+// Recruit `pick` (Sam's choice when he's a Traitor) or the Traitors' first
+// idea. The new Traitor's list turns fake, like the others'. Returns who.
+export function recruit(game, pick = null) {
+  const samPicks = game.playerSide === TRAITOR && player(game, game.playerId).inGame;
+  const who = samPicks && pick ? pick : recruitIdeas(game)[0];
+  if (isTraitor(game, who)) throw new Error("already a Traitor");
+  player(game, who).side = TRAITOR;
+  if (who === game.playerId) game.playerSide = TRAITOR;
+  const s = game.scores[who];
+  if (s) {
+    const r = rng(game, "recruit", who);
+    for (const o of Object.keys(s)) {
+      if (isTraitor(game, o)) s[o] = 0.05 + r() * 0.3;
+      else s[o] = Math.max(s[o], 0.2 + r() * 0.6);
+    }
+  }
+  game.recruited = who;
+  game.history[game.history.length - 1].recruited = who;
+  return who;
+}
