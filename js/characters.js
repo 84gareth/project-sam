@@ -6,7 +6,8 @@
 export const CHARACTERS = [
   { id: "puddle", name: "Captain Puddle", about: "A sailor who is scared of water.", colour: "#2f6fb3",
     picture: "assets/characters/puddle.jpg" },
-  { id: "gumdrop", name: "Granny Gumdrop", about: "Loves sweets and knitting.", colour: "#d4548e" },
+  { id: "gumdrop", name: "Granny Gumdrop", about: "Loves sweets and knitting.", colour: "#d4548e",
+    picture: "assets/characters/gumdrop.jpg" },
   { id: "fizz", name: "Professor Fizz", about: "A scientist. Things often go bang.", colour: "#7a4fc9" },
   { id: "ruby", name: "Ruby Rails", about: "Drives the trains.", colour: "#c0392b" },
   { id: "pepper", name: "Chef Pepper", about: "Makes the best pies.", colour: "#e67e22" },
