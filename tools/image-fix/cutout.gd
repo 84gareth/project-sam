@@ -11,10 +11,12 @@ extends SceneTree
 #       <project folder> id1 id2 ...
 # Reads assets/characters/<id>.jpg, writes assets/puppets/<id>.png.
 const HEIGHT := 320
-const GROW := 9
+var GROW := 9   ## "grow=N" before the ids: a wider border for very light drawings
 
 func is_ink(c: Color) -> bool:
-	return c.get_luminance() < 0.5 or c.s * c.v > 0.08
+	# Pen is properly dark; photo shadows are only mid-grey, so they don't
+	# count (they left blobs round Ruby Rails).
+	return c.get_luminance() < 0.38 or c.s * c.v > 0.08
 
 # Max filter along rows then columns with a running count: O(pixels).
 func grow(mask: PackedByteArray, w: int, h: int, r: int) -> PackedByteArray:
@@ -38,10 +40,44 @@ func grow(mask: PackedByteArray, w: int, h: int, r: int) -> PackedByteArray:
 			if y >= 0 and y < h: out[y * w + x] = 1 if count > 0 else 0
 	return out
 
+# Drop small bits floating away from the character (specks, photo marks):
+# keep only parts at least 8% the size of the biggest one.
+func keep_big_parts(mask: PackedByteArray, w: int, h: int) -> PackedByteArray:
+	var label := PackedInt32Array(); label.resize(w * h)
+	var sizes: Array[int] = [0]
+	for start in w * h:
+		if not mask[start] or label[start]:
+			continue
+		var id := sizes.size()
+		var count := 0
+		var stack: Array[int] = [start]
+		label[start] = id
+		while not stack.is_empty():
+			var k: int = stack.pop_back()
+			count += 1
+			var x := k % w
+			var y := k / w
+			for n in [k - 1 if x > 0 else -1, k + 1 if x < w - 1 else -1, k - w if y > 0 else -1, k + w if y < h - 1 else -1]:
+				if n >= 0 and mask[n] and not label[n]:
+					label[n] = id
+					stack.append(n)
+		sizes.append(count)
+	var biggest := 0
+	for c in sizes: biggest = maxi(biggest, c)
+	var out := PackedByteArray(); out.resize(w * h)
+	for k in w * h:
+		if label[k] and sizes[label[k]] >= biggest * 0.08:
+			out[k] = 1
+	return out
+
 func _initialize() -> void:
 	var a := OS.get_cmdline_user_args()
 	var root := a[0]
-	for i in range(1, a.size()):
+	var first := 1
+	if a.size() > 1 and a[1].begins_with("grow="):
+		GROW = int(a[1].substr(5))
+		first = 2
+	for i in range(first, a.size()):
 		var id := a[i]
 		var img := Image.load_from_file(root + "/assets/characters/" + id + ".jpg")
 		img.convert(Image.FORMAT_RGBA8)
@@ -51,7 +87,7 @@ func _initialize() -> void:
 		for y in h:
 			for x in w:
 				ink[y * w + x] = 1 if is_ink(img.get_pixel(x, y)) else 0
-		var solid := grow(ink, w, h, GROW)
+		var solid := keep_big_parts(grow(ink, w, h, GROW), w, h)
 		var outside := PackedByteArray(); outside.resize(w * h)
 		var stack: Array[Vector2i] = []
 		for x in w:

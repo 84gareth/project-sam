@@ -16,7 +16,7 @@ keeps only pen (dark) and crayon (colourful) and makes the rest plain paper;
 `assets/characters/<id>.jpg`, and listed as `picture` in
 `js/characters.js`. A test fails if a listed picture is missing.
 
-Done (20 of 22):
+Done (21 of 22):
 - Captain Puddle (2026-10-24: pirate hat with a "no water" sign, peg leg,
   skull shirt; re-photographed without the shadow)
 - Granny Gumdrop (2026-10-24: purple dress, hair in a bun, a bag of sweets)
@@ -42,6 +42,12 @@ Done (20 of 22):
 - Ivy Inkwell (2026-10-24: glasses, a pencil and a notebook)
 - Max Muddle (2026-10-24: scratching his head under a big question mark;
   tablecloth photo: `paper_only.gd`, `clean_paper.gd`, two `paint_rect.gd`)
+- Olive Oddsocks (2026-10-24: one green-striped sock, one black shoe)
+
+Cut-outs redone 2026-10-24 (Gareth: Lola Loud cut too much, Ruby had
+shadow blobs): cutout.gd ignores grey photo shadows and drops floating
+specks; Lola rebuilt from her original photo and cut with `grow=16`; Ruby's
+photo cleaned with `clean_paper.gd` first.
 
 Redrawn with more detail (coloured faces), 2026-10-24: Tiny Tom (photo on a
 tablecloth: `paper_only.gd` then `clean_paper.gd`), Zara Zoom, Madame Mystic.

@@ -44,7 +44,8 @@ export const CHARACTERS = [
     picture: "assets/characters/ivy.jpg" },
   { id: "max", name: "Max Muddle", about: "Always gets lost.", colour: "#a04000",
     picture: "assets/characters/max.jpg" },
-  { id: "olive", name: "Olive Oddsocks", about: "Never wears socks that match.", colour: "#808b38" },
+  { id: "olive", name: "Olive Oddsocks", about: "Never wears socks that match.", colour: "#808b38",
+    picture: "assets/characters/olive.jpg" },
   { id: "barry", name: "Barry Banjo", about: "Plays the banjo. Badly.", colour: "#ca6f1e" },
 ];
 
