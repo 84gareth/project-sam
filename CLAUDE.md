@@ -191,7 +191,7 @@ so, kindly.
   crashes partway can look like a pass (learned in Project 2126).
 
 ## Current status
-Updated 2026-10-24 (v0.2.4).
+Updated 2026-10-24 (v0.2.5).
 - **Phase 0 (web setup) done.** Tests in headless Chrome; GitHub Pages;
   Turbo Town archived.
 - **Phase 1 done.** The game: like The Traitors, starting at Havenbrook
@@ -201,6 +201,6 @@ Updated 2026-10-24 (v0.2.4).
   Station, character picker, then the game TELLS you your side (fair deal,
   Sam's change). Rules in `js/game.js`.
 - **Phase 3 interviewed** (`docs/castle-spec.md`); building it is next.
-- **Roadmap OK'd by Gareth.** Sam draws the 22 pictures as we go (3 of 22
+- **Roadmap OK'd by Gareth.** Sam draws the 22 pictures as we go (4 of 22
   in: how to add one is in `docs/characters.md`); voices
   are the iPad's own (Web Speech), arriving with Phase 3.
