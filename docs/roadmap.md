@@ -87,8 +87,8 @@ library; they loop softly and fade between rooms (`docs/sound-spec.md`).
 ## Phase 5: Missions and the prize pot
 Mini-games in the day that win money for the pot. Sam's 13 missions are in
 `docs/missions.md`. Built (v0.8.0): the daily mission, the pot, the shield,
-Castle Bells and Chilli Pie Shuffle. Next: the rule changes once Gareth
-picks how recruiting works, then the other 11 missions.
+Castle Bells and Chilli Pie Shuffle. v0.9.0: the 12-day rules. Next: the
+other 11 missions.
 
 ## Phase 6: A whole game, with saving
 Days and nights until the end; who wins the pot; the game remembers where

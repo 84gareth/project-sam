@@ -5,6 +5,8 @@ import { CHARACTERS } from "./characters.js";
 export const TRAITOR_COUNT = 3;
 export const FAITHFUL = "faithful";
 export const TRAITOR = "traitor";
+// Every game lasts 12 days, like the TV show (Sam and Gareth, 2026-10-24).
+export const DAYS = 12;
 
 // A small seeded random number generator (mulberry32): the same seed always
 // gives the same game, so tests are repeatable. Returns floats in [0, 1).

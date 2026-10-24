@@ -65,7 +65,15 @@ First two missions:
   are covered and swapped about; tap the chilli pie. Three rounds, more
   swaps and faster each time. Score = right answers / 3.
 
-Waiting for Gareth: the rule changes (always 12 days, murders every other
-night, recruit when 2 Traitors are left). See the question in chat: if the
-Traitors always recruit back up to 3, they can never all be caught, so the
-Faithfuls could never win.
+## The 12-day rules (v0.9.0, OK'd by Gareth)
+
+- Every game lasts 12 days. It ends early only if every Traitor is caught.
+  After day 12's Round Table, any Traitor still in wins the pot; if none,
+  the Faithfuls share it.
+- Nights: night 1 the Traitors recruit. After that they murder every other
+  night (nights 2, 4, 6...) and only plot on the others.
+- When only 2 Traitors are left, they recruit instead, but only up to
+  night 8 (Gareth's pick, option 2), so they can still all be caught.
+- Balance, measured over 300 computer games: Faithfuls win about 15%.
+  Recruiting up to night 6 instead gives about 41%; night 4, about 61%.
+  Gareth to choose (`RECRUIT_UNTIL` in `js/castle.js`).

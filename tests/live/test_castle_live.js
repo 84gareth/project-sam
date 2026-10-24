@@ -3,6 +3,7 @@ import { test, assert, openPage, until } from "../framework.js";
 import { newGame, TRAITOR, FAITHFUL } from "../../js/game.js";
 import {
   arriveAtCastle, roundTable, night, winner, stillIn, recruit, tableTalk, talkOptions, playerSays,
+  nightKind, isTraitor,
 } from "../../js/castle.js";
 import { finishMission, todaysMission, bellTune, pieRound } from "../../js/missions.js";
 
@@ -60,7 +61,7 @@ const visible = (doc, id) => !doc.getElementById(id).hidden;
 test("the train takes you to the castle: everyone else is walking round its rooms", async () => {
   const { page, doc } = await toCastle(seedFor("pepper", FAITHFUL));
   assert.ok(visible(doc, "screen-castle"));
-  assert.eq(doc.getElementById("castle-day").textContent, "Day 1 at the castle");
+  assert.eq(doc.getElementById("castle-day").textContent, "Day 1 of 12");
   assert.eq(Object.keys(page.world.people).length, 21, "21 others in the castle");
   assert.eq(doc.getElementById("room-name").textContent, "Great hall", "Sam starts in the great hall");
   await until(() => doc.querySelectorAll(".puppet:not(.me)").length > 0, "puppets in the room");
@@ -174,7 +175,7 @@ test("Round Table: vote, everyone shows a chalkboard, drum roll, reveal, next da
   assert.eq(gone, [out.banished], "only the banished one is crossed out");
   doc.getElementById("start-day").click();
   await flopMission(page, doc);
-  assert.eq(doc.getElementById("castle-day").textContent, "Day 2 at the castle");
+  assert.eq(doc.getElementById("castle-day").textContent, "Day 2 of 12");
   await until(() => doc.querySelector(".puppet.me"), "back in the castle");
   assert.notOk(doc.querySelector(`.puppet[data-id="${out.banished}"]`), "the banished one has gone from the castle");
 });
@@ -203,7 +204,7 @@ test("a Faithful who is murdered (night 2) gets the letter", async () => {
     sayQuiet(g);
     roundTable(g, stillIn(g).find((id) => id !== "pepper"));
     if (winner(g) || !stillIn(g).includes("pepper")) continue;
-    if (night(g) === "pepper") seed = s;
+    if (nightKind(g) === "murder" && night(g) === "pepper") seed = s;
   }
   assert.gt(seed, 0, "found a game");
   const { page, doc } = await toCastle(seed);
@@ -502,4 +503,32 @@ test("no debug button without ?debug", async () => {
   const page = await openPage(`../index.html?fast=1`);
   await until(() => page.document.querySelectorAll(".card").length === 22, "cards built");
   assert.notOk(visible(page.document, "debug"));
+});
+
+test("a quiet night: the Traitors only plot, and everyone comes to breakfast", async () => {
+  for (const side of [FAITHFUL, TRAITOR]) {
+    // Day 1 must leave 3 Traitors, so tonight isn't a recruiting night.
+    let seed = 0;
+    for (let s = 1; s <= 5000 && !seed; s++) {
+      if (newGame("pepper", s).playerSide !== side) continue;
+      const g = arriveAtCastle(newGame("pepper", s));
+      sayFirst(g);
+      roundTable(g, "puddle");
+      if (!winner(g) && stillIn(g).includes("pepper") && stillIn(g).filter((id) => isTraitor(g, id)).length === 3) seed = s;
+    }
+    assert.gt(seed, 0, "found a game");
+    const { page, doc } = await toCastle(seed);
+    await voteAndReveal(doc);
+    // Pretend nights 1 and 2 have happened: tonight is night 3, a quiet one.
+    page.game.history.unshift({ quiet: true }, { quiet: true });
+    doc.getElementById("next-day").click();
+    await until(() => visible(doc, "to-breakfast"), "the quiet night", 8000);
+    assert.notOk(visible(doc, "letter"), "no letter");
+    assert.ok(visible(doc, "screen-night"), `${side}: the night screen, not the Traitors' meeting`);
+    const before = stillIn(page.game).length;
+    doc.getElementById("to-breakfast").click();
+    await until(() => visible(doc, "start-day"), "breakfast", 8000);
+    assert.ok(doc.getElementById("missing").textContent.includes("Nobody was murdered"));
+    assert.eq(stillIn(page.game).length, before, "nobody murdered");
+  }
 });

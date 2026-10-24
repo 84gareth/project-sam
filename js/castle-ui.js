@@ -4,8 +4,9 @@ import { TRAITOR, FAITHFUL } from "./game.js";
 import {
   arriveAtCastle, answer, roundTable, winner, stillIn, isTraitor, QUESTIONS,
   night, murderIdeas, breakfastGroups, tableTalk, talkOptions, playerSays,
-  isRecruitNight, recruit, recruitIdeas, joinChat,
+  isRecruitNight, recruit, recruitIdeas, joinChat, nightKind, quietNight,
 } from "./castle.js";
+import { DAYS } from "./game.js";
 import { $, show, badge, card, character, wait, FAST } from "./ui.js";
 import {
   ROOMS, FLOOR, createWorld, step, tapTo, walkUpTo, nextTo, neighbour, peopleIn,
@@ -38,8 +39,8 @@ function startDay() {
 }
 
 function enterCastle() {
-  $("castle-day").textContent = `Day ${game.day} at the castle`;
-  narrate(`Day ${game.day} at the castle.`);
+  $("castle-day").textContent = `Day ${game.day} of ${DAYS}`;
+  narrate(game.day === DAYS ? "The last day at the castle!" : `Day ${game.day} at the castle.`);
   const me = game.playerId;
   if (game.playerSide === TRAITOR) {
     const fellows = stillIn(game).filter((id) => id !== me && isTraitor(game, id));
@@ -460,7 +461,7 @@ async function reveal(result) {
     gameOver("You've been banished!");
   } else if (won) {
     const traitors = game.players.filter((p) => p.side === TRAITOR).map((p) => character(p.id).name);
-    gameOver(`${won === FAITHFUL ? "The Faithfuls win" : "The Traitors win"} the £${(game.pot ?? 0).toLocaleString("en-GB")} pot! The Traitors were ${traitors.join(", ")}.`);
+    gameOver(`${game.day > DAYS ? "Day 12 is over! " : ""}${won === FAITHFUL ? "The Faithfuls win" : "The Traitors win"} the £${(game.pot ?? 0).toLocaleString("en-GB")} pot! The Traitors were ${traitors.join(", ")}.`);
   } else {
     $("after-reveal").hidden = false;
   }
@@ -479,6 +480,7 @@ let victimPick = null;
 async function goNight() {
   setRoomSound(null);
   const me = game.playerId;
+  if (nightKind(game) === "quiet") return quietNightScreen();
   if (game.playerSide === TRAITOR) return traitorsMeeting();
   // A Faithful waits in their room... is there a letter?
   $("night-title").textContent = "Night falls...";
@@ -508,7 +510,30 @@ async function goNight() {
   }
 }
 
-// Night 1 for a Faithful: the Traitors recruit. Maybe Sam!
+// Every other night the Traitors only plot: no murder (so 12 days fit).
+async function quietNightScreen() {
+  quietNight(game);
+  const traitor = game.playerSide === TRAITOR;
+  $("night-title").textContent = "Night falls...";
+  $("night-text").textContent = traitor
+    ? "Tonight the Traitors just plot. No murder tonight."
+    : "The Traitors are plotting in secret...";
+  $("letter").hidden = true;
+  $("to-breakfast").hidden = true;
+  $("night-over").hidden = true;
+  show("screen-night");
+  play("night");
+  narrate(`Night falls. ${$("night-text").textContent}`);
+  await wait(1800);
+  if (!traitor) {
+    $("night-text").textContent = "Phew! No letter for you tonight.";
+    narrate("Phew! No letter for you tonight.", { queue: true });
+  }
+  $("to-breakfast").hidden = false;
+}
+
+// A recruiting night for a Faithful (night 1, or when only 2 Traitors are
+// left): the Traitors recruit. Maybe Sam!
 async function recruitNightFaithful() {
   const who = recruit(game);
   await wait(1800);
@@ -537,8 +562,9 @@ function traitorsMeeting() {
   recruiting = isRecruitNight(game);
   $("murder").disabled = true;
   $("murder").textContent = recruiting ? "Recruit them" : "Send the letter";
+  const fewLeft = recruiting && game.history.length > 1;
   $("meeting-hint").textContent = recruiting
-    ? "Tonight the Traitors recruit someone new. Who should join you? You pick."
+    ? `${fewLeft ? "Only 2 Traitors are left! " : ""}Tonight the Traitors recruit someone new. Who should join you? You pick.`
     : "Who will the Traitors murder tonight? You pick.";
   const ideas = recruiting ? recruitIdeas(game) : murderIdeas(game);
   const fellows = stillIn(game).filter((id) => id !== game.playerId && isTraitor(game, id));

@@ -70,7 +70,8 @@ test("the Traitors can't murder whoever has the shield, and it lasts one night",
   for (let seed = 1; seed <= 20; seed++) {
     const g = castle(seed);
     roundTable(g, stillIn(g).find((id) => id !== "dot"));
-    g.recruited = "skip";   // straight to a murder night
+    g.history[0].quiet = true;   // skip night 1: straight on to a murder night
+    roundTable(g, stillIn(g).find((id) => id !== "dot"));
     const top = murderIdeas(g)[0];
     g.shield = top;
     assert.notOk(murderIdeas(g).includes(top), "not on their list");

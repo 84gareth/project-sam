@@ -3,7 +3,7 @@
 // The team's scores fill the prize pot, and the best player wins the shield,
 // so the Traitors can't murder them that night.
 
-import { makeRandom } from "./game.js";
+import { makeRandom, DAYS } from "./game.js";
 
 // All 13 of Sam's missions. `built` ones can be played so far.
 export const MISSIONS = [
@@ -23,7 +23,6 @@ export const MISSIONS = [
   { id: "catapults", name: "Catapults", type: "hunting", built: false },
   { id: "lights", name: "Lights Out", type: "puzzle", built: false },
 ];
-export const DAYS = 12;
 
 // Who is good (+1) or bad (-1) at each type, from their personality.
 // Anyone not listed is normal (0).

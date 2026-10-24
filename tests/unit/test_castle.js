@@ -241,34 +241,77 @@ test("breakfast: everyone still in arrives once, in groups of 2 or 3", () => {
   }
 });
 
-test("the Traitors win when they're as many as the Faithfuls", () => {
+test("the game lasts 12 days: no early Traitor win; after day 12 any Traitor left wins", () => {
   const g = castle(2);
   const keep = [...traitorsOf(g), ...stillIn(g).filter((id) => !isTraitor(g, id)).slice(0, 3)];
   for (const p of g.players) p.inGame = keep.includes(p.id);
-  assert.eq(winner(g), TRAITOR);
+  g.day = 12;
+  assert.eq(winner(g), null, "as many Traitors as Faithfuls, but it's only day 12");
+  g.day = 13;
+  assert.eq(winner(g), TRAITOR, "day 12 is over and Traitors are still in");
+  for (const t of traitorsOf(g)) g.players.find((p) => p.id === t).inGame = false;
+  assert.eq(winner(g), FAITHFUL, "none left: the Faithfuls win");
 });
 
-test("balance with nights: Faithfuls win most games, but not all; a game lasts days", () => {
-  const N = 300;
-  let faithfulWins = 0;
-  const days = [];
-  for (let seed = 1; seed <= N; seed++) {
-    const g = arriveAtCastle(newGame("dot", seed), { everyone: true });
-    let d = 0;
-    while (!winner(g) && d < 30) {
-      roundTable(g, null);
-      d++;
-      if (!winner(g)) (isRecruitNight(g) ? recruit(g) : night(g));
-    }
-    if (winner(g) === FAITHFUL) faithfulWins++;
-    days.push(d);
+// Play a whole game with the computer playing Sam too. Returns the game.
+function wholeGame(seed) {
+  const g = arriveAtCastle(newGame("dot", seed), { everyone: true });
+  while (!winner(g)) {
+    roundTable(g, null);
+    if (winner(g)) break;
+    const kind = nightKind(g);
+    if (kind === "recruit") recruit(g);
+    else if (kind === "murder") night(g);
+    else quietNight(g);
   }
-  days.sort((a, b) => a - b);
-  const tag = `Faithfuls win ${(faithfulWins / N * 100).toFixed(0)}%, median ${days[N >> 1]} days, longest ${days[N - 1]}`;
-  assert.gt(faithfulWins / N, 0.55, tag);
-  assert.lt(faithfulWins / N, 0.85, tag);
-  assert.gt(days[N >> 1], 5, tag);
-  assert.lt(days[N >> 1], 13, tag);
+  return g;
+}
+
+test("nights: recruit on night 1; murder every other night; recruit at 2 Traitors only up to night 8", () => {
+  for (let seed = 1; seed <= 100; seed++) {
+    const g = wholeGame(seed);
+    for (const [i, h] of g.history.entries()) {
+      const n = i + 1;
+      if (n === 1) assert.ok(h.recruited, "night 1 recruits");
+      if (h.recruited && n > 1) assert.ok(n <= 8, `recruit on night ${n}`);
+      if (h.murdered) assert.eq(n % 2, 0, `murders on even nights only (night ${n})`);
+      if (n % 2 === 1 && n > 1) assert.notOk(h.murdered);
+    }
+    assert.ok(g.day <= 13, "never more than 12 days");
+  }
+});
+
+test("only 2 Traitors left by night 8: they recruit again", () => {
+  let seen = 0;
+  for (let seed = 1; seed <= 200; seed++) {
+    const g = wholeGame(seed);
+    seen += g.history.filter((h, i) => i > 0 && h.recruited).length;
+  }
+  assert.gt(seen, 10, "recruiting again happens");
+});
+
+test("balance over 12 days: both sides win sometimes; most games go the distance", () => {
+  const N = 300;
+  let faithfulWins = 0, fullLength = 0, rec = 0, caught = 0;
+  const tl = [];
+  const left = [];
+  for (let seed = 1; seed <= N; seed++) {
+    const g = wholeGame(seed);
+    if (winner(g) === FAITHFUL) faithfulWins++;
+    if (g.day > 12) fullLength++;
+    left.push(stillIn(g).length);
+    tl.push(stillIn(g).filter((id) => isTraitor(g, id)).length);
+    rec += g.history.filter((h) => h.recruited).length;
+    caught += g.history.filter((h) => h.side === TRAITOR).length;
+  }
+  left.sort((a, b) => a - b);
+  const tag = `Faithfuls win ${(faithfulWins / N * 100).toFixed(0)}%, ${(fullLength / N * 100).toFixed(0)}% reach day 12, median ${left[N >> 1]} people left, Traitors left ${(tl.reduce((a, b) => a + b, 0) / N).toFixed(2)}, recruits ${(rec / N).toFixed(2)}, caught ${(caught / N).toFixed(2)} (averages)`;
+  // Measured 2026-10-24 with recruiting up to night 8: Faithfuls win ~15%
+  // (up to night 6: ~41%; night 4: ~61%). Gareth to choose; see roadmap.
+  assert.gt(faithfulWins / N, 0.1, tag);
+  assert.lt(faithfulWins / N, 0.75, tag);
+  assert.gt(fullLength / N, 0.5, tag);
+  assert.gt(left[0], 2, "always a few people at the end: " + tag);
 });
 
 test("Traitors whisper the truth to a Traitor Sam, and fib to a Faithful Sam", () => {
@@ -327,7 +370,7 @@ test("accusing someone makes honest players more suspicious of them", () => {
 });
 
 // ─── Recruiting on the first night ──────────────────────────────────────────
-import { isRecruitNight, recruit, recruitIdeas } from "../../js/castle.js";
+import { isRecruitNight, recruit, recruitIdeas, nightKind, quietNight } from "../../js/castle.js";
 
 test("the first night recruits a fourth Traitor instead of a murder", () => {
   for (let seed = 1; seed <= 60; seed++) {

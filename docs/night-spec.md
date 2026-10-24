@@ -41,3 +41,8 @@ Night 1 is a recruiting night, not a murder: see `docs/roadmap.md`. A
 recruited Sam gets a letter: "By order of the Traitors, you are now a
 Traitor! Your fellow Traitors are ...". Breakfast after it: "Everyone came
 to breakfast! Nobody was murdered last night... strange!"
+
+## 12 days (v0.9.0)
+The night rules changed with missions: see `docs/missions.md`, "The
+12-day rules". In short, murders every other night, recruiting at 2
+Traitors up to night 8, and no early Traitor win.

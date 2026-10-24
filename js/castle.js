@@ -4,7 +4,7 @@
 // (docs/castle-spec.md).
 
 import { CHARACTERS } from "./characters.js";
-import { makeRandom, FAITHFUL, TRAITOR } from "./game.js";
+import { makeRandom, FAITHFUL, TRAITOR, DAYS } from "./game.js";
 import { inCharacter, pickOne } from "./dialogue.js";
 
 export const QUESTIONS = [
@@ -331,13 +331,15 @@ function learn(game, { votes, banished, side }) {
   }
 }
 
-// Who has won, if anyone: every Traitor caught, or Traitors as many as
-// Faithfuls. Null while the game goes on.
+// Who has won, if anyone. The game always lasts 12 days (Sam): it ends
+// early only if every Traitor is caught. After day 12's Round Table, any
+// Traitor still in wins; if none, the Faithfuls do. Null while it goes on.
 export function winner(game) {
   const left = stillIn(game);
   const traitors = left.filter((id) => isTraitor(game, id)).length;
   if (traitors === 0) return FAITHFUL;
-  if (traitors >= left.length - traitors) return TRAITOR;
+  if (traitors === left.length) return TRAITOR;   // no Faithfuls left (a safety net)
+  if (game.day > DAYS) return TRAITOR;
   return null;
 }
 
@@ -524,7 +526,28 @@ export function playerSays(game, option) {
 // not, the computer Traitors pick, and they might pick Sam, who then just
 // becomes a Traitor (Sam: "Yes, no choice"). Whoever is picked says yes.
 
-export const isRecruitNight = (game) => game.history.length === 1 && !game.recruited;
+// What happens tonight (after the day just finished):
+// - "recruit": night 1, and any night up to night 8 when only 2 Traitors
+//   are left (Sam; Gareth: "option 2", so they can still all be caught);
+// - "murder": every other night (nights 2, 4, 6...), so 12 days fit;
+// - "quiet": the Traitors only plot;
+// - "done": tonight has already happened.
+export const RECRUIT_UNTIL = 8;
+export function nightKind(game) {
+  const last = game.history[game.history.length - 1];
+  if (last.recruited || last.murdered || last.quiet) return "done";
+  const n = game.history.length;
+  const traitors = stillIn(game).filter((id) => isTraitor(game, id)).length;
+  if (n === 1 || (traitors <= 2 && n <= RECRUIT_UNTIL)) return "recruit";
+  return n % 2 === 0 ? "murder" : "quiet";
+}
+export const isRecruitNight = (game) => nightKind(game) === "recruit";
+
+// A quiet night: nobody is murdered, and the shield wears off.
+export function quietNight(game) {
+  game.shield = null;
+  game.history[game.history.length - 1].quiet = true;
+}
 
 // Who the Traitors would like to recruit, best first: Faithfuls nobody
 // suspects much, so the new Traitor blends in.
