@@ -1,8 +1,11 @@
 // The 22 characters, all approved by Sam on 2026-10-24
 // (docs/characters.md). Pure data: no page code.
+// `picture`: Sam's drawing, once he's done it (assets/characters/<id>.jpg).
+// Without one, the game shows a coloured circle with their initials.
 
 export const CHARACTERS = [
-  { id: "puddle", name: "Captain Puddle", about: "A sailor who is scared of water.", colour: "#2f6fb3" },
+  { id: "puddle", name: "Captain Puddle", about: "A sailor who is scared of water.", colour: "#2f6fb3",
+    picture: "assets/characters/puddle.jpg" },
   { id: "gumdrop", name: "Granny Gumdrop", about: "Loves sweets and knitting.", colour: "#d4548e" },
   { id: "fizz", name: "Professor Fizz", about: "A scientist. Things often go bang.", colour: "#7a4fc9" },
   { id: "ruby", name: "Ruby Rails", about: "Drives the trains.", colour: "#c0392b" },

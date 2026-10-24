@@ -70,3 +70,14 @@ test("there's no Faithful-or-Traitor button to pick", async () => {
   const page = await openPage();
   assert.eq(page.document.querySelectorAll("#pick-faithful, #pick-traitor").length, 0);
 });
+
+test("Captain Puddle shows Sam's drawing; others show their initials", async () => {
+  const page = await openPage();
+  const doc = page.document;
+  doc.getElementById("start").click();
+  const cards = doc.querySelectorAll(".card");
+  const img = cards[0].querySelector("img.portrait");
+  assert.ok(img, "Captain Puddle's card has a picture");
+  await until(() => img.complete && img.naturalWidth > 0, "the drawing loaded");
+  assert.ok(cards[1].querySelector(".badge"), "Granny Gumdrop still has her circle");
+});

@@ -14,9 +14,18 @@ function show(screenId) {
   for (const s of document.querySelectorAll(".screen")) s.hidden = s.id !== screenId;
 }
 
-function badge(character, extraClass = "") {
+// Sam's drawing of the character if there is one, else a coloured circle
+// with their initials.
+function badge(character, big = false) {
+  if (character.picture) {
+    const img = document.createElement("img");
+    img.className = "portrait" + (big ? " big-portrait" : "");
+    img.src = character.picture;
+    img.alt = character.name;
+    return img;
+  }
   const b = document.createElement("div");
-  b.className = "badge " + extraClass;
+  b.className = "badge" + (big ? " big-badge" : "");
   b.style.background = character.colour;
   b.textContent = initials(character.name);
   return b;
@@ -52,7 +61,7 @@ function startGame() {
   window.game = newGame(pickedId, seed);
   const side = window.game.playerSide;
   const c = CHARACTERS.find((x) => x.id === pickedId);
-  $("ready-badge").replaceWith(Object.assign(badge(c, "big-badge"), { id: "ready-badge" }));
+  $("ready-badge").replaceWith(Object.assign(badge(c, true), { id: "ready-badge" }));
   $("ready-who").textContent = `You are ${c.name}.`;
   $("ready-side").textContent = side === TRAITOR ? "You are a Traitor. Shh!" : "You are a Faithful.";
   $("ready-side").className = "ready-side " + side;

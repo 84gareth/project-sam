@@ -119,6 +119,16 @@ button.big:active { transform: scale(0.97); }
 }
 .big-badge { width: 120px; height: 120px; font-size: 48px; }
 
+/* Sam's drawings: the whole picture, on its own bit of paper. */
+.portrait {
+  height: 84px;
+  max-width: 100%;
+  object-fit: contain;
+  border-radius: 8px;
+  flex: none;
+}
+.big-portrait { height: min(46vh, 340px); border-radius: 14px; }
+
 /* 3. Ready: who you are and your secret */
 .ready-side { font-size: 28px; font-weight: 700; margin: 0; }
 .ready-side.faithful { color: #7fc4f5; }

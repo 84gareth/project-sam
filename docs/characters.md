@@ -3,6 +3,15 @@
 Made up by Claude, 2026-10-24. Sam approved every one: "put all of them
 in the game!!!" The game's copy is `js/characters.js`.
 
+## Sam's drawings
+Gareth sends photos as Sam finishes them. Each is cropped to the drawing
+(`sips -c <h> <w> --cropOffset <y> <x>`, then `sips -Z 700`), saved as
+`assets/characters/<id>.jpg`, and listed as `picture` in
+`js/characters.js`. A test fails if a listed picture is missing.
+
+Done (1 of 22): Captain Puddle (2026-10-24: pirate hat with a "no water"
+sign, peg leg, skull shirt).
+
 | # | Name | About them |
 |---|------|-----------|
 | 1 | Captain Puddle | A sailor who is scared of water. |

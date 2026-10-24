@@ -73,3 +73,12 @@ test("the random numbers are between 0 and 1", () => {
     assert.ok(x >= 0 && x < 1, `got ${x}`);
   }
 });
+
+test("every drawing listed for a character really exists", async () => {
+  const withPictures = CHARACTERS.filter((c) => c.picture);
+  assert.gt(withPictures.length, 0, "at least Captain Puddle");
+  for (const c of withPictures) {
+    const res = await fetch("../" + c.picture);
+    assert.ok(res.ok, `${c.name}: ${c.picture} (${res.status})`);
+  }
+});
