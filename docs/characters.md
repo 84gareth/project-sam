@@ -9,13 +9,14 @@ Gareth sends photos as Sam finishes them. Each is cropped to the drawing
 `assets/characters/<id>.jpg`, and listed as `picture` in
 `js/characters.js`. A test fails if a listed picture is missing.
 
-Done (5 of 22):
+Done (6 of 22):
 - Captain Puddle (2026-10-24: pirate hat with a "no water" sign, peg leg,
   skull shirt; re-photographed without the shadow)
 - Granny Gumdrop (2026-10-24: purple dress, hair in a bun, a bag of sweets)
 - Professor Fizz (2026-10-24: goggles, lab coat and tie, an exploding flask)
 - Ruby Rails (2026-10-24: stripy driver's cap and overalls)
 - Chef Pepper (2026-10-24: chef's hat, a pie full of secret chillies)
+- Sir Reginald Waffle (2026-10-24: waffle armour, waffle shield, waffle sword)
 
 | # | Name | About them |
 |---|------|-----------|
@@ -24,7 +25,7 @@ Done (5 of 22):
 | 3 | Professor Fizz | A scientist. Things often go bang. |
 | 4 | Ruby Rails | Drives the trains. |
 | 5 | Chef Pepper | Sneaks chilli peppers into his pies. Says they're strawberries! (Sam's line, 2026-10-24) |
-| 6 | Sir Reginald Waffle | A posh knight in a tin suit. |
+| 6 | Sir Reginald Waffle | A posh knight. His armour and sword are made of waffles! (Sam's line, 2026-10-24) |
 | 7 | Doctor Plaster | A doctor with plasters for everything. |
 | 8 | Lola Loud | A singer who never stops singing. |
 | 9 | Farmer Fern | Takes her goat everywhere. |
