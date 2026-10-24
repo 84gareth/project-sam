@@ -455,3 +455,44 @@ test("each room has its own sound, and it stops at the Round Table", async () =>
   doc.getElementById("to-table").click();
   await until(() => doc.body.dataset.roomSound === "", "quiet at the Round Table");
 });
+
+test("debug menu (?debug): play any mission on its own, then back to the list", async () => {
+  const page = await openPage(`../index.html?debug&seed=3&fast=1`);
+  const doc = page.document;
+  await until(() => visible(doc, "debug"), "the Test a mission button");
+  doc.getElementById("debug").click();
+  const ids = [...doc.querySelectorAll("#debug-missions .question")].map((b) => b.dataset.mission);
+  assert.eq([...ids].sort(), ["bells", "pies"]);
+  for (const id of ids) {
+    doc.querySelector(`#debug-missions [data-mission="${id}"]`).click();
+    assert.ok(visible(doc, "screen-mission"));
+    const name = doc.getElementById("mission-name").textContent;
+    assert.ok(name.includes(id === "bells" ? "Castle Bells" : "Chilli Pie"), name);
+    // Do it badly, then back to the list.
+    doc.getElementById("mission-go").click();
+    let round = 0;
+    await until(() => {
+      if (visible(doc, "mission-result")) return true;
+      const status = doc.getElementById("mission-status").textContent;
+      if (id === "bells" && status === "Your turn!" && !doc.getElementById("bells").dataset.flopped) {
+        doc.getElementById("bells").dataset.flopped = "yes";
+        doc.querySelector(`.bell[data-bell="${(bellTune(page.game)[0] + 1) % 4}"]`).click();
+      }
+      if (id === "pies" && status === "Which one is the chilli pie?" && doc.getElementById("pies").dataset.round === String(round)) {
+        const { answer } = pieRound(page.game, round++);
+        const pies = [...doc.querySelectorAll(".pie")].sort((a, b) => parseFloat(a.style.left) - parseFloat(b.style.left));
+        pies[(answer + 1) % 3].click();
+      }
+      return false;
+    }, `${id} ends`, 15000);
+    assert.eq(doc.getElementById("mission-done").textContent, "Back to the missions");
+    doc.getElementById("mission-done").click();
+    assert.ok(visible(doc, "screen-debug"), "back to the list");
+  }
+});
+
+test("no debug button without ?debug", async () => {
+  const page = await openPage(`../index.html?fast=1`);
+  await until(() => page.document.querySelectorAll(".card").length === 22, "cards built");
+  assert.notOk(visible(page.document, "debug"));
+});

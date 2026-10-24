@@ -12,12 +12,15 @@ const money = (n) => `£${n.toLocaleString("en-GB")}`;
 
 let game = null;
 let onDone = null;
+let mission = null;
 
-// Show today's mission; `done` runs when Sam taps "Go to the castle".
-export function startMission(g, done) {
+// Show today's mission (or `only`, from the debug menu); `done` runs when
+// Sam taps the button at the end.
+export function startMission(g, done, only = null) {
   game = g;
   onDone = done;
-  const m = todaysMission(game);
+  const m = mission = only ?? todaysMission(game);
+  $("mission-done").textContent = only ? "Back to the missions" : "Go to the castle";
   $("screen-mission").classList.toggle("pies-mission", m.id === "pies");
   $("mission-name").textContent = `Mission ${game.day}: ${m.name}`;
   $("mission-how").textContent = m.how;
@@ -38,7 +41,7 @@ export function startMission(g, done) {
 }
 
 async function finish(score, line) {
-  const r = finishMission(game, score, stillIn(game));
+  const r = finishMission(game, score, stillIn(game), mission);
   $("mission-score").textContent = line;
   $("mission-pot").textContent = `The team won ${money(r.won)}! The pot is now ${money(game.pot)}.`;
   $("mission-shield").textContent = r.shield === game.playerId

@@ -87,8 +87,8 @@ export function computerScore(game, id, mission) {
 // Finish today's mission with Sam's score (0 to 1). Everyone still in gets
 // a score; the pot grows; the best player wins the shield.
 // Returns { mission, scores: [[id, score]] best first, won, shield }.
-export function finishMission(game, samScore, stillIn) {
-  const mission = todaysMission(game);
+// `mission` defaults to today's (the debug menu passes its own).
+export function finishMission(game, samScore, stillIn, mission = todaysMission(game)) {
   const scores = stillIn.map((id) => [id, id === game.playerId ? samScore : computerScore(game, id, mission)]);
   scores.sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1));
   const average = scores.reduce((sum, [, s]) => sum + s, 0) / scores.length;

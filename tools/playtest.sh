@@ -5,6 +5,7 @@
 #
 #   tools/playtest.sh             the game
 #   tools/playtest.sh tests       the test page, in a visible browser
+#   tools/playtest.sh missions    the game with the "Test a mission" button
 #
 # Stop it with Ctrl+C (or the terminal's stop button).
 set -euo pipefail
@@ -15,8 +16,9 @@ PAGE=""
 case "${1:-}" in
   "") PAGE="" ;;
   tests) PAGE="tests/" ;;
-  -h|--help) sed -n '2,9p' "$0"; exit 0 ;;
-  *) echo "Unknown page '$1'. Try: tools/playtest.sh  or  tools/playtest.sh tests"; exit 2 ;;
+  missions) PAGE="?debug" ;;
+  -h|--help) sed -n '2,10p' "$0"; exit 0 ;;
+  *) echo "Unknown page '$1'. Try: tools/playtest.sh, tools/playtest.sh tests or tools/playtest.sh missions"; exit 2 ;;
 esac
 
 VERSION="$(sed -n 's/^export const VERSION = "\(.*\)";/\1/p' js/version.js)"

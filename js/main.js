@@ -8,6 +8,9 @@ import { $, show, badge, card, character } from "./ui.js";
 import { goToCastle } from "./castle-ui.js";
 import { unlockSounds, play } from "./sound.js";
 import { narrate } from "./voice.js";
+import { MISSIONS } from "./missions.js";
+import { startMission } from "./mission-ui.js";
+import { arriveAtCastle } from "./castle.js";
 
 let pickedId = null;
 // The game in progress, once a character is chosen. Exposed for the live tests.
@@ -55,6 +58,29 @@ $("to-castle").addEventListener("click", async () => {
   await play("train");
   goToCastle(window.game);
 });
+// The debug menu (Gareth: "a debug menu to play each mission on its own to
+// test it"). Add ?debug to the address to see its button at the station.
+function debugMenu() {
+  const box = $("debug-missions");
+  box.replaceChildren();
+  for (const m of MISSIONS.filter((x) => x.built)) {
+    const b = document.createElement("button");
+    b.className = "question";
+    b.dataset.mission = m.id;
+    b.textContent = m.name;
+    b.addEventListener("click", () => {
+      const seed = Number(new URLSearchParams(location.search).get("seed")) || Date.now();
+      window.game = arriveAtCastle(newGame("pepper", seed));
+      startMission(window.game, debugMenu, m);
+    });
+    box.append(b);
+  }
+  show("screen-debug");
+}
+if (new URLSearchParams(location.search).has("debug")) $("debug").hidden = false;
+$("debug").addEventListener("click", debugMenu);
+$("debug-back").addEventListener("click", () => show("screen-station"));
+
 // The first tap switches sound on (iPad rule); every button tap clicks.
 document.addEventListener("pointerdown", unlockSounds, { capture: true });
 document.addEventListener("click", (e) => {

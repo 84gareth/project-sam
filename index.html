@@ -12,22 +12,22 @@
   <!-- STAMP (tools/stamp.py writes this; don't edit by hand) -->
   <script type="importmap">{
   "imports": {
-    "./js/castle-ui.js": "./js/castle-ui.js?v=0.8.0",
-    "./js/castle.js": "./js/castle.js?v=0.8.0",
-    "./js/characters.js": "./js/characters.js?v=0.8.0",
-    "./js/dialogue.js": "./js/dialogue.js?v=0.8.0",
-    "./js/game.js": "./js/game.js?v=0.8.0",
-    "./js/main.js": "./js/main.js?v=0.8.0",
-    "./js/mission-ui.js": "./js/mission-ui.js?v=0.8.0",
-    "./js/missions.js": "./js/missions.js?v=0.8.0",
-    "./js/puppets.js": "./js/puppets.js?v=0.8.0",
-    "./js/sound.js": "./js/sound.js?v=0.8.0",
-    "./js/ui.js": "./js/ui.js?v=0.8.0",
-    "./js/version.js": "./js/version.js?v=0.8.0",
-    "./js/voice.js": "./js/voice.js?v=0.8.0"
+    "./js/castle-ui.js": "./js/castle-ui.js?v=0.8.1",
+    "./js/castle.js": "./js/castle.js?v=0.8.1",
+    "./js/characters.js": "./js/characters.js?v=0.8.1",
+    "./js/dialogue.js": "./js/dialogue.js?v=0.8.1",
+    "./js/game.js": "./js/game.js?v=0.8.1",
+    "./js/main.js": "./js/main.js?v=0.8.1",
+    "./js/mission-ui.js": "./js/mission-ui.js?v=0.8.1",
+    "./js/missions.js": "./js/missions.js?v=0.8.1",
+    "./js/puppets.js": "./js/puppets.js?v=0.8.1",
+    "./js/sound.js": "./js/sound.js?v=0.8.1",
+    "./js/ui.js": "./js/ui.js?v=0.8.1",
+    "./js/version.js": "./js/version.js?v=0.8.1",
+    "./js/voice.js": "./js/voice.js?v=0.8.1"
   }
 }</script>
-  <link rel="stylesheet" href="css/style.css?v=0.8.0">
+  <link rel="stylesheet" href="css/style.css?v=0.8.1">
   <!-- /STAMP -->
 </head>
 <body>
@@ -37,6 +37,7 @@
     <div class="station-panel">
       <h1 id="title">Project Sam</h1>
       <button id="start" class="big">Start</button>
+      <button id="debug" class="big" hidden>Test a mission</button>
       <p id="version">v0.0.0</p>
     </div>
   </section>
@@ -168,6 +169,13 @@
   </section>
 
   <!-- 11. Breakfast: people arrive in little groups. Who's missing? -->
+  <!-- Debug menu (address ends ?debug): play any mission on its own. -->
+  <section id="screen-debug" class="screen mission" hidden>
+    <h2>Test a mission</h2>
+    <div id="debug-missions" class="questions"></div>
+    <button id="debug-back" class="big">Back</button>
+  </section>
+
   <!-- Today's mission (docs/missions.md). -->
   <section id="screen-mission" class="screen mission" hidden>
     <h2 id="mission-name"></h2>
@@ -210,6 +218,6 @@
     </div>
   </section>
 
-  <script type="module" src="js/main.js?v=0.8.0"></script>
+  <script type="module" src="js/main.js?v=0.8.1"></script>
 </body>
 </html>
