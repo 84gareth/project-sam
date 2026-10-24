@@ -9,10 +9,11 @@ Gareth sends photos as Sam finishes them. Each is cropped to the drawing
 `assets/characters/<id>.jpg`, and listed as `picture` in
 `js/characters.js`. A test fails if a listed picture is missing.
 
-Done (2 of 22):
+Done (3 of 22):
 - Captain Puddle (2026-10-24: pirate hat with a "no water" sign, peg leg,
   skull shirt; re-photographed without the shadow)
 - Granny Gumdrop (2026-10-24: purple dress, hair in a bun, a bag of sweets)
+- Professor Fizz (2026-10-24: goggles, lab coat and tie, an exploding flask)
 
 | # | Name | About them |
 |---|------|-----------|

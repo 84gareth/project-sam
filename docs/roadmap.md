@@ -52,4 +52,4 @@ you got to.
 Anything else for the look and sound, once the game is fun.
 
 ## Ongoing: Sam's character drawings
-Added as they come in. Done: 2 of 22 (Captain Puddle, Granny Gumdrop).
+Added as they come in. Done: 3 of 22 (Captain Puddle, Granny Gumdrop, Professor Fizz).
