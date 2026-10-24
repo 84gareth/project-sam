@@ -354,3 +354,12 @@ button.small {
 }
 .arrivals { flex: 0 1 auto; }
 .arrival { background: rgba(20, 22, 30, 0.6); }
+
+/* Round Table talk */
+.talk-lines { display: flex; flex-direction: column; gap: 8px; width: 100%; max-width: 760px; flex: 0 1 auto; overflow-y: auto; touch-action: pan-y; }
+.talk-line { display: flex; align-items: center; gap: 10px; animation: pop 0.3s ease-out; }
+.talk-line .portrait { height: 64px; }
+.talk-line .badge { width: 48px; height: 48px; font-size: 18px; }
+.talk-bubble { margin: 0; background: rgba(255, 255, 255, 0.92); color: #1c1f29; padding: 10px 16px; border-radius: 16px; font-size: 19px; }
+/* Votes so far, during the chalkboards */
+.tally { position: fixed; left: 50%; top: 40%; transform: translate(-50%, -50%); margin: 0; background: rgba(15, 20, 15, 0.92); border: 6px solid #8a5a33; border-radius: 10px; padding: 18px 28px; font: 28px "Chalkboard SE", "Chalkboard", "Comic Sans MS", cursive; color: #f4f4ec; text-align: center; animation: pop 0.3s ease-out; max-width: 80vw; }

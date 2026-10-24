@@ -63,6 +63,14 @@
     <button id="chat-back" class="big">Back</button>
   </section>
 
+  <!-- 5b. Round Table talk: people accuse and defend; Sam joins in. -->
+  <section id="screen-talk" class="screen table" hidden>
+    <h2>The Round Table</h2>
+    <div id="talk-lines" class="talk-lines"></div>
+    <div id="talk-options" class="questions" hidden></div>
+    <button id="to-vote" class="big" hidden>Time to vote</button>
+  </section>
+
   <!-- 6. The Round Table: tap who you think is a Traitor. -->
   <section id="screen-table" class="screen table" hidden>
     <h2>Who do you think is a Traitor?</h2>
@@ -74,6 +82,7 @@
   <section id="screen-votes" class="screen table" hidden>
     <h2>The votes</h2>
     <div id="boards" class="boards"></div>
+    <p id="tally" class="tally" hidden></p>
     <p id="most-votes" class="most-votes" hidden></p>
     <button id="to-reveal" class="big" hidden>Find out...</button>
   </section>

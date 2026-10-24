@@ -299,3 +299,78 @@ export function breakfastGroups(game) {
   }
   return groups;
 }
+
+// ─── Round Table talk (Gareth, 2026-10-24: "some conversation with options
+// for us to join in during the round table before we all vote") ──────────
+
+// Who someone is about to accuse at the Round Table: the name they'd give
+// if you asked who they'll vote for.
+function accuses(game, id) {
+  return answer(game, id, "vote").names[0];
+}
+
+// Today's talk before the vote: two people accuse someone, and each accused
+// person defends themselves. Returns [{ speaker, text, names }].
+export function tableTalk(game) {
+  const r = rng(game, "talk", game.day);
+  const speakers = brains(game);
+  for (let i = speakers.length - 1; i > 0; i--) {
+    const j = Math.floor(r() * (i + 1));
+    [speakers[i], speakers[j]] = [speakers[j], speakers[i]];
+  }
+  const accuseLines = [
+    (n) => `I've been watching ${n}. I think they're a Traitor!`,
+    (n) => `It's ${n}! I just know it.`,
+    (n) => `${n} has been acting really sneaky...`,
+  ];
+  const defendLines = [
+    "That's not fair! I'm a Faithful!",
+    "Me? No way! You've got it all wrong!",
+    "I'm Faithful, I promise! Look somewhere else!",
+  ];
+  const talk = [];
+  const accused = [];
+  for (const s of speakers) {
+    if (accused.length === 2) break;
+    const target = accuses(game, s);
+    if (accused.includes(target) || accused.includes(s) || target === undefined) continue;
+    accused.push(target);
+    talk.push({ speaker: s, text: accuseLines[Math.floor(r() * accuseLines.length)](nameOf(target)), names: [target] });
+    if (target !== game.playerId) {
+      talk.push({ speaker: target, text: defendLines[Math.floor(r() * defendLines.length)], names: [] });
+    }
+  }
+  return talk;
+}
+
+// What Sam can say: agree with an accusation, stick up for someone, or stay
+// quiet. If Sam was accused, he can defend himself.
+export function talkOptions(game, talk) {
+  const accused = talk.filter((t) => t.names.length > 0).map((t) => t.names[0]);
+  const options = [];
+  for (const a of accused) {
+    if (a === game.playerId) options.push({ kind: "defend", target: a, text: "I'm a Faithful! It's not me!" });
+    else options.push({ kind: "accuse", target: a, text: `I agree. It's ${nameOf(a)}!` });
+  }
+  const other = accused.find((a) => a !== game.playerId);
+  if (other) options.push({ kind: "defend", target: other, text: `Leave ${nameOf(other)} alone. I trust them.` });
+  options.push({ kind: "quiet", target: null, text: "Stay quiet and watch..." });
+  return options.slice(0, 4);
+}
+
+// Sam speaks. Honest players listen a little: an accusation makes them
+// more suspicious of that person, sticking up for someone less. The one Sam
+// accused starts to suspect Sam back.
+export const TALK_SWAY = 0.12;
+export function playerSays(game, option) {
+  if (option.kind === "quiet") return;
+  for (const b of brains(game)) {
+    if (isTraitor(game, b) || b === option.target) continue;
+    const s = game.scores[b];
+    if (option.target === game.playerId) continue;
+    s[option.target] = Math.max(0, s[option.target] + (option.kind === "accuse" ? TALK_SWAY : -TALK_SWAY));
+  }
+  if (option.kind === "accuse" && game.scores[option.target]) {
+    game.scores[option.target][game.playerId] += 0.15;
+  }
+}

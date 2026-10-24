@@ -71,8 +71,15 @@ function nightSeed(side, want) {
   throw new Error("no seed found");
 }
 
-async function voteAndReveal(doc) {
+async function talkThenTable(doc) {
   doc.getElementById("to-table").click();
+  await until(() => !doc.getElementById("talk-options").hidden, "the Round Table talk", 8000);
+  doc.querySelector("#talk-options .question").click();
+  doc.getElementById("to-vote").click();
+}
+
+async function voteAndReveal(doc) {
+  await talkThenTable(doc);
   doc.querySelector("#table-cards .card").click();
   doc.getElementById("cast-vote").click();
   await until(() => !doc.getElementById("to-reveal").hidden, "all the chalkboards are up");
@@ -82,13 +89,14 @@ async function voteAndReveal(doc) {
 
 test("Round Table: vote, everyone shows a chalkboard, drum roll, reveal, next day", async () => {
   const { page, doc } = await toCastle(seedFor("pepper", FAITHFUL));
-  doc.getElementById("to-table").click();
+  await talkThenTable(doc);
   assert.ok(visible(doc, "screen-table"));
   assert.ok(doc.getElementById("cast-vote").disabled, "can't vote before picking");
   doc.querySelector("#table-cards .card").click();
   doc.getElementById("cast-vote").click();
   await until(() => visible(doc, "to-reveal"), "all the chalkboards are up");
   assert.eq(doc.querySelectorAll("#boards .chalkboard").length, 22, "22 chalkboards");
+  assert.eq(doc.getElementById("boards").dataset.pauses, "3", "stopped 3 times to count the votes");
   assert.ok([...doc.querySelectorAll(".board-voter")].some((b) => b.textContent === "You"), "yours is there");
   doc.getElementById("to-reveal").click();
   await until(() => doc.getElementById("reveal").textContent.includes("!"), "the reveal", 8000);
@@ -189,4 +197,19 @@ test("at the secret meeting, each Traitor says their idea out loud", async () =>
   assert.eq(spoken.length, ideas.length, "one spoken line per idea");
   const fellows = page.game.players.filter((p) => p.side === TRAITOR && p.id !== "pepper" && p.inGame);
   spoken.forEach((s, i) => assert.near(s.pitch, voiceFor(fellows[i].id).pitch, 1e-6, "in their own voice"));
+});
+
+test("Round Table talk: people accuse and defend, then Sam joins in", async () => {
+  const { page, doc } = await toCastle(seedFor("pepper", FAITHFUL));
+  doc.getElementById("to-table").click();
+  assert.ok(visible(doc, "screen-talk"), "talk comes before the vote");
+  await until(() => visible(doc, "talk-options"), "Sam's turn to speak", 8000);
+  assert.gt(doc.querySelectorAll("#talk-lines .talk-line").length, 1, "people have spoken");
+  const opts = doc.querySelectorAll("#talk-options .question");
+  assert.ok(opts.length >= 3, "options to join in");
+  opts[0].click();
+  assert.eq(doc.querySelector("#talk-lines .talk-line:last-child b").textContent, "You: ", "Sam's line appears");
+  assert.ok(visible(doc, "to-vote"));
+  doc.getElementById("to-vote").click();
+  assert.ok(visible(doc, "screen-table"));
 });

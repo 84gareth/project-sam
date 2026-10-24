@@ -56,3 +56,16 @@ median 8 days. The Traitors can't win yet: that needs the night train
 The suspicion and voting rules live in pure code, so a test can play
 hundreds of Round Tables and check bands, like: Faithful computer players
 find a Traitor more often than chance, but not every time.
+
+## Round Table talk and vote counts (Gareth, 2026-10-24, v0.5.3)
+"Some conversation with options for us to join in during the round table
+before we all vote", and "stop for a vote count a few times during the
+chalk board reveals".
+- Before the vote, two people accuse someone (whoever they plan to vote
+  for), and each accused person sticks up for themselves, all spoken.
+- Sam then picks: agree with an accusation, stick up for someone, defend
+  himself if accused, or stay quiet. Honest players listen: an accusation
+  makes them a little more suspicious of that person (+0.12), sticking up
+  for someone a little less; the one Sam accused starts to suspect Sam.
+- During the chalkboards, every 6 votes the game stops and shows the votes
+  so far (top 3) on a big chalkboard, read out by the storyteller.

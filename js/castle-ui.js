@@ -3,7 +3,7 @@
 import { TRAITOR, FAITHFUL } from "./game.js";
 import {
   arriveAtCastle, answer, roundTable, winner, stillIn, isTraitor, QUESTIONS,
-  night, murderIdeas, breakfastGroups,
+  night, murderIdeas, breakfastGroups, tableTalk, talkOptions, playerSays,
 } from "./castle.js";
 import { $, show, badge, card, character, wait } from "./ui.js";
 import { say, narrate, voicesOn, setVoices } from "./voice.js";
@@ -88,6 +88,55 @@ function showVoicesButton() {
 
 // ─── The Round Table ────────────────────────────────────────────────────────
 
+// First the talk: two accusations and their answers, one at a time, each
+// spoken in that character's voice. Then Sam joins in.
+async function roundTableTalk() {
+  const lines = $("talk-lines");
+  lines.replaceChildren();
+  $("talk-options").hidden = true;
+  $("to-vote").hidden = true;
+  show("screen-talk");
+  narrate("Everyone sits down at the Round Table.");
+  const talk = tableTalk(game);
+  for (const t of talk) {
+    await wait(1500);
+    lines.append(talkLine(t.speaker, t.text));
+    say(t.text, t.speaker, { queue: true });
+  }
+  await wait(1000);
+  const opts = $("talk-options");
+  opts.replaceChildren();
+  for (const o of talkOptions(game, talk)) {
+    const b = document.createElement("button");
+    b.className = "question";
+    b.textContent = o.text;
+    b.addEventListener("click", () => {
+      playerSays(game, o);
+      opts.hidden = true;
+      if (o.kind !== "quiet") {
+        lines.append(talkLine(game.playerId, o.text, "You"));
+        say(o.text, game.playerId);
+      }
+      $("to-vote").hidden = false;
+    });
+    opts.append(b);
+  }
+  opts.hidden = false;
+}
+
+function talkLine(id, text, label = character(id).name) {
+  const row = document.createElement("div");
+  row.className = "talk-line";
+  row.append(badge(character(id)));
+  const bubble = document.createElement("p");
+  bubble.className = "talk-bubble";
+  const who = document.createElement("b");
+  who.textContent = label + ": ";
+  bubble.append(who, text);
+  row.append(bubble);
+  return row;
+}
+
 function goToTable() {
   tableVote = null;
   $("cast-vote").disabled = true;
@@ -115,7 +164,12 @@ async function castVote() {
   $("most-votes").hidden = true;
   $("to-reveal").hidden = true;
   show("screen-votes");
-  for (const [voter, target] of result.votes) {
+  // Every few chalkboards, stop and count the votes so far (Gareth).
+  const counts = {};
+  let pauses = 0;
+  $("tally").hidden = true;
+  for (const [i, [voter, target]] of result.votes.entries()) {
+    counts[target] = (counts[target] || 0) + 1;
     const b = document.createElement("div");
     b.className = "chalkboard";
     const who = document.createElement("span");
@@ -128,6 +182,17 @@ async function castVote() {
     boards.append(b);
     play("chalk");
     await wait(350);
+    if ((i + 1) % 6 === 0 && i + 1 < result.votes.length) {
+      const top = Object.entries(counts).sort((x, y) => y[1] - x[1]).slice(0, 3);
+      const text = "Votes so far: " + top.map(([id, n]) => `${character(id).name} ${n}`).join(", ") + ".";
+      $("tally").textContent = text;
+      $("tally").hidden = false;
+      narrate(text);
+      pauses++;
+      boards.dataset.pauses = String(pauses);
+      await wait(2600);
+      $("tally").hidden = true;
+    }
   }
   const out = character(result.banished);
   $("most-votes").textContent = `${out.name} has the most votes: ${result.counts[result.banished]}.`;
@@ -330,7 +395,8 @@ $("chat-back").addEventListener("click", () => {
   if (window.speechSynthesis) window.speechSynthesis.cancel();
   show("screen-castle");
 });
-$("to-table").addEventListener("click", goToTable);
+$("to-table").addEventListener("click", roundTableTalk);
+$("to-vote").addEventListener("click", goToTable);
 $("cast-vote").addEventListener("click", castVote);
 $("next-day").addEventListener("click", goNight);
 $("murder").addEventListener("click", () => {
