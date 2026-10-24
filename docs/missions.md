@@ -93,6 +93,14 @@ has gone, there's no note.
   flicker while you put its 9 pieces back (tap a piece, then its place).
   45 seconds. Everyone builds; the best builder wins the shield.
 
+## Fresh every time (Gareth, v0.12.6)
+
+Every mission's details come from the game's random seed, so they change
+from game to game: tunes, shuffles, the catapult wall, the diner, hiding
+places, words, mazes (and their corners), trails, galleries and treasure.
+Added: the Cooking menu (4 of 6 foods per truck, the hated food always on
+it) and four Lights Out shield pictures.
+
 ## No mission on day 1 (Gareth, v0.11.1)
 
 Day 1 goes straight to the castle. Days 2 to 12 have a mission each, so a

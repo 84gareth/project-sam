@@ -8,7 +8,7 @@ import {
 import {
   todaysMission, bellTune, pieRound, cookingDiner, shieldTruck, TRUCKS, HATES, flopResult, MISSIONS,
   whereRounds, jumbleWords, secretCode, makeMaze, canStep, MAZE_W, MAZE_H, footprintTrail, galleryRounds,
-  treasureSpot,
+  treasureSpot, truckFoods,
 } from "../../js/missions.js";
 
 // What flopMission does, as rules (for rehearsing a game to find a seed).
@@ -548,7 +548,9 @@ test("Cooking: cook their hated food and find the shield", async () => {
   assert.ok(doc.getElementById("diner-clue").textContent.includes(HATES[diner][1]), "the clue shows");
   assert.ok(doc.getElementById("serve").disabled, "can't serve an empty plate");
   const hated = HATES[diner][0];
-  for (const t of TRUCKS) doc.querySelector(`.food[data-food="${t.foods.includes(hated) ? hated : t.foods[0]}"]`).click();
+  const menu = truckFoods(page.game, diner);
+  assert.eq([...doc.querySelectorAll(".food")].map((f) => f.dataset.food), menu.flat(), "today's menu");
+  for (const foods of menu) doc.querySelector(`.food[data-food="${foods.includes(hated) ? hated : foods[0]}"]`).click();
   doc.querySelector(`.box[data-box="${shieldTruck(page.game)}"]`).click();
   assert.notOk(doc.getElementById("serve").disabled);
   doc.getElementById("serve").click();

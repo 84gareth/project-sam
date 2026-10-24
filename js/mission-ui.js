@@ -3,7 +3,7 @@
 // missions.js; these files draw and listen.
 import {
   finishMission, todaysMission, bellTune, BELL_ROUNDS, BELLS, bellScore, pieRound, PIE_ROUNDS, pieScore,
-  STONES, finishCatapults, TRUCKS, HATES, cookingDiner, shieldTruck, finishCooking, flopResult,
+  STONES, finishCatapults, TRUCKS, HATES, cookingDiner, shieldTruck, finishCooking, flopResult, truckFoods,
 } from "./missions.js";
 import { PLAY } from "./mission-more.js";
 import { stillIn } from "./castle.js";
@@ -327,13 +327,14 @@ async function playCooking() {
   const trucks = $("trucks");
   trucks.replaceChildren();
   const ready = () => { $("serve").disabled = meal.includes(null) || box === null; };
+  const menu = truckFoods(game, diner);
   TRUCKS.forEach((truck, i) => {
     const col = document.createElement("div");
     col.className = "truck";
     const h = document.createElement("h3");
     h.textContent = truck.name;
     col.append(h);
-    for (const food of truck.foods) {
+    for (const food of menu[i]) {
       const b = document.createElement("button");
       b.className = "food";
       b.dataset.food = food;

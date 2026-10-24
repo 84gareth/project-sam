@@ -179,10 +179,21 @@ export function finishCatapults(game, samHits, stillIn, mission = MISSIONS.find(
 // Three trucks of food. Someone comes to dinner with a clue about the food
 // they hate: cook it and win money. One truck's secret box has the shield.
 export const TRUCKS = [
-  { id: "healthy", name: "Healthy truck", foods: ["Carrots", "Broccoli", "Soup", "Salad"] },
-  { id: "meat", name: "Meat truck", foods: ["Sausages", "Fish", "Chicken", "Burger"] },
-  { id: "dessert", name: "Dessert truck", foods: ["Strawberries", "Jelly", "Ice cream", "Pancakes"] },
+  { id: "healthy", name: "Healthy truck", foods: ["Carrots", "Broccoli", "Soup", "Salad", "Peas", "Cabbage"] },
+  { id: "meat", name: "Meat truck", foods: ["Sausages", "Fish", "Chicken", "Burger", "Meatballs", "Ham"] },
+  { id: "dessert", name: "Dessert truck", foods: ["Strawberries", "Jelly", "Ice cream", "Pancakes", "Cake", "Custard"] },
 ];
+// Today's menu: 4 of each truck's 6 foods, different each time (Gareth:
+// "all missions should have randomised elements"). The diner's hated food
+// is always on it somewhere.
+export function truckFoods(game, diner) {
+  const r = rng(game, "menu", game.day);
+  return TRUCKS.map((t) => {
+    const hated = t.foods.includes(HATES[diner][0]) ? [HATES[diner][0]] : [];
+    const rest = shuffled(t.foods.filter((f) => !hated.includes(f)), r).slice(0, 4 - hated.length);
+    return shuffled([...hated, ...rest], r);
+  });
+}
 // Everyone's least favourite food, and the clue they give.
 export const HATES = {
   puddle: ["Soup", "I hate anything wet!"],
@@ -448,6 +459,9 @@ export const treasureScore = (found, taps) => (found ? Math.max(0.3, 1 - (taps -
 // ─── Lights Out ─────────────────────────────────────────────────────────────
 export const PIECES = 9, LIGHTS_SECONDS = 45;
 export const lightsTray = (game) => shuffled([...Array(PIECES).keys()], rng(game, "lights", game.day));
+// Which of the shield pictures to rebuild today.
+export const SHIELD_DESIGNS = 4;
+export const lightsDesign = (game) => Math.floor(rng(game, "lights-design", game.day)() * SHIELD_DESIGNS);
 export const lightsScore = (placed) => placed.filter((p, slot) => p === slot).length / PIECES;
 
 // Doing a mission as badly as possible (the tests' "give up"): nobody hit,

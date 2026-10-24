@@ -439,3 +439,36 @@ test("Garden Maze: a hedge stops you at its edge", () => {
     return;
   }
 });
+
+// ─── Fresh every time (Gareth: "all missions should have randomised elements") ─
+import { truckFoods, lightsDesign, SHIELD_DESIGNS, bellTune as tuneOf } from "../../js/missions.js";
+
+test("Cooking: 4 foods a truck, changing each time; the hated food is always on the menu", () => {
+  const menus = new Set();
+  for (let seed = 1; seed <= 30; seed++) {
+    const g = castle(seed);
+    g.day = 2 + (seed % 5);
+    const diner = cookingDiner(g, stillIn(g));
+    const menu = truckFoods(g, diner);
+    assert.eq(menu.map((m) => m.length), [4, 4, 4]);
+    assert.ok(menu.flat().includes(HATES[diner][0]), `${diner} hates ${HATES[diner][0]}`);
+    menu.forEach((foods, i) => foods.forEach((f) => assert.ok(TRUCKS[i].foods.includes(f))));
+    menus.add(menu.flat().join());
+  }
+  assert.gt(menus.size, 20);
+});
+
+test("every mission changes from game to game", () => {
+  const seen = { lights: new Set(), maze: new Set(), bells: new Set(), keys: new Set() };
+  for (let seed = 1; seed <= 20; seed++) {
+    const g = castle(seed);
+    seen.lights.add(lightsDesign(g));
+    seen.maze.add(JSON.stringify(makeMaze(g).walls));
+    seen.bells.add(tuneOf(g).join());
+    seen.keys.add(JSON.stringify(keySpots(g)));
+  }
+  assert.eq(seen.lights.size, SHIELD_DESIGNS, "all the shield pictures come up");
+  assert.eq(seen.maze.size, 20);
+  assert.gt(seen.bells.size, 15);
+  assert.eq(seen.keys.size, 20);
+});

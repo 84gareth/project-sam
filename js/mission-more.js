@@ -5,7 +5,7 @@ import {
   whereRounds, jumbleWords, noteFrom, secretCode, CODE_TRIES, makeMaze, mazeMove, mazeSquare, MAZE_SPEED, mazeScore,
   MAZE_W, MAZE_H, MAZE_SECONDS, keySpots, KEYS, KEYS_SECONDS, footprintTrail, footprintNote,
   galleryRounds, treasureSpot, treasureTap, treasureScore, TREASURE_TAPS, lightsTray, lightsScore,
-  PIECES, LIGHTS_SECONDS, gone,
+  PIECES, LIGHTS_SECONDS, gone, lightsDesign,
 } from "./missions.js";
 import { stillIn } from "./castle.js";
 import { ROOMS } from "./puppets.js";
@@ -469,16 +469,29 @@ function treasure(ctx) {
 
 // ─── Lights Out ─────────────────────────────────────────────────────────────
 
-// The shield picture to rebuild: drawn here, so there's nothing to download.
-const SHIELD_PICTURE = "data:image/svg+xml," + encodeURIComponent(
-  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300">'
-  + '<rect width="300" height="300" fill="#2b2f3a"/>'
-  + '<path d="M30 20h240v110c0 80-60 130-120 155C90 260 30 210 30 130z" fill="#c62828" stroke="#f2c14e" stroke-width="12"/>'
-  + '<path d="M150 20v265M30 120h240" stroke="#f2c14e" stroke-width="10"/>'
-  + '<path d="M150 20h120v100H150z" fill="#1e5aa8"/><path d="M30 120h120v110c-30-10-120-50-120-110z" fill="#1e5aa8"/>'
-  + '<polygon points="90,40 100,68 128,68 105,85 114,112 90,95 66,112 75,85 52,68 80,68" fill="#fff"/>'
-  + '<circle cx="210" cy="190" r="34" fill="#fff"/><circle cx="210" cy="190" r="16" fill="#2e8b57"/>'
-  + "</svg>");
+// The shield pictures to rebuild: drawn here, so there's nothing to
+// download. A different one can come up each time.
+const SHIELDS = [
+  ["#c62828", "#1e5aa8", "#f2c14e", "star"],
+  ["#2e8b57", "#f2c14e", "#fff", "crown"],
+  ["#5b2c83", "#e2453c", "#f2c14e", "circle"],
+  ["#1e5aa8", "#ffffff", "#c62828", "cross"],
+].map(([main, second, trim, emblem]) => {
+  const emblems = {
+    star: '<polygon points="90,40 100,68 128,68 105,85 114,112 90,95 66,112 75,85 52,68 80,68" fill="#fff"/><circle cx="210" cy="190" r="34" fill="#fff"/>',
+    crown: '<polygon points="55,100 60,50 80,75 90,40 100,75 120,50 125,100" fill="#f2c14e" stroke="#7a5412" stroke-width="4"/><rect x="185" y="160" width="50" height="60" rx="8" fill="#fff"/>',
+    circle: '<circle cx="90" cy="72" r="34" fill="#f2c14e"/><circle cx="90" cy="72" r="14" fill="#5b2c83"/><polygon points="210,150 245,215 175,215" fill="#fff"/>',
+    cross: '<path d="M80 40h22v26h26v22h-26v26H80V88H54V66h26z" fill="#c62828"/><circle cx="210" cy="190" r="30" fill="#c62828"/>',
+  };
+  return "data:image/svg+xml," + encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300">'
+    + '<rect width="300" height="300" fill="#2b2f3a"/>'
+    + `<path d="M30 20h240v110c0 80-60 130-120 155C90 260 30 210 30 130z" fill="${main}" stroke="${trim}" stroke-width="12"/>`
+    + `<path d="M150 20v265M30 120h240" stroke="${trim}" stroke-width="10"/>`
+    + `<path d="M150 20h120v100H150z" fill="${second}"/><path d="M30 120h120v110c-30-10-120-50-120-110z" fill="${second}"/>`
+    + emblems[emblem] + "</svg>");
+});
+let SHIELD_PICTURE = SHIELDS[0];
 
 function pieceEl(index, tag = "button") {
   const p = el(tag, "piece");
@@ -490,6 +503,7 @@ function pieceEl(index, tag = "button") {
 
 async function lights(ctx) {
   const { game, box } = ctx;
+  SHIELD_PICTURE = SHIELDS[lightsDesign(game)];
   const whole = el("img", "whole-shield");
   whole.src = SHIELD_PICTURE;
   whole.alt = "The shield";
