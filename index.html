@@ -15,24 +15,24 @@
   <!-- STAMP (tools/stamp.py writes this; don't edit by hand) -->
   <script type="importmap">{
   "imports": {
-    "./js/castle-ui.js": "./js/castle-ui.js?v=0.12.2",
-    "./js/castle.js": "./js/castle.js?v=0.12.2",
-    "./js/characters.js": "./js/characters.js?v=0.12.2",
-    "./js/dialogue.js": "./js/dialogue.js?v=0.12.2",
-    "./js/fit.js": "./js/fit.js?v=0.12.2",
-    "./js/game.js": "./js/game.js?v=0.12.2",
-    "./js/main.js": "./js/main.js?v=0.12.2",
-    "./js/mission-more.js": "./js/mission-more.js?v=0.12.2",
-    "./js/mission-ui.js": "./js/mission-ui.js?v=0.12.2",
-    "./js/missions.js": "./js/missions.js?v=0.12.2",
-    "./js/puppets.js": "./js/puppets.js?v=0.12.2",
-    "./js/sound.js": "./js/sound.js?v=0.12.2",
-    "./js/ui.js": "./js/ui.js?v=0.12.2",
-    "./js/version.js": "./js/version.js?v=0.12.2",
-    "./js/voice.js": "./js/voice.js?v=0.12.2"
+    "./js/castle-ui.js": "./js/castle-ui.js?v=0.12.3",
+    "./js/castle.js": "./js/castle.js?v=0.12.3",
+    "./js/characters.js": "./js/characters.js?v=0.12.3",
+    "./js/dialogue.js": "./js/dialogue.js?v=0.12.3",
+    "./js/fit.js": "./js/fit.js?v=0.12.3",
+    "./js/game.js": "./js/game.js?v=0.12.3",
+    "./js/main.js": "./js/main.js?v=0.12.3",
+    "./js/mission-more.js": "./js/mission-more.js?v=0.12.3",
+    "./js/mission-ui.js": "./js/mission-ui.js?v=0.12.3",
+    "./js/missions.js": "./js/missions.js?v=0.12.3",
+    "./js/puppets.js": "./js/puppets.js?v=0.12.3",
+    "./js/sound.js": "./js/sound.js?v=0.12.3",
+    "./js/ui.js": "./js/ui.js?v=0.12.3",
+    "./js/version.js": "./js/version.js?v=0.12.3",
+    "./js/voice.js": "./js/voice.js?v=0.12.3"
   }
 }</script>
-  <link rel="stylesheet" href="css/style.css?v=0.12.2">
+  <link rel="stylesheet" href="css/style.css?v=0.12.3">
   <!-- /STAMP -->
 </head>
 <body>
@@ -163,6 +163,12 @@
     <section id="screen-night" class="screen night" hidden>
       <h2 id="night-title">Night falls...</h2>
       <p id="night-text" class="night-text">The Traitors are meeting in secret.</p>
+      <!-- A sealed letter: tap it to open (Gareth). -->
+      <button id="envelope" class="envelope" hidden>
+        <span class="envelope-flap"></span>
+        <span class="wax-seal">T</span>
+        <span class="envelope-label">Tap to open</span>
+      </button>
       <div id="letter" class="letter" hidden>
         <p>By order of the Traitors,</p>
         <p id="letter-big" class="letter-big">you have been murdered.</p>
@@ -250,6 +256,6 @@
     <p>Turn your phone sideways to play!</p>
   </div>
 
-  <script type="module" src="js/main.js?v=0.12.2"></script>
+  <script type="module" src="js/main.js?v=0.12.3"></script>
 </body>
 </html>

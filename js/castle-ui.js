@@ -518,24 +518,41 @@ async function goNight() {
   $("night-over").hidden = true;
   show("screen-night");
   play("night");
+  $("envelope").hidden = true;
   narrate("Night falls. The Traitors are meeting in secret.");
   if (isRecruitNight(game)) return recruitNightFaithful();
   const victim = night(game);
   await wait(1800);
   if (victim === me) {
-    $("letter-big").textContent = "you have been murdered.";
-    $("night-text").textContent = "There's a letter under your door...";
-    narrate("There's a letter under your door...", { queue: true });
-    await wait(1200);
-    $("letter").hidden = false;
-    play("letter");
-    narrate("By order of the Traitors, you have been murdered.", { queue: true });
+    await sealedLetter("you have been murdered.");
     $("night-over").hidden = false;
   } else {
     $("night-text").textContent = "Phew! No letter for you tonight.";
     narrate("Phew! No letter for you tonight.", { queue: true });
     $("to-breakfast").hidden = false;
   }
+}
+
+// A letter from the Traitors slides under the door, sealed. Tap it: it
+// unfolds and is read out (Gareth). Resolves once it has been opened.
+async function sealedLetter(words) {
+  $("night-text").textContent = "There's a letter under your door...";
+  narrate("There's a letter under your door... Tap it to open it.", { queue: true });
+  await wait(1200);
+  $("letter-big").textContent = words;
+  $("envelope").className = "envelope";
+  $("envelope").hidden = false;
+  play("letter");
+  await new Promise((resolve) => { $("envelope").onclick = resolve; });
+  $("envelope").onclick = null;
+  $("envelope").classList.add("opening");
+  await wait(700);
+  $("envelope").hidden = true;
+  $("letter").classList.remove("unfold");
+  void $("letter").offsetWidth;
+  $("letter").classList.add("unfold");
+  $("letter").hidden = false;
+  narrate(`By order of the Traitors, ${words}`);
 }
 
 // Every other night the Traitors only plot: no murder (so 12 days fit).
@@ -566,14 +583,8 @@ async function recruitNightFaithful() {
   const who = recruit(game);
   await wait(1800);
   if (who === game.playerId) {
-    $("night-text").textContent = "There's a letter under your door...";
-    narrate("There's a letter under your door...", { queue: true });
-    await wait(1200);
     const others = stillIn(game).filter((id) => id !== who && isTraitor(game, id)).map((id) => character(id).name);
-    $("letter-big").textContent = `you are now a Traitor! Your fellow Traitors are ${others.join(", ")}.`;
-    $("letter").hidden = false;
-    play("letter");
-    narrate(`By order of the Traitors, you are now a Traitor! Your fellow Traitors are ${others.join(", ")}.`, { queue: true });
+    await sealedLetter(`you are now a Traitor! Your fellow Traitors are ${others.join(", ")}.`);
   } else {
     $("night-text").textContent = "Phew! No letter for you tonight.";
     narrate("Phew! No letter for you tonight.", { queue: true });

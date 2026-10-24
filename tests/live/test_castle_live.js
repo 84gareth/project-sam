@@ -174,7 +174,11 @@ test("night 1: if the Traitors recruit Sam, a letter makes him a Traitor", async
   const { page, doc } = await toCastle(nightSeed(FAITHFUL, (v) => v === "pepper"));
   await voteAndReveal(doc);
   doc.getElementById("next-day").click();
-  await until(() => visible(doc, "letter"), "the letter", 8000);
+  await until(() => visible(doc, "envelope"), "a sealed letter", 8000);
+  assert.notOk(visible(doc, "letter"), "sealed until you tap it");
+  assert.notOk(visible(doc, "to-breakfast"), "open it first");
+  doc.getElementById("envelope").click();
+  await until(() => visible(doc, "letter"), "the letter unfolds", 8000);
   assert.ok(doc.getElementById("letter").textContent.includes("By order of the Traitors"));
   assert.ok(doc.getElementById("letter").textContent.includes("you are now a Traitor"));
   assert.eq(page.game.playerSide, TRAITOR);
@@ -217,7 +221,9 @@ test("a Faithful who is murdered (night 2) gets the letter", async () => {
   await until(() => visible(doc, "after-reveal") || visible(doc, "game-over"), "the reveal", 8000);
   if (visible(doc, "game-over")) return;   // the game ended at the table instead
   doc.getElementById("next-day").click();
-  await until(() => visible(doc, "letter"), "the letter", 8000);
+  await until(() => visible(doc, "envelope"), "a sealed letter", 8000);
+  doc.getElementById("envelope").click();
+  await until(() => visible(doc, "letter"), "the letter unfolds", 8000);
   assert.ok(doc.getElementById("letter").textContent.includes("you have been murdered"));
   assert.ok(visible(doc, "night-over"), "Play again");
 });
