@@ -526,3 +526,14 @@ button.small {
 .pie.wrong .crust { box-shadow: 0 0 30px 10px #f66; }
 .mission-result { display: flex; flex-direction: column; align-items: center; gap: 6px; background: rgba(20, 22, 30, 0.8); padding: 16px 28px; border-radius: 18px; }
 .mission-result p { margin: 0; font-size: 24px; font-weight: 700; text-align: center; }
+
+/* The slow-motion walk to the Round Table */
+.walk { justify-content: flex-start; overflow: hidden; }
+.walk-line {
+  position: absolute; left: 0; bottom: 6%; display: flex; gap: 6px; align-items: flex-end;
+  white-space: nowrap; animation: walk-across 12s linear forwards;
+}
+.walk-line .cutout { height: 170px; width: auto; animation: slow-waddle 1.4s ease-in-out infinite; transform-origin: 50% 100%; }
+.walk-line .cutout:nth-child(odd) { animation-delay: -0.7s; }
+@keyframes walk-across { from { transform: translateX(70vw); } to { transform: translateX(calc(-100% + 100vw)); } }
+@keyframes slow-waddle { 0%, 100% { transform: rotate(-3deg) translateY(0); } 50% { transform: rotate(3deg) translateY(-8px); } }

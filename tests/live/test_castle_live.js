@@ -305,7 +305,7 @@ test("at the secret meeting, each Traitor says their idea out loud", async () =>
 test("Round Table talk: people accuse and defend, then Sam joins in", async () => {
   const { page, doc } = await toCastle(seedFor("pepper", FAITHFUL));
   doc.getElementById("to-table").click();
-  assert.ok(visible(doc, "screen-talk"), "talk comes before the vote");
+  await until(() => visible(doc, "screen-talk"), "after the walk, talk comes before the vote", 8000);
   await until(() => visible(doc, "talk-options"), "Sam's turn to speak", 8000);
   assert.gt(doc.querySelectorAll("#talk-lines .talk-line").length, 1, "people have spoken");
   const opts = doc.querySelectorAll("#talk-options .question");
@@ -531,4 +531,13 @@ test("a quiet night: the Traitors only plot, and everyone comes to breakfast", a
     assert.ok(doc.getElementById("missing").textContent.includes("Nobody was murdered"));
     assert.eq(stillIn(page.game).length, before, "nobody murdered");
   }
+});
+
+test("everyone walks to the Round Table in slow motion, to drums", async () => {
+  const { page, doc } = await toCastle(seedFor("pepper", FAITHFUL));
+  doc.getElementById("to-table").click();
+  assert.ok(visible(doc, "screen-walk"), "the walk comes first");
+  const walkers = [...doc.querySelectorAll("#walk-line [data-id]")].map((e) => e.dataset.id).sort();
+  assert.eq(walkers, stillIn(page.game).sort(), "everyone still in, Sam too");
+  await until(() => visible(doc, "screen-talk"), "then the talk", 8000);
 });

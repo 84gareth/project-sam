@@ -317,6 +317,26 @@ function showVoicesButton() {
 
 // First the talk: two accusations and their answers, one at a time, each
 // spoken in that character's voice. Then Sam joins in.
+// Everyone walks to the Round Table in slow motion, in one long line, to
+// big drums (Sam, 2026-10-24: "slow motion walk towards the round table
+// ... with some dramatic music"; every day, everyone at once).
+async function walkToTable() {
+  const line = $("walk-line");
+  line.replaceChildren(...stillIn(game).map((id) => {
+    const el = cutout(id);
+    el.dataset.id = id;
+    return el;
+  }));
+  // Restart the walk animation from the right-hand edge.
+  line.style.animation = "none";
+  void line.offsetWidth;
+  line.style.animation = "";
+  show("screen-walk");
+  narrate("Everyone walks to the Round Table...");
+  await play("walk");
+  roundTableTalk();
+}
+
 async function roundTableTalk() {
   const lines = $("talk-lines");
   lines.replaceChildren();
@@ -707,7 +727,7 @@ $("stage").addEventListener("click", (e) => {
 });
 $("door-left").addEventListener("click", (e) => { e.stopPropagation(); tapTo(world, 0, world.me.y); });
 $("door-right").addEventListener("click", (e) => { e.stopPropagation(); tapTo(world, 1, world.me.y); });
-$("to-table").addEventListener("click", roundTableTalk);
+$("to-table").addEventListener("click", walkToTable);
 $("to-vote").addEventListener("click", goToTable);
 $("cast-vote").addEventListener("click", castVote);
 $("next-day").addEventListener("click", goNight);

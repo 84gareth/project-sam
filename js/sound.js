@@ -16,6 +16,7 @@ const SOUNDS = {
   night: ["night.mp3", 6.0, 0.6],
   letter: ["letter.mp3", 1.2, 0.9],
   train: ["train.mp3", 5.0, 0.8],
+  walk: ["walk-drums.mp3", 12.0, 0.8],   // the slow walk to the Round Table (Gareth's pick)
 };
 
 let audio = null;

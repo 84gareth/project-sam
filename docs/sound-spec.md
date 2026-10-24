@@ -57,3 +57,9 @@ Tested by listening in on what the page says (`test_castle_live.js`).
 Looped with a 1 s fade between rooms (`setRoomSound` in `js/sound.js`);
 the fire plays from the Round Table talk to the reveal; quiet everywhere
 else (missions, night, breakfast).
+
+## The walk to the Round Table (v0.9.2)
+Sam: a slow-motion walk to the Round Table "with some dramatic music",
+every day, everyone in one long line. Music: Mixkit 676 "Epical Drums 01"
+(Gareth's pick, 3.4 MB, Mixkit free licence), `walk-drums.mp3`; the first
+12 seconds play, fading out over the last 2.
