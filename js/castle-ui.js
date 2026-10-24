@@ -4,7 +4,7 @@ import { TRAITOR, FAITHFUL } from "./game.js";
 import {
   arriveAtCastle, answer, roundTable, winner, stillIn, isTraitor, QUESTIONS,
   night, murderIdeas, breakfastGroups, tableTalk, talkOptions, playerSays,
-  isRecruitNight, recruit, recruitIdeas,
+  isRecruitNight, recruit, recruitIdeas, joinChat,
 } from "./castle.js";
 import { $, show, badge, card, character, wait, FAST } from "./ui.js";
 import {
@@ -18,6 +18,7 @@ let tableVote = null;
 
 let world = null;
 let chatTarget = null;
+let joinTarget = null;
 
 export function goToCastle(g) {
   game = arriveAtCastle(g);
@@ -44,6 +45,19 @@ function startDay() {
     $("fellows").hidden = true;
   }
   backToCastle();
+}
+
+// Sam's cut-out of a character (the puppet), or their badge if there's no
+// drawing yet. Used when you talk to someone (Gareth: show the cut-out, not
+// the portrait).
+function cutout(id, extraClass = "") {
+  const c = character(id);
+  if (!c.picture) return badge(c, true);
+  const img = document.createElement("img");
+  img.className = "cutout " + extraClass;
+  img.src = `assets/puppets/${id}.png`;
+  img.alt = c.name;
+  return img;
 }
 
 // ─── The paper puppet castle ────────────────────────────────────────────────
@@ -79,7 +93,8 @@ function tick(now, fromBackup = false) {
   if (chatTarget && nextTo(world, chatTarget)) {
     const id = chatTarget;
     chatTarget = null;
-    openChat(id);
+    if (joinTarget) openJoin(...joinTarget);
+    else openChat(id);
   }
   render();
   if (!fromBackup) requestAnimationFrame(tick);
@@ -108,14 +123,18 @@ function puppetEl(id) {
   const label = document.createElement("span");
   label.className = "puppet-name";
   label.textContent = id === game.playerId ? "You" : c.name;
+  // A big speech bubble with bouncing dots when they're chatting.
   const dots = document.createElement("span");
   dots.className = "puppet-chat";
-  dots.textContent = "...";
+  for (let i = 0; i < 3; i++) dots.append(document.createElement("i"));
   el.append(dots, body, label);
   if (id !== game.playerId) {
     el.addEventListener("click", (e) => {
       e.stopPropagation();
-      if (FAST) return openChat(id);
+      const p = world.people[id];
+      // Chatting to someone else? Then Sam joins their chat.
+      joinTarget = p.mode === "chat" && p.with && p.with !== game.playerId ? [id, p.with] : null;
+      if (FAST) return joinTarget ? openJoin(...joinTarget) : openChat(id);
       chatTarget = id;
       walkUpTo(world, id);
     });
@@ -167,7 +186,7 @@ function openChat(id) {
   // They stop to talk while you chat.
   const them = world && world.people[id];
   if (them) { them.mode = "chat"; them.timer = 3; them.with = game.playerId; }
-  $("chat-picture").replaceChildren(badge(c, true));
+  $("chat-picture").replaceChildren(cutout(id));
   $("chat-name").textContent = c.name;
   $("bubble").hidden = true;
   const qs = $("questions");
@@ -181,6 +200,30 @@ function openChat(id) {
     qs.append(b);
   }
   show("screen-chat");
+}
+
+// Sam joins two people chatting. Two Traitors send him away; anyone else
+// usually lets him in (castle.js joinChat).
+function openJoin(a, b) {
+  joinTarget = null;
+  const j = joinChat(game, a, b);
+  for (const id of [a, b]) {
+    const p = world.people[id];
+    if (p) { p.mode = "chat"; p.timer = 3; }
+  }
+  $("join-pictures").replaceChildren(cutout(a, "join-cutout"), cutout(b, "join-cutout"));
+  $("join-names").textContent = `${character(a).name} and ${character(b).name}`;
+  $("join-who").textContent = character(j.speaker).name + ":";
+  $("join-text").textContent = j.text;
+  $("join-chat").hidden = !j.welcome;
+  $("join-chat").textContent = `Chat to ${character(j.speaker).name}`;
+  $("join-chat").onclick = () => openChat(j.speaker);
+  if (!j.welcome) {
+    // Not wanted: they finish up and walk off.
+    for (const id of [a, b]) if (world.people[id]) world.people[id].timer = 0.5;
+  }
+  show("screen-join");
+  say(j.text, j.speaker);
 }
 
 function ask(id, question) {
@@ -308,10 +351,10 @@ async function castVote() {
       const text = "Votes so far: " + top.map(([id, n]) => `${character(id).name} ${n}`).join(", ") + ".";
       $("tally").textContent = text;
       $("tally").hidden = false;
-      narrate(text);
       pauses++;
       boards.dataset.pauses = String(pauses);
-      await wait(2600);
+      // Wait for the storyteller to finish the count before carrying on.
+      await Promise.all([narrate(text), wait(1500)]);
       $("tally").hidden = true;
     }
   }
@@ -328,6 +371,7 @@ async function castVote() {
 async function reveal(result) {
   const out = character(result.banished);
   $("banished-picture").replaceChildren(badge(out, true));
+  $("banished-picture").firstChild.classList.add("reveal-portrait");
   $("banished-name").textContent = out.name;
   $("reveal").textContent = "";
   $("reveal").className = "reveal";
@@ -557,6 +601,10 @@ function showRoster() {
 $("voices").addEventListener("click", () => {
   setVoices(!voicesOn());
   showVoicesButton();
+});
+$("join-back").addEventListener("click", () => {
+  if (window.speechSynthesis) window.speechSynthesis.cancel();
+  backToCastle();
 });
 $("chat-back").addEventListener("click", () => {
   if (window.speechSynthesis) window.speechSynthesis.cancel();

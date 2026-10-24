@@ -42,7 +42,7 @@ test("over two minutes, people wander between rooms, chat, and stay on the floor
     }
   }
   const moved = Object.entries(s.world.people).filter(([id, p]) => p.room !== start[id]).length;
-  assert.gt(moved, 3, `${moved} people changed room`);
+  assert.gt(moved, 8, `${moved} people changed room`);
   assert.gt(chats, 0, "some people stopped to chat");
 });
 

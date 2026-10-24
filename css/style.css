@@ -419,3 +419,44 @@ button.small {
 .room-name { position: absolute; top: 64px; right: 16px; margin: 0; font-size: 20px; font-weight: 700; text-shadow: 0 2px 6px #000; }
 .walk-hint { position: absolute; bottom: 86px; text-shadow: 0 2px 6px #000; }
 .table-button { position: absolute; bottom: max(14px, env(safe-area-inset-bottom)); }
+
+/* ─── Gareth's round of fixes, 2026-10-24 ──────────────────────────────── */
+/* Sam's portraits hang in picture frames: a gilt frame round a paper mat. */
+.portrait {
+  background: #f4f1ea;
+  padding: 4px;
+  border: 5px solid #b8862b;
+  border-radius: 3px;
+  box-shadow: inset 0 0 0 2px #7a5512, 0 3px 8px rgba(0, 0, 0, 0.55);
+  box-sizing: content-box;
+}
+.big-portrait { padding: 8px; border-width: 10px; box-shadow: inset 0 0 0 3px #7a5512, 0 0 0 3px #e6c06a, 0 6px 16px rgba(0, 0, 0, 0.6); }
+/* The reveal at the end of the vote: much bigger. */
+.reveal-portrait { height: min(58vh, 460px) !important; }
+/* Talking to someone shows their cut-out puppet. */
+.cutout { height: min(38vh, 300px); filter: drop-shadow(0 6px 6px rgba(0, 0, 0, 0.6)); }
+.join-pictures { display: flex; gap: 24px; align-items: flex-end; }
+.join-cutout { height: min(32vh, 250px); }
+/* Chat bubbles over puppets: big, white, bouncing dots. */
+.puppet-chat {
+  top: -52px;
+  padding: 12px 18px;
+  z-index: 5;
+  border-radius: 16px;
+  border: 3px solid #1c1f29;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.5);
+  display: flex;
+  gap: 7px;
+}
+.puppet-chat::after {
+  content: "";
+  position: absolute;
+  bottom: -11px;
+  left: 18px;
+  border: 8px solid transparent;
+  border-top-color: #1c1f29;
+}
+.puppet-chat i { width: 14px; height: 14px; border-radius: 50%; background: #1c1f29; animation: dot 1s ease-in-out infinite; }
+.puppet-chat i:nth-child(2) { animation-delay: 0.15s; }
+.puppet-chat i:nth-child(3) { animation-delay: 0.3s; }
+@keyframes dot { 0%, 60%, 100% { transform: translateY(0); } 30% { transform: translateY(-6px); } }

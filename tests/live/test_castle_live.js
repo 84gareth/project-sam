@@ -282,3 +282,28 @@ test("Round Table talk: people accuse and defend, then Sam joins in", async () =
   doc.getElementById("to-vote").click();
   assert.ok(visible(doc, "screen-table"));
 });
+
+test("join two chatting Traitors as a Faithful: they send you away", async () => {
+  const { page, doc } = await toCastle(seedFor("pepper", FAITHFUL));
+  const [a, b] = page.game.players.filter((p) => p.side === TRAITOR).map((p) => p.id);
+  for (const [id, other] of [[a, b], [b, a]]) {
+    Object.assign(page.world.people[id], { room: "hall", mode: "chat", timer: 99, with: other, x: id === a ? 0.4 : 0.5, y: 0.85 });
+  }
+  await until(() => doc.querySelector(`.puppet[data-id="${a}"]`), "they're in the hall");
+  doc.querySelector(`.puppet[data-id="${a}"]`).click();
+  assert.ok(visible(doc, "screen-join"), "Sam joins their chat");
+  assert.notOk(visible(doc, "join-chat"), "not welcome");
+  assert.gt(doc.getElementById("join-text").textContent.length, 0);
+  assert.eq(doc.querySelectorAll("#join-pictures img.cutout, #join-pictures .badge").length, 2, "both of them, cut out");
+});
+
+test("talking to someone shows their cut-out puppet", async () => {
+  const { page, doc } = await toCastle(seedFor("pepper", FAITHFUL));
+  // Held still, already turned to Sam, so nobody else can start a chat with
+  // him first (that would rightly open "join their chat" instead).
+  Object.assign(page.world.people.puddle, { room: "hall", mode: "chat", with: "pepper", timer: 99, x: 0.3, y: 0.85 });
+  await until(() => doc.querySelector('.puppet[data-id="puddle"]'), "Captain Puddle in the hall");
+  doc.querySelector('.puppet[data-id="puddle"]').click();
+  assert.ok(visible(doc, "screen-chat"));
+  assert.ok(doc.querySelector("#chat-picture img.cutout"), "the cut-out, not the framed portrait");
+});

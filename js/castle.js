@@ -413,3 +413,34 @@ export function recruit(game, pick = null) {
   game.history[game.history.length - 1].recruited = who;
   return who;
 }
+
+// ─── Joining someone else's chat (Gareth, 2026-10-24: "you should be able
+// to join in their conversations (but maybe they dont want you to!)") ─────
+
+// Sam walks up to `a` and `b` chatting. Returns { speaker, text, names,
+// welcome }. Two Traitors together get shifty and send Sam away (a clue!),
+// unless Sam is a Traitor too, when they let him in on the plan. Anyone else
+// usually shares what they were saying, but sometimes wants privacy too, so
+// being sent away isn't proof.
+export function joinChat(game, a, b) {
+  const r = rng(game, "join", game.day, [a, b].sort().join("+"));
+  const bothTraitors = isTraitor(game, a) && isTraitor(game, b);
+  const say = (speaker, text, names = [], welcome = true) => ({ speaker, text, names, welcome });
+  if (bothTraitors) {
+    if (game.playerSide === TRAITOR) {
+      const target = traitorTarget(game);
+      return say(a, `Psst! Get in here. We're all blaming ${nameOf(target)} today.`, [target]);
+    }
+    const lines = ["Oh! Erm... nothing! We weren't talking about anything!", "Go away! This is a private chat!", "Shh! Someone's coming!"];
+    return say(a, lines[Math.floor(r() * lines.length)], [], false);
+  }
+  if (r() < 0.25) {
+    return say(a, "Sorry, this is a private chat. Come back later!", [], false);
+  }
+  const speaker = r() < 0.5 ? a : b;
+  const pick = answer(game, speaker, "suspect").names[0];
+  if (pick === game.playerId) {
+    return say(speaker, "Oh! Erm... we were just talking about you, actually...", [pick]);
+  }
+  return say(speaker, `Come and join us! We were saying ${nameOf(pick)} is acting really sneaky.`, [pick]);
+}

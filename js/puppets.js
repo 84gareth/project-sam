@@ -21,7 +21,7 @@ export const DOOR_RIGHT = 0.96;
 export const SPEED = 0.16;          // room widths per second
 export const PLAYER_SPEED = 0.28;
 const CHAT_CHANCE = 0.25;           // when someone stops, chance they chat
-const DOOR_CHANCE = 0.2;            // ...or leave the room
+const DOOR_CHANCE = 0.45;           // ...or leave the room (Gareth: more room to room)
 const NEAR = 0.012;
 
 const roomIndex = (id) => ROOMS.findIndex((r) => r.id === id);
@@ -115,7 +115,7 @@ export function step(world, stillIn, dt, random) {
       if (walk(p, SPEED, dt)) {
         if (p.door) goThrough(p, random);
         p.mode = "idle";
-        p.timer = 1.5 + random() * 3;
+        p.timer = 1 + random() * 2;
       }
     } else if (p.mode === "chat") {
       p.timer -= dt;

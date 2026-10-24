@@ -7,7 +7,7 @@ test("voices stay in a friendly range and never change", () => {
   for (const c of CHARACTERS) {
     const v = voiceFor(c.id);
     assert.ok(v.pitch >= 0.7 && v.pitch <= 1.5, `${c.name} pitch ${v.pitch}`);
-    assert.ok(v.rate >= 0.9 && v.rate <= 1.15, `${c.name} rate ${v.rate}`);
+    assert.ok(v.rate >= 0.78 && v.rate <= 1.02, `${c.name} rate ${v.rate}`);
     assert.eq(voiceFor(c.id), v);
   }
 });
@@ -22,4 +22,8 @@ test("Sam's swap: Professor Fizz has Granny Gumdrop's voice, and back", () => {
   assert.ne(plain("fizz"), plain("gumdrop"), "they still sound different from each other");
   assert.ok(voiceFor("fizz").voiceIndex === 1, "Fizz uses Gumdrop's iPad voice");
   assert.ok(voiceFor("gumdrop").voiceIndex === 2, "Gumdrop uses Fizz's");
+});
+
+test("Zara Zoom talks slowly enough to follow", () => {
+  assert.lt(voiceFor("zara").rate, 0.85);
 });

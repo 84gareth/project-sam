@@ -372,3 +372,43 @@ test("a Traitor Sam picks who joins", () => {
   }
   assert.ok(false, "no game found");
 });
+
+// ─── Joining someone else's chat ────────────────────────────────────────────
+import { joinChat } from "../../js/castle.js";
+
+test("two Traitors chatting send a Faithful Sam away", () => {
+  let n = 0;
+  for (let seed = 1; seed <= 200; seed++) {
+    const g = castle(seed);
+    if (g.playerSide !== FAITHFUL) continue;
+    const [a, b] = traitorsOf(g);
+    const j = joinChat(g, a, b);
+    assert.notOk(j.welcome, `seed ${seed}: ${j.text}`);
+    n++;
+  }
+  assert.gt(n, 10);
+});
+
+test("two Traitors let a Traitor Sam in on the plan", () => {
+  for (let seed = 1; seed <= 400; seed++) {
+    const g = castle(seed);
+    if (g.playerSide !== TRAITOR) continue;
+    const [a, b] = traitorsOf(g).filter((t) => t !== "dot");
+    const j = joinChat(g, a, b);
+    assert.ok(j.welcome);
+    assert.ok(j.text.startsWith("Psst!"));
+    return;
+  }
+  assert.ok(false, "no game found");
+});
+
+test("Faithfuls mostly welcome Sam, but not always (being sent away isn't proof)", () => {
+  let welcome = 0, away = 0;
+  for (let seed = 1; seed <= 200; seed++) {
+    const g = castle(seed);
+    const [a, b] = computers(g).filter((id) => !isTraitor(g, id));
+    joinChat(g, a, b).welcome ? welcome++ : away++;
+  }
+  assert.gt(welcome, away, `${welcome} welcomes, ${away} sent away`);
+  assert.gt(away, 0, "sometimes Faithfuls want privacy too");
+});

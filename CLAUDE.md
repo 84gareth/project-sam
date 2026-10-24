@@ -205,7 +205,7 @@ so, kindly.
   crashes partway can look like a pass (learned in Project 2126).
 
 ## Current status
-Updated 2026-10-24 (v0.6.3).
+Updated 2026-10-24 (v0.7.0).
 - **Phase 0 (web setup) done.** Tests in headless Chrome; GitHub Pages;
   Turbo Town archived.
 - **Phase 1 done.** The game: like The Traitors, starting at Havenbrook
@@ -221,12 +221,17 @@ Updated 2026-10-24 (v0.6.3).
   Every line is voiced, plus a storyteller; Traitors whisper to a Traitor
   Sam (v0.5.2). Panels are see-through so the pictures show.
 - **Recruiting on night 1 (v0.6.2)**: `recruit()` in `js/castle.js`.
+- **Gareth's fixes (v0.7.0)**: whole sticker cut-outs (cutout.gd v2 grows
+  the pen lines to close gaps), framed portraits, bigger reveal, cut-outs
+  when chatting, joining other people's chats (`joinChat`), the vote
+  count waits for the storyteller (`say()` returns a promise), people
+  change rooms more, calmer voices (Zara 0.8; novelty voices skipped).
 - **The paper puppet castle (v0.6.0)**: walk the kitchen, great hall,
   library and garden (`js/puppets.js` rules, rendering in `castle-ui.js`).
   New drawings need a cut-out too: run `tools/image-fix/cutout.gd` for
   them (see `docs/characters.md`).
 - **Phase 4 (the night) built, waiting for Sam (v0.4.0).** Traitors'
   meeting, the letter, breakfast; tactical voting (`docs/night-spec.md`).
-- **Roadmap OK'd by Gareth.** Sam draws the 22 pictures as we go (17 of 22
+- **Roadmap OK'd by Gareth.** Sam draws the 22 pictures as we go (18 of 22
   in: how to add one is in `docs/characters.md`); voices
   are the iPad's own (Web Speech), arriving with Phase 3.
