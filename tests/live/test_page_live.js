@@ -17,3 +17,11 @@ test("page fills an iPad screen without scrolling", async () => {
   assert.ok(doc.documentElement.scrollHeight <= 768, `page is ${doc.documentElement.scrollHeight}px tall`);
   assert.ok(doc.documentElement.scrollWidth <= 1024, `page is ${doc.documentElement.scrollWidth}px wide`);
 });
+
+test("the page loads its code with the version stamped on", async () => {
+  const page = await openPage();
+  await until(() => page.document.getElementById("version").textContent !== "v0.0.0", "page script ran");
+  const loaded = page.performance.getEntriesByType("resource").map((e) => e.name).filter((n) => n.includes("/js/"));
+  assert.gt(loaded.length, 5, "it loaded its modules");
+  for (const n of loaded) assert.ok(n.includes(`?v=${VERSION}`), `stamped: ${n}`);
+});

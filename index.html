@@ -9,7 +9,23 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>Project Sam</title>
-  <link rel="stylesheet" href="css/style.css">
+  <!-- STAMP (tools/stamp.py writes this; don't edit by hand) -->
+  <script type="importmap">{
+  "imports": {
+    "./js/castle-ui.js": "./js/castle-ui.js?v=0.7.5",
+    "./js/castle.js": "./js/castle.js?v=0.7.5",
+    "./js/characters.js": "./js/characters.js?v=0.7.5",
+    "./js/game.js": "./js/game.js?v=0.7.5",
+    "./js/main.js": "./js/main.js?v=0.7.5",
+    "./js/puppets.js": "./js/puppets.js?v=0.7.5",
+    "./js/sound.js": "./js/sound.js?v=0.7.5",
+    "./js/ui.js": "./js/ui.js?v=0.7.5",
+    "./js/version.js": "./js/version.js?v=0.7.5",
+    "./js/voice.js": "./js/voice.js?v=0.7.5"
+  }
+}</script>
+  <link rel="stylesheet" href="css/style.css?v=0.7.5">
+  <!-- /STAMP -->
 </head>
 <body>
   <!-- 1. The station: Sam's picture and a Start button. -->
@@ -175,6 +191,6 @@
     </div>
   </section>
 
-  <script type="module" src="js/main.js"></script>
+  <script type="module" src="js/main.js?v=0.7.5"></script>
 </body>
 </html>

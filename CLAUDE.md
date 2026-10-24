@@ -84,7 +84,9 @@ These rules are carried over from Project 2126
    about process ("why did that take so long?") wants an answer, not another
    investigation.
 6. **Bump the version on every gameplay change.** Single source of truth:
-   `VERSION` in `js/version.js`.
+   `VERSION` in `js/version.js`. **Then run `python3 tools/stamp.py`**: it
+   stamps the version onto every file index.html loads, so devices fetch
+   the new copy (a test fails if you forget).
 7. **When you suggest options, number them** so Sam can pick by number. Keep
    it to three or four options at most.
 8. **No emoji in game UI.** Plain text or proper drawn icons. (Chat-status
@@ -187,6 +189,9 @@ so, kindly.
 - **A test helper that searches (for a seed, say) must give up**, or a
   broken rule makes it loop forever and freezes the run. The runner has a
   120 s stopwatch for this since 2026-10-24; keep it.
+- **Browsers keep old copies of the game's files** (again 2026-10-24:
+  Barry's picture missing on Gareth's device, live site fine). Fixed for
+  good by `tools/stamp.py` version-stamping every module and the CSS.
 - **Browsers keep old copies of the game's files.** A stale `js/main.js`
   next to a new `index.html` made "All aboard!" do nothing (2026-10-24).
   `tools/playtest.sh` now sends `Cache-Control: no-store`. GitHub Pages
@@ -205,7 +210,7 @@ so, kindly.
   crashes partway can look like a pass (learned in Project 2126).
 
 ## Current status
-Updated 2026-10-24 (v0.7.4).
+Updated 2026-10-24 (v0.7.5).
 - **Phase 0 (web setup) done.** Tests in headless Chrome; GitHub Pages;
   Turbo Town archived.
 - **Phase 1 done.** The game: like The Traitors, starting at Havenbrook
