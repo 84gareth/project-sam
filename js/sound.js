@@ -74,6 +74,7 @@ const ROOM_SOUNDS = {
   garden: ["room-garden.mp3", 0.35],   // birds singing
   kitchen: ["room-kitchen.mp3", 0.25], // cooking sizzling
   library: ["room-library.mp3", 0.3],  // a quiet ticking clock
+  table: ["room-table.mp3", 0.35],     // the Round Table's crackling fire (Gareth)
 };
 const roomBuffers = {};
 let roomNow = null;   // { room, src, gain }

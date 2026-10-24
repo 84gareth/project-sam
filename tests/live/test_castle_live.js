@@ -128,7 +128,7 @@ function nightSeed(side, want) {
 }
 
 async function talkThenTable(doc) {
-  doc.getElementById("to-table").click();
+  if (doc.getElementById("screen-talk").hidden) doc.getElementById("to-table").click();
   await until(() => !doc.getElementById("talk-options").hidden, "the Round Table talk", 8000);
   doc.querySelector("#talk-options .question").click();
   doc.getElementById("to-vote").click();
@@ -447,13 +447,20 @@ test("Chilli Pie Shuffle: follow the chilli pie three times", async () => {
   assert.ok(doc.getElementById("mission-shield").textContent.includes("You win the shield"));
 });
 
-test("each room has its own sound, and it stops at the Round Table", async () => {
+test("each room has its own sound, and the Round Table has a crackling fire", async () => {
   const { page, doc } = await toCastle(seedFor("pepper", FAITHFUL));
   await until(() => doc.body.dataset.roomSound === "hall", "the great hall's sound");
   page.world.me.room = "garden";
   await until(() => doc.body.dataset.roomSound === "garden", "the garden's sound");
   doc.getElementById("to-table").click();
-  await until(() => doc.body.dataset.roomSound === "", "quiet at the Round Table");
+  await until(() => doc.body.dataset.roomSound === "table", "the fire at the Round Table");
+  await new Promise((r) => setTimeout(r, 300));
+  assert.eq(doc.body.dataset.roomSound, "table", "and it stays on");
+  await voteAndReveal(doc);
+  assert.eq(doc.body.dataset.roomSound, "table", "through the vote and the reveal");
+  if (!visible(doc, "after-reveal")) return;   // the game ended at the table
+  doc.getElementById("next-day").click();
+  await until(() => doc.body.dataset.roomSound === "", "quiet at night");
 });
 
 test("debug menu (?debug): play any mission on its own, then back to the list", async () => {

@@ -92,8 +92,10 @@ setInterval(() => {
 function tick(now, fromBackup = false) {
   if ($("screen-castle").hidden) {
     looping = false;
-    // Still chatting in the room? Keep its sound. Anywhere else: quiet.
-    if ($("screen-chat").hidden && $("screen-join").hidden) setRoomSound(null);
+    // Still chatting in the room, or at the Round Table (its own fire)?
+    // Keep that sound. Anywhere else: quiet.
+    const atTable = ["screen-talk", "screen-table", "screen-votes", "screen-banished"].some((id) => !$(id).hidden);
+    if ($("screen-chat").hidden && $("screen-join").hidden && !atTable) setRoomSound(null);
     return;
   }
   // In test mode (?fast=1) big steady steps, so tests don't depend on how
@@ -320,6 +322,7 @@ async function roundTableTalk() {
   $("talk-options").hidden = true;
   $("to-vote").hidden = true;
   show("screen-talk");
+  setRoomSound("table");   // a crackling fire (Gareth)
   narrate("Everyone sits down at the Round Table.");
   const talk = tableTalk(game);
   for (const t of talk) {
@@ -474,6 +477,7 @@ function gameOver(text) {
 let victimPick = null;
 
 async function goNight() {
+  setRoomSound(null);
   const me = game.playerId;
   if (game.playerSide === TRAITOR) return traitorsMeeting();
   // A Faithful waits in their room... is there a letter?

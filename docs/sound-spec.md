@@ -53,5 +53,7 @@ Tested by listening in on what the page says (`test_castle_live.js`).
 | room-garden.mp3 | 17 Little birds singing in the trees | Garden | 0.35 |
 | room-kitchen.mp3 | 123 Frying fish on a hot pan | Kitchen | 0.25 |
 | room-library.mp3 | 1060 Wall clock tick tock | Library | 0.3 |
+| room-table.mp3 | 1329 Campfire burning crackles (v0.8.2, Gareth's pick, 0.5 MB) | Round Table | 0.35 |
 Looped with a 1 s fade between rooms (`setRoomSound` in `js/sound.js`);
-quiet everywhere outside the castle rooms and chats.
+the fire plays from the Round Table talk to the reveal; quiet everywhere
+else (missions, night, breakfast).
