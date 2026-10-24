@@ -65,4 +65,4 @@ you got to.
 Anything else for the look and sound, once the game is fun.
 
 ## Ongoing: Sam's character drawings
-Added as they come in. Done: 10 of 22 (Captain Puddle, Granny Gumdrop, Professor Fizz, Ruby Rails, Chef Pepper, Sir Reginald Waffle, Doctor Plaster, Lola Loud, Farmer Fern, Detective Dot).
+Added as they come in. Done: 11 of 22 (Captain Puddle, Granny Gumdrop, Professor Fizz, Ruby Rails, Chef Pepper, Sir Reginald Waffle, Doctor Plaster, Lola Loud, Farmer Fern, Detective Dot, Benny Biscuit).
