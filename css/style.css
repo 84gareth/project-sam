@@ -487,3 +487,42 @@ button.small {
 }
 .train-text { margin-bottom: 40px; background: rgba(20, 22, 30, 0.75); padding: 14px 24px; border-radius: 16px; }
 @keyframes chuff { from { background-position: 50% 50%; } to { background-position: 50.6% 50.3%; } }
+
+/* Missions */
+.mission {
+  background: linear-gradient(rgba(10, 8, 6, 0.45), rgba(10, 8, 6, 0.45)),
+              url("../assets/rooms/hall.jpg") center / cover no-repeat;
+}
+.mission.pies-mission {
+  background: linear-gradient(rgba(10, 8, 6, 0.35), rgba(10, 8, 6, 0.35)),
+              url("../assets/rooms/kitchen.jpg") center / cover no-repeat;
+}
+.mission h2 { font-size: 40px; margin: 0; text-shadow: 0 2px 6px #000; }
+.mission-how, .mission-status { margin: 0; font-size: 24px; font-weight: 700; text-align: center; text-shadow: 0 2px 6px #000; }
+.mission-status { min-height: 32px; color: var(--accent); }
+.bells { display: flex; gap: 24px; }
+.bell {
+  width: 150px; height: 150px; border: 6px solid #2a1d0c; border-radius: 50% 50% 18px 18px;
+  font: 800 22px -apple-system, system-ui, sans-serif; color: #1c1f29;
+  opacity: 0.75; transition: transform 0.12s, opacity 0.12s, box-shadow 0.12s;
+}
+.bell.lit { opacity: 1; transform: scale(1.12) rotate(-6deg); box-shadow: 0 0 40px 12px #fff6; }
+.pies { position: relative; width: 640px; max-width: 100%; height: 190px; }
+.pie {
+  position: absolute; top: 20px; width: 170px; height: 150px; border: none; padding: 0;
+  background: transparent; transition-property: left; transition-timing-function: ease-in-out;
+}
+.pie .crust {
+  position: absolute; inset: 30px 0 0; border-radius: 50%;
+  background: radial-gradient(circle at 50% 40%, #e6b36a, #b97a32 70%, #7d4c18);
+  border: 5px solid #5a3510;
+}
+.pie .chilli {
+  position: absolute; left: 60px; top: 0; width: 50px; height: 70px; border-radius: 50% 50% 50% 50% / 30% 30% 70% 70%;
+  background: #d8261c; border: 4px solid #6b0f09; transform: rotate(20deg); display: none; z-index: 1;
+}
+.pie.show-chilli .chilli { display: block; }
+.pie.right .crust { box-shadow: 0 0 30px 10px #6f6; }
+.pie.wrong .crust { box-shadow: 0 0 30px 10px #f66; }
+.mission-result { display: flex; flex-direction: column; align-items: center; gap: 6px; background: rgba(20, 22, 30, 0.8); padding: 16px 28px; border-radius: 18px; }
+.mission-result p { margin: 0; font-size: 24px; font-weight: 700; text-align: center; }

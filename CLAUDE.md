@@ -210,7 +210,7 @@ so, kindly.
   crashes partway can look like a pass (learned in Project 2126).
 
 ## Current status
-Updated 2026-10-24 (v0.7.5).
+Updated 2026-10-24 (v0.8.0).
 - **Phase 0 (web setup) done.** Tests in headless Chrome; GitHub Pages;
   Turbo Town archived.
 - **Phase 1 done.** The game: like The Traitors, starting at Havenbrook
@@ -237,6 +237,10 @@ Updated 2026-10-24 (v0.7.5).
   them (see `docs/characters.md`).
 - **Phase 4 (the night) built, waiting for Sam (v0.4.0).** Traitors'
   meeting, the letter, breakfast; tactical voting (`docs/night-spec.md`).
+- **Phase 5 (missions) started (v0.8.0)**: each day opens with a mission
+  (`js/missions.js` rules, `js/mission-ui.js` screens): the pot, the shield
+  (stops that night's murder), Castle Bells, Chilli Pie Shuffle. Sam's 13
+  missions and answers: `docs/missions.md`.
 - **Roadmap OK'd by Gareth.** All 22 of Sam's drawings are in (
   how to add one: how to add one is in `docs/characters.md`); voices
   are the iPad's own (Web Speech), arriving with Phase 3.

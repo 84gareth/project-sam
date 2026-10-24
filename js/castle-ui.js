@@ -12,6 +12,7 @@ import {
 } from "./puppets.js";
 import { say, narrate, voicesOn, setVoices } from "./voice.js";
 import { drumRoll, play, setRoomSound } from "./sound.js";
+import { startMission } from "./mission-ui.js";
 
 let game = null;
 let tableVote = null;
@@ -31,7 +32,12 @@ export function goToCastle(g) {
 
 // ─── Chatting ───────────────────────────────────────────────────────────────
 
+// Each day starts with its mission, then the castle.
 function startDay() {
+  startMission(game, enterCastle);
+}
+
+function enterCastle() {
   $("castle-day").textContent = `Day ${game.day} at the castle`;
   narrate(`Day ${game.day} at the castle.`);
   const me = game.playerId;
@@ -451,7 +457,7 @@ async function reveal(result) {
     gameOver("You've been banished!");
   } else if (won) {
     const traitors = game.players.filter((p) => p.side === TRAITOR).map((p) => character(p.id).name);
-    gameOver(`${won === FAITHFUL ? "The Faithfuls win!" : "The Traitors win!"} The Traitors were ${traitors.join(", ")}.`);
+    gameOver(`${won === FAITHFUL ? "The Faithfuls win" : "The Traitors win"} the £${(game.pot ?? 0).toLocaleString("en-GB")} pot! The Traitors were ${traitors.join(", ")}.`);
   } else {
     $("after-reveal").hidden = false;
   }
@@ -642,7 +648,7 @@ function showRoster() {
   if (won) {
     const traitors = game.players.filter((p) => p.side === TRAITOR).map((p) => character(p.id).name);
     $("breakfast-over-text").textContent =
-      `${won === FAITHFUL ? "The Faithfuls win!" : "The Traitors win!"} The Traitors were ${traitors.join(", ")}.`;
+      `${won === FAITHFUL ? "The Faithfuls win" : "The Traitors win"} the £${(game.pot ?? 0).toLocaleString("en-GB")} pot! The Traitors were ${traitors.join(", ")}.`;
     narrate($("breakfast-over-text").textContent, { queue: true });
     $("breakfast-over").hidden = false;
   } else {

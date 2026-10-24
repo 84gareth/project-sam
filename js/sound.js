@@ -114,3 +114,19 @@ export function setRoomSound(room, force = false) {
   roomNow.src = src;
   roomNow.gain = gain;
 }
+
+// ─── Castle Bells: four made tones (no recordings needed) ──────────────────
+const BELL_NOTES = [523.25, 659.25, 783.99, 1046.5];   // C, E, G, high C
+export function bell(i) {
+  if (!audio) return;
+  const now = audio.currentTime;
+  const osc = audio.createOscillator();
+  const gain = audio.createGain();
+  osc.type = "sine";
+  osc.frequency.value = BELL_NOTES[i];
+  gain.gain.setValueAtTime(0.5, now);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
+  osc.connect(gain).connect(audio.destination);
+  osc.start(now);
+  osc.stop(now + 1.2);
+}

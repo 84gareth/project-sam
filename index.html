@@ -12,20 +12,22 @@
   <!-- STAMP (tools/stamp.py writes this; don't edit by hand) -->
   <script type="importmap">{
   "imports": {
-    "./js/castle-ui.js": "./js/castle-ui.js?v=0.7.6",
-    "./js/castle.js": "./js/castle.js?v=0.7.6",
-    "./js/characters.js": "./js/characters.js?v=0.7.6",
-    "./js/dialogue.js": "./js/dialogue.js?v=0.7.6",
-    "./js/game.js": "./js/game.js?v=0.7.6",
-    "./js/main.js": "./js/main.js?v=0.7.6",
-    "./js/puppets.js": "./js/puppets.js?v=0.7.6",
-    "./js/sound.js": "./js/sound.js?v=0.7.6",
-    "./js/ui.js": "./js/ui.js?v=0.7.6",
-    "./js/version.js": "./js/version.js?v=0.7.6",
-    "./js/voice.js": "./js/voice.js?v=0.7.6"
+    "./js/castle-ui.js": "./js/castle-ui.js?v=0.8.0",
+    "./js/castle.js": "./js/castle.js?v=0.8.0",
+    "./js/characters.js": "./js/characters.js?v=0.8.0",
+    "./js/dialogue.js": "./js/dialogue.js?v=0.8.0",
+    "./js/game.js": "./js/game.js?v=0.8.0",
+    "./js/main.js": "./js/main.js?v=0.8.0",
+    "./js/mission-ui.js": "./js/mission-ui.js?v=0.8.0",
+    "./js/missions.js": "./js/missions.js?v=0.8.0",
+    "./js/puppets.js": "./js/puppets.js?v=0.8.0",
+    "./js/sound.js": "./js/sound.js?v=0.8.0",
+    "./js/ui.js": "./js/ui.js?v=0.8.0",
+    "./js/version.js": "./js/version.js?v=0.8.0",
+    "./js/voice.js": "./js/voice.js?v=0.8.0"
   }
 }</script>
-  <link rel="stylesheet" href="css/style.css?v=0.7.6">
+  <link rel="stylesheet" href="css/style.css?v=0.8.0">
   <!-- /STAMP -->
 </head>
 <body>
@@ -166,6 +168,22 @@
   </section>
 
   <!-- 11. Breakfast: people arrive in little groups. Who's missing? -->
+  <!-- Today's mission (docs/missions.md). -->
+  <section id="screen-mission" class="screen mission" hidden>
+    <h2 id="mission-name"></h2>
+    <p id="mission-how" class="mission-how"></p>
+    <p id="mission-status" class="mission-status"></p>
+    <div id="bells" class="bells" hidden></div>
+    <div id="pies" class="pies" hidden></div>
+    <button id="mission-go" class="big">Start the mission</button>
+    <div id="mission-result" class="mission-result" hidden>
+      <p id="mission-score"></p>
+      <p id="mission-pot"></p>
+      <p id="mission-shield"></p>
+      <button id="mission-done" class="big">Go to the castle</button>
+    </div>
+  </section>
+
   <section id="screen-breakfast" class="screen breakfast" hidden>
     <h2>Breakfast</h2>
     <div id="arrivals" class="arrivals"></div>
@@ -192,6 +210,6 @@
     </div>
   </section>
 
-  <script type="module" src="js/main.js?v=0.7.6"></script>
+  <script type="module" src="js/main.js?v=0.8.0"></script>
 </body>
 </html>

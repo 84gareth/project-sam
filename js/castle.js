@@ -352,10 +352,11 @@ function threat(game, id) {
   return traitors.reduce((sum, t) => sum + game.scores[id][t], 0);
 }
 
-// Who the Traitors would murder tonight, most wanted first.
+// Who the Traitors would murder tonight, most wanted first. Not whoever
+// won today's mission shield: everyone knows who has it.
 export function murderIdeas(game) {
   return stillIn(game)
-    .filter((id) => !isTraitor(game, id))
+    .filter((id) => !isTraitor(game, id) && id !== game.shield)
     .sort((a, b) => threat(game, b) - threat(game, a) || (a < b ? -1 : 1));
 }
 
@@ -366,6 +367,8 @@ export function night(game, playerPick = null) {
   const samPicks = game.playerSide === TRAITOR && player(game, game.playerId).inGame;
   const victim = samPicks && playerPick ? playerPick : murderIdeas(game)[0];
   if (isTraitor(game, victim)) throw new Error("Traitors can't murder a Traitor");
+  if (victim === game.shield) throw new Error("they have the shield");
+  game.shield = null;   // a shield lasts one night
   player(game, victim).inGame = false;
   game.history[game.history.length - 1].murdered = victim;
   return victim;
@@ -550,6 +553,7 @@ export function recruit(game, pick = null) {
     }
   }
   game.recruited = who;
+  game.shield = null;
   game.history[game.history.length - 1].recruited = who;
   return who;
 }

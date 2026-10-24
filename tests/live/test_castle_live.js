@@ -4,6 +4,7 @@ import { newGame, TRAITOR, FAITHFUL } from "../../js/game.js";
 import {
   arriveAtCastle, roundTable, night, winner, stillIn, recruit, tableTalk, talkOptions, playerSays,
 } from "../../js/castle.js";
+import { finishMission, todaysMission, bellTune, pieRound } from "../../js/missions.js";
 
 // Sam's words at the Round Table sway the others, so rehearsals must say them too.
 const sayFirst = (g) => playerSays(g, talkOptions(g, tableTalk(g))[0]);
@@ -23,8 +24,36 @@ async function toCastle(seed) {
   doc.querySelectorAll("#cards .card")[4].click();
   doc.getElementById("choose").click();
   doc.getElementById("to-castle").click();
-  await until(() => !doc.getElementById("screen-castle").hidden, "the train ride arrives at the castle", 8000);
+  await until(() => !doc.getElementById("screen-mission").hidden, "the train ride arrives at the mission", 8000);
+  await flopMission(page, doc);
   return { page, doc };
+}
+
+// Do today's mission badly on purpose (score 0, so Sam never wins the
+// shield and rehearsals can use finishMission(g, 0, ...)), then go to the
+// castle.
+async function flopMission(page, doc) {
+  const status = () => doc.getElementById("mission-status").textContent;
+  const m = todaysMission(page.game);
+  doc.getElementById("mission-go").click();
+  let round = 0;
+  await until(() => {
+    if (!doc.getElementById("mission-result").hidden) return true;
+    if (m.id === "bells" && status() === "Your turn!" && !doc.getElementById("bells").dataset.flopped) {
+      doc.getElementById("bells").dataset.flopped = "yes";
+      const wrong = (bellTune(page.game)[0] + 1) % 4;
+      doc.querySelector(`.bell[data-bell="${wrong}"]`).click();
+    }
+    const pieBox = doc.getElementById("pies");
+    if (m.id === "pies" && status() === "Which one is the chilli pie?" && pieBox.dataset.round === String(round)) {
+      const { answer } = pieRound(page.game, round++);
+      const pies = [...doc.querySelectorAll(".pie")].sort((a, b) => parseFloat(a.style.left) - parseFloat(b.style.left));
+      pies[(answer + 1) % 3].click();
+    }
+    return false;
+  }, "the mission ends", 15000);
+  doc.getElementById("mission-done").click();
+  await until(() => !doc.getElementById("screen-castle").hidden, "on to the castle");
 }
 const visible = (doc, id) => !doc.getElementById(id).hidden;
 
@@ -144,6 +173,7 @@ test("Round Table: vote, everyone shows a chalkboard, drum roll, reveal, next da
   const gone = [...doc.querySelectorAll("#gone .gone-person")].map((g) => g.dataset.id).sort();
   assert.eq(gone, [out.banished], "only the banished one is crossed out");
   doc.getElementById("start-day").click();
+  await flopMission(page, doc);
   assert.eq(doc.getElementById("castle-day").textContent, "Day 2 at the castle");
   await until(() => doc.querySelector(".puppet.me"), "back in the castle");
   assert.notOk(doc.querySelector(`.puppet[data-id="${out.banished}"]`), "the banished one has gone from the castle");
@@ -169,19 +199,21 @@ test("a Faithful who is murdered (night 2) gets the letter", async () => {
     sayFirst(g);
     roundTable(g, "puddle");
     if (winner(g) || !stillIn(g).includes("pepper") || recruit(g) === "pepper") continue;
+    finishMission(g, 0, stillIn(g));
     sayQuiet(g);
     roundTable(g, stillIn(g).find((id) => id !== "pepper"));
     if (winner(g) || !stillIn(g).includes("pepper")) continue;
     if (night(g) === "pepper") seed = s;
   }
   assert.gt(seed, 0, "found a game");
-  const { doc } = await toCastle(seed);
+  const { page, doc } = await toCastle(seed);
   await voteAndReveal(doc);
   doc.getElementById("next-day").click();
   await until(() => visible(doc, "to-breakfast"), "no letter on night 1", 8000);
   doc.getElementById("to-breakfast").click();
   await until(() => visible(doc, "start-day"), "breakfast", 8000);
   doc.getElementById("start-day").click();
+  await flopMission(page, doc);
   // Day 2: the Round Table picks the first person still on the list.
   doc.getElementById("to-table").click();
   await until(() => visible(doc, "talk-options"), "the talk", 8000);
@@ -354,7 +386,65 @@ test("All aboard! plays the train ride before the castle", async () => {
   doc.getElementById("choose").click();
   doc.getElementById("to-castle").click();
   assert.ok(visible(doc, "screen-train"), "the train ride shows first");
-  await until(() => visible(doc, "screen-castle"), "then the castle", 8000);
+  await until(() => visible(doc, "screen-mission"), "then the day's mission", 8000);
+  await flopMission(page, doc);
+  assert.ok(visible(doc, "screen-castle"), "then the castle");
+});
+
+// Find a seed whose day-1 mission is `id`.
+function missionSeed(id) {
+  for (let seed = 1; seed <= 1000; seed++) {
+    const g = arriveAtCastle(newGame("pepper", seed));
+    if (todaysMission(g).id === id) return seed;
+  }
+  throw new Error(`no seed starts with ${id}`);
+}
+
+async function toMission(seed) {
+  const page = await openPage(`../index.html?seed=${seed}&fast=1`);
+  const doc = page.document;
+  await until(() => doc.querySelectorAll(".card").length === 22, "cards built");
+  doc.getElementById("start").click();
+  doc.querySelectorAll("#cards .card")[4].click();
+  doc.getElementById("choose").click();
+  doc.getElementById("to-castle").click();
+  await until(() => visible(doc, "screen-mission"), "the mission", 8000);
+  return { page, doc };
+}
+
+test("Castle Bells: ring every tune back right and you win the shield", async () => {
+  const { page, doc } = await toMission(missionSeed("bells"));
+  assert.ok(doc.getElementById("mission-name").textContent.includes("Castle Bells"));
+  doc.getElementById("mission-go").click();
+  const tune = bellTune(page.game);
+  for (const length of [3, 4, 5, 6, 7]) {
+    await until(() => doc.getElementById("bells").dataset.round === String(length)
+      && doc.getElementById("mission-status").textContent === "Your turn!", `round of ${length}`, 8000);
+    for (let k = 0; k < length; k++) doc.querySelector(`.bell[data-bell="${tune[k]}"]`).click();
+  }
+  await until(() => visible(doc, "mission-result"), "the result", 8000);
+  assert.ok(doc.getElementById("mission-score").textContent.includes("perfectly"));
+  assert.ok(doc.getElementById("mission-shield").textContent.includes("You win the shield"));
+  assert.gt(page.game.pot, 0);
+  assert.ok(doc.getElementById("mission-pot").textContent.includes("£"));
+  doc.getElementById("mission-done").click();
+  assert.ok(visible(doc, "screen-castle"));
+});
+
+test("Chilli Pie Shuffle: follow the chilli pie three times", async () => {
+  const { page, doc } = await toMission(missionSeed("pies"));
+  assert.ok(doc.getElementById("mission-name").textContent.includes("Chilli Pie"));
+  doc.getElementById("mission-go").click();
+  for (let round = 0; round < 3; round++) {
+    await until(() => doc.getElementById("pies").dataset.round === String(round)
+      && doc.getElementById("mission-status").textContent === "Which one is the chilli pie?", `round ${round + 1}`, 8000);
+    const { answer } = pieRound(page.game, round);
+    const pies = [...doc.querySelectorAll(".pie")].sort((a, b) => parseFloat(a.style.left) - parseFloat(b.style.left));
+    pies[answer].click();
+  }
+  await until(() => visible(doc, "mission-result"), "the result", 8000);
+  assert.ok(doc.getElementById("mission-score").textContent.includes("3 times out of 3"));
+  assert.ok(doc.getElementById("mission-shield").textContent.includes("You win the shield"));
 });
 
 test("each room has its own sound, and it stops at the Round Table", async () => {
