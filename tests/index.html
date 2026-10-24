@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <title>Tests</title>
+  <style>
+    body { font: 14px/1.4 ui-monospace, Menlo, monospace; margin: 16px; }
+    iframe { position: absolute; left: -10000px; }
+  </style>
+</head>
+<body>
+  <pre id="out">Running...</pre>
+  <script type="module">
+    import { run } from "./framework.js";
+    // Every test file. A new file must be added here to run.
+    const FILES = [
+      "unit/test_version.js",
+      "live/test_page_live.js",
+    ];
+    run(FILES);
+  </script>
+</body>
+</html>

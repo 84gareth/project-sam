@@ -1,15 +1,10 @@
-# Godot 4+ specific ignores
-.godot/
-/android/
-
-# Exported builds
-/builds/
-
-# Screenshots, GPU captures and other scratch output. Tools write here, never
-# to the project root (Project 2126's root filled up with ~150 of them).
-# The .gdignore stops Godot importing them as game assets.
+# Screenshots and other scratch output. Never the project root.
 /captures/*
 !/captures/.gdignore
+
+# The archived Godot game (archive/turbo-town): its import cache and captures.
+.godot/
+archive/turbo-town/captures/
 
 # macOS
 .DS_Store
