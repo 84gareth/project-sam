@@ -103,6 +103,8 @@ test("Round Table: vote, everyone shows a chalkboard, drum roll, reveal, next da
   const murdered = page.game.history[0].murdered;
   assert.ok(doc.getElementById("missing").textContent.includes("never came to breakfast"));
   assert.eq(doc.querySelectorAll("#arrivals .arrival-person").length, 20, "20 come to breakfast");
+  const gone = [...doc.querySelectorAll("#gone .gone-person")].map((g) => g.dataset.id).sort();
+  assert.eq(gone, [out.banished, murdered].sort(), "the banished and the murdered, greyed out with a red X");
   doc.getElementById("start-day").click();
   assert.eq(doc.getElementById("castle-day").textContent, "Day 2 at the castle");
   assert.eq(doc.querySelectorAll("#castle-cards .card").length, 19, "two fewer to chat to");

@@ -237,6 +237,7 @@ async function breakfast(victim) {
   $("missing").hidden = true;
   $("start-day").hidden = true;
   $("breakfast-over").hidden = true;
+  $("gone-box").hidden = true;
   show("screen-breakfast");
   for (const group of breakfastGroups(game)) {
     await wait(900);
@@ -257,6 +258,20 @@ async function breakfast(victim) {
   const name = character(victim).name;
   $("missing").textContent = `${name} never came to breakfast. ${name} was murdered by the Traitors!`;
   $("missing").hidden = false;
+  // Everyone who has left, greyed out with a red X (Sam, 2026-10-24).
+  const gone = $("gone");
+  gone.replaceChildren();
+  for (const p of game.players.filter((p) => !p.inGame)) {
+    const who = document.createElement("div");
+    who.className = "arrival-person gone-person";
+    who.dataset.id = p.id;
+    who.append(badge(character(p.id)));
+    const label = document.createElement("span");
+    label.textContent = character(p.id).name;
+    who.append(label);
+    gone.append(who);
+  }
+  $("gone-box").hidden = false;
   const won = winner(game);
   if (won) {
     const traitors = game.players.filter((p) => p.side === TRAITOR).map((p) => character(p.id).name);

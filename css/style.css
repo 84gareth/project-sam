@@ -268,3 +268,21 @@ button.small {
 .arrival-person { display: flex; flex-direction: column; align-items: center; gap: 4px; width: 92px; font-size: 14px; font-weight: 700; text-align: center; }
 .arrival-person .portrait { height: 64px; }
 .arrival-person .badge { width: 48px; height: 48px; font-size: 18px; }
+
+/* Gone from the castle: greyed out with a red X (Sam's idea). */
+.gone-box { background: rgba(20, 22, 30, 0.75); border-radius: 14px; padding: 6px 12px 10px; max-width: 100%; }
+.gone-title { margin: 0 0 6px; font-weight: 700; text-align: center; color: #ffb3a8; }
+.gone-row { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+.gone-person { position: relative; width: 80px; color: #aaa; }
+/* Grey the picture only, so the red X on top stays red. */
+.gone-person .portrait, .gone-person .badge { filter: grayscale(1) brightness(1.15); opacity: 0.85; }
+.gone-person::after {
+  content: "";
+  position: absolute;
+  top: 0; left: 50%;
+  width: 64px; height: 64px;
+  transform: translateX(-50%);
+  background:
+    linear-gradient(45deg, transparent 44%, #e22 44%, #e22 56%, transparent 56%),
+    linear-gradient(-45deg, transparent 44%, #e22 44%, #e22 56%, transparent 56%);
+}

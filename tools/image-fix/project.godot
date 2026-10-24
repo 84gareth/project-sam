@@ -1,0 +1,2 @@
+; A tiny Godot project so tools/image-fix/*.gd can run headless.
+config_version=5
