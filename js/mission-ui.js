@@ -1,9 +1,11 @@
-// The mission screens: Castle Bells and Chilli Pie Shuffle. Rules come
-// from missions.js; this file draws and listens.
+// The mission screens. Castle Bells, Chilli Pie Shuffle, Catapults and
+// Cooking are here; the other nine are in mission-more.js. Rules come from
+// missions.js; these files draw and listen.
 import {
   finishMission, todaysMission, bellTune, BELL_ROUNDS, BELLS, bellScore, pieRound, PIE_ROUNDS, pieScore,
-  STONES, finishCatapults, TRUCKS, HATES, cookingDiner, shieldTruck, finishCooking,
+  STONES, finishCatapults, TRUCKS, HATES, cookingDiner, shieldTruck, finishCooking, flopResult,
 } from "./missions.js";
+import { PLAY } from "./mission-more.js";
 import { stillIn } from "./castle.js";
 import { $, show, character, wait, badge, FAST } from "./ui.js";
 import { narrate, say } from "./voice.js";
@@ -16,6 +18,10 @@ const money = (n) => `£${n.toLocaleString("en-GB")}`;
 let game = null;
 let onDone = null;
 let mission = null;
+let finished = true;
+let cleanups = [];   // timers to stop when the mission ends
+
+const CONTAINERS = ["bells", "pies", "catapult", "cooking", "mission-play"];
 
 // Show today's mission (or `only`, from the debug menu); `done` runs when
 // Sam taps the button at the end.
@@ -25,14 +31,14 @@ export function startMission(g, done, only = null) {
   const m = mission = only ?? todaysMission(game);
   $("mission-done").textContent = only ? "Back to the missions" : "Go to the castle";
   $("screen-mission").classList.toggle("pies-mission", m.id === "pies" || m.id === "cooking");
-  $("screen-mission").classList.toggle("garden-mission", m.id === "catapults");
+  $("screen-mission").classList.toggle("garden-mission", ["catapults", "maze", "footprints"].includes(m.id));
   $("mission-name").textContent = `Mission ${game.day}: ${m.name}`;
   $("mission-how").textContent = m.how;
   $("mission-status").textContent = "";
-  $("bells").hidden = true;
-  $("pies").hidden = true;
-  $("catapult").hidden = true;
-  $("cooking").hidden = true;
+  stopTimers();
+  finished = false;
+  for (const id of CONTAINERS) $(id).hidden = true;
+  $("mission-play").replaceChildren();
   $("mission-how").hidden = false;
   $("bells").dataset.round = $("pies").dataset.round = "";
   delete $("bells").dataset.flopped;
@@ -43,15 +49,49 @@ export function startMission(g, done, only = null) {
     if (m.id === "bells") playBells();
     else if (m.id === "pies") playPies();
     else if (m.id === "catapults") playCatapults();
-    else playCooking();
+    else if (m.id === "cooking") playCooking();
+    else {
+      $("mission-how").hidden = true;
+      $("mission-play").hidden = false;
+      // A fresh box for this go: if an old mission is still running
+      // somewhere, it only draws into its own (gone) box and can't finish
+      // this one.
+      const box = document.createElement("div");
+      box.className = "mission-box";
+      $("mission-play").replaceChildren(box);
+      const live = () => box.isConnected;
+      PLAY[m.id]({
+        game, mission: m, box,
+        status: (t) => { if (live()) $("mission-status").textContent = t; },
+        finish: (...args) => live() && finish(...args),
+        every,
+      });
+    }
   };
   show("screen-mission");
   narrate(`Mission time! ${m.name}. ${m.how}`);
 }
 
+// A repeating timer that stops when the mission ends.
+function every(ms, fn) {
+  const t = setInterval(fn, ms);
+  cleanups.push(() => clearInterval(t));
+  return t;
+}
+function stopTimers() {
+  for (const stop of cleanups) stop();
+  cleanups = [];
+}
+
+// The tests' way to finish a mission at once, as badly as possible.
+if (FAST) window.missionGiveUp = () => finish(null, "You gave up.", flopResult(game, stillIn(game), mission));
+
 // `done`: a result already worked out (Catapults, Cooking); `extra`: one
-// more line to show.
+// more line to show. Only the first finish counts.
 async function finish(score, line, done = null, extra = "") {
+  if (finished) return;
+  finished = true;
+  stopTimers();
   const r = done ?? finishMission(game, score, stillIn(game), mission);
   $("mission-score").textContent = line;
   $("mission-pot").textContent = `The team won ${money(r.won)}! The pot is now ${money(game.pot)}.`;
@@ -64,7 +104,7 @@ async function finish(score, line, done = null, extra = "") {
       : r.shield === game.playerId
         ? "You were the best! You win the shield. Nobody can murder you tonight!"
         : `${character(r.shield).name} was the best, and wins the shield!`;
-  for (const id of ["bells", "pies", "catapult", "cooking"]) $(id).hidden = true;
+  for (const id of CONTAINERS) $(id).hidden = true;
   $("mission-status").textContent = "";
   $("mission-result").hidden = false;
   $("mission-done").onclick = () => onDone();
@@ -229,7 +269,7 @@ async function playCatapults() {
     const slot = Math.floor(x / SLOT);
     return x - slot * SLOT < PICTURE + (SLOT - PICTURE) / 2 && x - slot * SLOT > (SLOT - PICTURE) / 2 ? order[slot] ?? "" : "";
   };
-  const move = setInterval(() => {
+  const move = every(30, () => {
     const now = performance.now();
     offset += dir * BELT_SPEED * Math.min(0.1, (now - last) / 1000);
     last = now;
@@ -238,7 +278,7 @@ async function playCatapults() {
     if (offset > max) { offset = max; dir = -1; }
     belt.style.transform = `translateX(${-offset}px)`;
     wall.dataset.aim = aimAt();
-  }, 30);
+  });
   const hits = [];
   $("stones").textContent = `Stones left: ${STONES}`;
   $("mission-status").textContent = "Wait for someone to line up, then fire!";

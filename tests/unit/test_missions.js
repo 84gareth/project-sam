@@ -199,3 +199,164 @@ test("Cooking: the hated food scores; the right box wins the shield", () => {
   assert.notOk(r2.found);
   assert.eq(r2.shield, r2.scores[0][0], "otherwise the best player");
 });
+
+// ─── The other nine ─────────────────────────────────────────────────────────
+import {
+  gone, noteFrom, whereRounds, jumbleWords, secretCode, SHAPES, SHAPE_COLOURS, makeMaze, canStep, stepsOut,
+  mazeScore, MAZE_W, MAZE_H, keySpots, footprintTrail, footprintNote, galleryRounds, treasureSpot, treasureTap,
+  treasureScore, FOUND_NEAR, lightsTray, lightsScore, flopResult,
+} from "../../js/missions.js";
+
+// A game a few days in: two banished, one murdered.
+function fewDaysIn(seed) {
+  const g = castle(seed);
+  roundTable(g, stillIn(g).find((id) => id !== "dot"));
+  recruit(g);
+  roundTable(g, stillIn(g).find((id) => id !== "dot"));
+  night(g);
+  return g;
+}
+
+test("all 13 missions are built, and a game plays 12 of them", () => {
+  assert.ok(MISSIONS.every((m) => m.built && m.how));
+  const order = missionOrder(castle(1));
+  assert.eq(order.length, 12);
+  assert.eq(new Set(order.map((m) => m.id)).size, 12, "no repeats");
+});
+
+test("notes: from people who've gone, murdered first; naming who they suspected", () => {
+  const g = fewDaysIn(3);
+  const left = gone(g);
+  assert.eq(left.length, 3);
+  assert.eq(left[0], g.history[1].murdered, "the murdered one first");
+  const note = noteFrom(g, left[0]);
+  assert.eq(note.suspect, suspectList(g, left[0])[0]);
+  assert.eq(gone(castle(3)).length, 0, "nobody gone on day 1");
+  const h = castle(3);
+  h.history = [{ banished: "puddle", murdered: "fizz" }, { banished: "ruby" }];
+  assert.eq(gone(h), ["fizz", "ruby", "puddle"], "murdered first, then the newest banished");
+});
+
+test("Who Was Where?: 3 people per room; each answer really was there", () => {
+  for (let seed = 1; seed <= 20; seed++) {
+    const g = castle(seed);
+    const { rooms, questions } = whereRounds(g, stillIn(g));
+    for (const ids of Object.values(rooms)) assert.eq(ids.length, 3);
+    assert.eq(questions.length, 3);
+    assert.eq(new Set(questions.map((q) => q.room)).size, 3, "three different rooms");
+    for (const q of questions) {
+      assert.ok(rooms[q.room].includes(q.answer));
+      assert.eq(q.options.length, 4);
+      assert.ok(q.options.includes(q.answer));
+      assert.eq(q.options.filter((id) => rooms[q.room].includes(id)).length, 1, "only one right answer");
+    }
+  }
+});
+
+test("Letter Jumble: three jumbled names; the first is the last murdered, with a note", () => {
+  const g = fewDaysIn(5);
+  const words = jumbleWords(g, stillIn(g));
+  assert.eq(words.length, 3);
+  assert.eq(words[0].id, gone(g)[0]);
+  assert.ok(words[0].note);
+  for (const w of words) {
+    assert.eq([...w.letters].sort().join(""), [...w.word].sort().join(""), "same letters");
+    assert.ne(w.letters.join(""), w.word, "jumbled");
+    assert.ne(w.id, "dot");
+  }
+  assert.notOk(jumbleWords(castle(5), stillIn(castle(5)))[0].note, "no note on day 1");
+});
+
+test("Secret Code: every letter has its own shape", () => {
+  for (let seed = 1; seed <= 30; seed++) {
+    const { words, key } = secretCode(castle(seed));
+    assert.eq(words.length, 3);
+    for (const l of words.join("")) assert.ok(key[l], l);
+    const symbols = Object.values(key).map((s) => s.shape + s.colour);
+    assert.eq(new Set(symbols).size, symbols.length, "no two letters share a shape");
+    assert.ok(symbols.length <= SHAPES.length * SHAPE_COLOURS.length);
+  }
+});
+
+test("Garden Maze: always a way out; steps only between open squares", () => {
+  for (let seed = 1; seed <= 20; seed++) {
+    const m = makeMaze(castle(seed));
+    const n = stepsOut(m, m.start);
+    assert.ok(n >= MAZE_W + MAZE_H - 2 && n < Infinity, `${n} steps`);
+    assert.eq(mazeScore(m, m.start), 0);
+    assert.eq(mazeScore(m, m.exit), 1);
+    assert.notOk(canStep(m, [0, 0], [2, 0]), "one square at a time");
+    assert.notOk(canStep(m, [0, 0], [0, -1]) && false);
+  }
+  const m = makeMaze(castle(1));
+  // Walls match on both sides.
+  for (let y = 0; y < MAZE_H; y++) for (let x = 0; x + 1 < MAZE_W; x++) assert.eq(m.walls[y][x].e, m.walls[y][x + 1].w);
+});
+
+test("Lost Keys: 5 keys, spread out, on the picture", () => {
+  for (let seed = 1; seed <= 20; seed++) {
+    const spots = keySpots(castle(seed));
+    assert.eq(spots.length, 5);
+    for (const s of spots) assert.ok(s.x > 0.05 && s.x < 0.95 && s.y > 0.1 && s.y < 0.9);
+  }
+});
+
+test("Muddy Footprints: the boot is in every split once; two right finds the note", () => {
+  for (let seed = 1; seed <= 20; seed++) {
+    const { boot, splits } = footprintTrail(castle(seed));
+    assert.eq(splits.length, 3);
+    for (const s of splits) {
+      assert.eq(s.length, 3);
+      assert.eq(s.filter((x) => x === boot).length, 1);
+    }
+  }
+  assert.ok(footprintNote(2));
+  assert.notOk(footprintNote(1));
+});
+
+test("Portrait Gallery: one new picture each round; the last is someone who's gone", () => {
+  const g = fewDaysIn(7);
+  const rounds = galleryRounds(g);
+  assert.eq(rounds.map((r) => r.wall.length), [6, 8, 10]);
+  for (const r of rounds) {
+    assert.notOk(r.wall.includes(r.newcomer));
+    assert.eq(r.after.length, r.wall.length + 1);
+    assert.eq(r.after.filter((id) => !r.wall.includes(id)), [r.newcomer]);
+  }
+  assert.eq(rounds[2].newcomer, gone(g)[0]);
+  assert.ok(rounds[2].note);
+  assert.notOk(galleryRounds(castle(7))[2].note, "no note before anyone's gone");
+});
+
+test("Treasure Hunt: warmer, colder, wrong room, and found", () => {
+  const g = castle(4);
+  const spot = treasureSpot(g);
+  const other = ["kitchen", "hall", "library", "garden"].find((r) => r !== spot.room);
+  assert.eq(treasureTap(spot, other, spot.x, spot.y, null).said, "wrong room");
+  assert.eq(treasureTap(spot, spot.room, spot.x, spot.y, null).said, "found");
+  assert.eq(treasureTap(spot, spot.room, spot.x + FOUND_NEAR * 0.8, spot.y, null).said, "found", "close enough counts");
+  const far = treasureTap(spot, spot.room, spot.x > 0.5 ? 0 : 1, spot.y, null);
+  const near = treasureTap(spot, spot.room, spot.x + FOUND_NEAR * 2, spot.y, far.dist);
+  assert.eq(near.said, "warmer");
+  assert.eq(treasureTap(spot, spot.room, spot.x > 0.5 ? 0 : 1, spot.y, near.dist).said, "colder");
+  assert.eq(treasureScore(true, 1), 1);
+  assert.gt(treasureScore(true, 1), treasureScore(true, 8));
+  assert.eq(treasureScore(false, 12), 0);
+});
+
+test("Lights Out: 9 pieces, shuffled; score is pieces in the right place", () => {
+  const tray = lightsTray(castle(2));
+  assert.eq([...tray].sort(), [0, 1, 2, 3, 4, 5, 6, 7, 8]);
+  assert.eq(lightsScore([0, 1, 2, 3, 4, 5, 6, 7, 8]), 1);
+  assert.eq(lightsScore([1, 0, 2, 3, 4, 5, 6, 7, 8]), 7 / 9);
+  assert.eq(lightsScore(Array(9).fill(null)), 0);
+});
+
+test("giving up scores nothing (and hits nobody, and finds no shield)", () => {
+  for (const m of MISSIONS) {
+    const g = castle(3);
+    const r = flopResult(g, stillIn(g), m);
+    assert.ne(r.shield, "dot", m.id);
+    if (m.id === "catapults") assert.eq(g.upForMurder.ids.includes("dot"), r.hit.includes("dot"));
+  }
+});

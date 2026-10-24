@@ -6,22 +6,13 @@ import {
   nightKind, isTraitor,
 } from "../../js/castle.js";
 import {
-  finishMission, todaysMission, bellTune, pieRound, finishCatapults, finishCooking, cookingDiner, shieldTruck,
-  TRUCKS, HATES,
+  todaysMission, bellTune, pieRound, cookingDiner, shieldTruck, TRUCKS, HATES, flopResult, MISSIONS,
+  whereRounds, jumbleWords, secretCode, makeMaze, canStep, MAZE_W, MAZE_H, footprintTrail, galleryRounds,
+  treasureSpot,
 } from "../../js/missions.js";
 
 // What flopMission does, as rules (for rehearsing a game to find a seed).
-function rehearseFlop(g) {
-  const m = todaysMission(g);
-  if (m.id === "catapults") return finishCatapults(g, [null, null, null], stillIn(g));
-  if (m.id === "cooking") {
-    const diner = cookingDiner(g, stillIn(g));
-    return finishCooking(g, diner, flopMeal(diner), (shieldTruck(g) + 1) % 3, stillIn(g));
-  }
-  return finishMission(g, 0, stillIn(g));
-}
-// A meal without the diner's hated food.
-const flopMeal = (diner) => TRUCKS.map((t) => t.foods.find((f) => f !== HATES[diner][0]));
+const rehearseFlop = (g) => flopResult(g, stillIn(g));
 
 // Sam's words at the Round Table sway the others, so rehearsals must say them too.
 const sayFirst = (g) => playerSays(g, talkOptions(g, tableTalk(g))[0]);
@@ -46,38 +37,12 @@ async function toCastle(seed) {
   return { page, doc };
 }
 
-// Do today's mission badly on purpose (score 0, so Sam never wins the
-// shield and rehearsals can use finishMission(g, 0, ...)), then go to the
-// castle.
+// Give up today's mission at once (the test-only give-up: as badly as
+// possible, the same as flopResult), then go to the castle.
 async function flopMission(page, doc) {
-  const status = () => doc.getElementById("mission-status").textContent;
-  const m = todaysMission(page.game);
   doc.getElementById("mission-go").click();
-  let round = 0;
-  await until(() => {
-    if (!doc.getElementById("mission-result").hidden) return true;
-    if (m.id === "bells" && status() === "Your turn!" && !doc.getElementById("bells").dataset.flopped) {
-      doc.getElementById("bells").dataset.flopped = "yes";
-      const wrong = (bellTune(page.game)[0] + 1) % 4;
-      doc.querySelector(`.bell[data-bell="${wrong}"]`).click();
-    }
-    const pieBox = doc.getElementById("pies");
-    if (m.id === "pies" && status() === "Which one is the chilli pie?" && pieBox.dataset.round === String(round)) {
-      const { answer } = pieRound(page.game, round++);
-      const pies = [...doc.querySelectorAll(".pie")].sort((a, b) => parseFloat(a.style.left) - parseFloat(b.style.left));
-      pies[(answer + 1) % 3].click();
-    }
-    // Catapults: fire only when the red line is on a gap (a miss).
-    if (m.id === "catapults" && !doc.getElementById("catapult").hidden && doc.getElementById("wall").dataset.aim === ""
-        && !doc.getElementById("fire").disabled) doc.getElementById("fire").click();
-    if (m.id === "cooking" && !doc.getElementById("cooking").hidden && doc.getElementById("serve").onclick) {
-      const diner = cookingDiner(page.game, stillIn(page.game));
-      for (const f of flopMeal(diner)) doc.querySelector(`.food[data-food="${f}"]`).click();
-      doc.querySelector(`.box[data-box="${(shieldTruck(page.game) + 1) % 3}"]`).click();
-      doc.getElementById("serve").click();
-    }
-    return false;
-  }, "the mission ends", 30000);
+  page.missionGiveUp();
+  assert.ok(visible(doc, "mission-result"), "the mission is over");
   doc.getElementById("mission-done").click();
   await until(() => !doc.getElementById("screen-castle").hidden, "on to the castle");
 }
@@ -495,35 +460,15 @@ test("debug menu (?debug): play any mission on its own, then back to the list", 
   await until(() => visible(doc, "debug"), "the Test a mission button");
   doc.getElementById("debug").click();
   const ids = [...doc.querySelectorAll("#debug-missions .question")].map((b) => b.dataset.mission);
-  assert.eq([...ids].sort(), ["bells", "catapults", "cooking", "pies"]);
+  assert.eq(ids.length, 13, "all 13 missions");
   for (const id of ids) {
     doc.querySelector(`#debug-missions [data-mission="${id}"]`).click();
     assert.ok(visible(doc, "screen-mission"));
     const name = doc.getElementById("mission-name").textContent;
-    assert.ok(name.includes({ bells: "Castle Bells", pies: "Chilli Pie", catapults: "Catapults", cooking: "Cooking" }[id]), name);
-    // Do it badly, then back to the list.
+    assert.ok(name.includes(MISSIONS.find((m) => m.id === id).name), name);
+    // Give up at once, then back to the list.
     doc.getElementById("mission-go").click();
-    let round = 0;
-    await until(() => {
-      if (visible(doc, "mission-result")) return true;
-      const status = doc.getElementById("mission-status").textContent;
-      if (id === "bells" && status === "Your turn!" && !doc.getElementById("bells").dataset.flopped) {
-        doc.getElementById("bells").dataset.flopped = "yes";
-        doc.querySelector(`.bell[data-bell="${(bellTune(page.game)[0] + 1) % 4}"]`).click();
-      }
-      if (id === "pies" && status === "Which one is the chilli pie?" && doc.getElementById("pies").dataset.round === String(round)) {
-        const { answer } = pieRound(page.game, round++);
-        const pies = [...doc.querySelectorAll(".pie")].sort((a, b) => parseFloat(a.style.left) - parseFloat(b.style.left));
-        pies[(answer + 1) % 3].click();
-      }
-      if (id === "catapults" && doc.getElementById("fire").onclick) doc.getElementById("fire").click();
-      if (id === "cooking" && doc.getElementById("serve").onclick) {
-        for (const t of doc.querySelectorAll(".truck")) t.querySelector(".food").click();
-        doc.querySelector(".box").click();
-        doc.getElementById("serve").click();
-      }
-      return false;
-    }, `${id} ends`, 30000);
+    page.missionGiveUp();
     assert.eq(doc.getElementById("mission-done").textContent, "Back to the missions");
     doc.getElementById("mission-done").click();
     assert.ok(visible(doc, "screen-debug"), "back to the list");
@@ -617,4 +562,123 @@ test("Cooking: cook their hated food and find the shield", async () => {
   assert.ok(doc.getElementById("mission-score").textContent.includes("least favourite"));
   assert.ok(doc.getElementById("mission-shield").textContent.includes("You found the shield"));
   assert.eq(page.game.shield, "pepper");
+});
+
+// ─── The other nine missions, played well ───────────────────────────────────
+
+async function playMission(id) {
+  const { page, doc } = await toMission(missionSeed(id));
+  doc.getElementById("mission-go").click();
+  return { page, doc, box: doc.querySelector("#mission-play .mission-box") };
+}
+const result = async (doc) => {
+  await until(() => visible(doc, "mission-result"), "the result", 15000);
+  return doc.getElementById("mission-score").textContent;
+};
+
+test("Who Was Where?: answer all three right", async () => {
+  const { page, doc, box } = await playMission("where");
+  const { questions } = whereRounds(page.game, stillIn(page.game));
+  for (const [i, q] of questions.entries()) {
+    await until(() => box.dataset.question === String(i) && box.querySelector(".where-option"), `question ${i + 1}`, 8000);
+    box.querySelector(`.where-option[data-id="${q.answer}"]`).click();
+  }
+  assert.eq(await result(doc), "You got 3 out of 3 right!");
+});
+
+test("Letter Jumble: spell all three names", async () => {
+  const { page, doc, box } = await playMission("jumble");
+  for (const [i, w] of jumbleWords(page.game, stillIn(page.game)).entries()) {
+    await until(() => box.dataset.word === String(i) && box.querySelector(".jumble-tile"), `word ${i + 1}`, 8000);
+    for (const letter of w.word) box.querySelector(`.jumble-tile[data-letter="${letter}"]:not(:disabled)`).click();
+  }
+  assert.eq(await result(doc), "You spelled 3 out of 3 names!");
+});
+
+test("Secret Code: crack all three words", async () => {
+  const { page, doc, box } = await playMission("code");
+  for (const [i, word] of secretCode(page.game).words.entries()) {
+    await until(() => box.dataset.word === String(i) && box.querySelector(".code-button"), `word ${i + 1}`, 8000);
+    for (const letter of word) box.querySelector(`.code-button[data-letter="${letter}"]`).click();
+  }
+  assert.eq(await result(doc), "You cracked 3 out of 3 secret words!");
+});
+
+test("Garden Maze: walk out of the maze", async () => {
+  const { page, doc, box } = await playMission("maze");
+  const m = makeMaze(page.game);
+  // The way out, found square by square.
+  const key = ([x, y]) => `${x},${y}`;
+  const from = new Map([[key(m.start), null]]);
+  const queue = [m.start];
+  while (queue.length) {
+    const at = queue.shift();
+    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      const n = [at[0] + dx, at[1] + dy];
+      if (n[0] < 0 || n[1] < 0 || n[0] >= MAZE_W || n[1] >= MAZE_H || from.has(key(n)) || !canStep(m, at, n)) continue;
+      from.set(key(n), at);
+      queue.push(n);
+    }
+  }
+  const path = [];
+  for (let at = m.exit; at; at = from.get(key(at))) path.unshift(at);
+  await until(() => box.querySelector(".maze-cell"), "the maze");
+  box.querySelector('.maze-cell[data-x="1"][data-y="1"]').click();   // not next door: nothing happens
+  assert.eq(box.dataset.at, "0,0");
+  for (const [x, y] of path.slice(1)) box.querySelector(`.maze-cell[data-x="${x}"][data-y="${y}"]`).click();
+  assert.eq(await result(doc), "You found the way out!");
+});
+
+test("Lost Keys: find all five", async () => {
+  const { doc, box } = await playMission("keys");
+  await until(() => box.querySelectorAll(".key").length === 5, "the keys");
+  for (const k of box.querySelectorAll(".key")) k.click();
+  assert.eq(await result(doc), "You found all 5 keys!");
+});
+
+test("Muddy Footprints: follow the right boot every time", async () => {
+  const { page, doc, box } = await playMission("footprints");
+  const { boot } = footprintTrail(page.game);
+  for (let i = 0; i < 3; i++) {
+    await until(() => box.dataset.split === String(i) && box.querySelector(".print-option"), `split ${i + 1}`, 8000);
+    box.querySelector(`.print-option[data-sole="${boot}"]`).click();
+  }
+  assert.ok((await result(doc)).includes("You followed the trail"));
+});
+
+test("Portrait Gallery: spot every new picture", async () => {
+  const { page, doc, box } = await playMission("portraits");
+  for (const [i, round] of galleryRounds(page.game).entries()) {
+    await until(() => box.dataset.round === String(i) && box.querySelector(".gallery-pick"), `round ${i + 1}`, 8000);
+    box.querySelector(`.gallery-pick[data-id="${round.newcomer}"]`).click();
+  }
+  assert.eq(await result(doc), "You spotted 3 out of 3 new pictures!");
+});
+
+test("Treasure Hunt: wrong room, then warmer, then gold", async () => {
+  const { page, doc, box } = await playMission("treasure");
+  const spot = treasureSpot(page.game);
+  await until(() => box.querySelector(".treasure-room"), "the castle rooms");
+  const room = box.querySelector(".treasure-room");
+  const tapAt = (x, y) => {
+    const r = room.getBoundingClientRect();
+    room.dispatchEvent(new page.MouseEvent("click", { bubbles: true, clientX: r.left + x * r.width, clientY: r.top + y * r.height }));
+  };
+  const other = ["kitchen", "hall", "library", "garden"].find((r) => r !== spot.room);
+  box.querySelector(`.treasure-tabs [data-room="${other}"]`).click();
+  tapAt(0.5, 0.5);
+  assert.ok(doc.getElementById("mission-status").textContent.startsWith("Not in this room"));
+  box.querySelector(`.treasure-tabs [data-room="${spot.room}"]`).click();
+  tapAt(spot.x, spot.y);
+  assert.eq(await result(doc), "You found the gold in 2 taps!");
+});
+
+test("Lights Out: put all nine pieces back", async () => {
+  const { doc, box } = await playMission("lights");
+  await until(() => box.dataset.ready === "yes", "the pieces", 8000);
+  for (let i = 0; i < 9; i++) {
+    box.querySelector(`.lights-tray [data-piece="${i}"]`).click();
+    box.querySelector(`.slot[data-slot="${i}"]`).click();
+  }
+  assert.eq(await result(doc), "You built the whole shield in the dark!");
 });

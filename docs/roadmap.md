@@ -89,7 +89,7 @@ Mini-games in the day that win money for the pot. Sam's 13 missions are in
 `docs/missions.md`. Built (v0.8.0): the daily mission, the pot, the shield,
 Castle Bells and Chilli Pie Shuffle. v0.9.0: the 12-day rules. v0.9.2: the
 slow-motion walk to the Round Table (Sam). v0.10.0: Catapults and the
-Cooking Challenge. Next: the other 9 missions.
+Cooking Challenge. v0.11.0: all 13 missions built. Next: Sam plays them.
 
 ## Phase 6: A whole game, with saving
 Days and nights until the end; who wins the pot; the game remembers where

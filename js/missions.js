@@ -5,6 +5,7 @@
 
 import { makeRandom, DAYS, TRAITOR } from "./game.js";
 import { suspectList } from "./castle.js";
+import { ROOMS } from "./puppets.js";
 
 // All 13 of Sam's missions. `built` ones can be played so far.
 export const MISSIONS = [
@@ -12,19 +13,28 @@ export const MISSIONS = [
     how: "Listen to the bells. Then ring them back in the same order!" },
   { id: "pies", name: "Chilli Pie Shuffle", type: "memory", built: true,
     how: "Watch Chef Pepper's chilli pie. Then find it after the shuffle!" },
-  { id: "where", name: "Who Was Where?", type: "memory", built: false },
-  { id: "jumble", name: "Letter Jumble", type: "puzzle", built: false },
-  { id: "code", name: "Secret Code", type: "puzzle", built: false },
-  { id: "maze", name: "Garden Maze", type: "puzzle", built: false },
-  { id: "keys", name: "Lost Keys", type: "hunting", built: false },
-  { id: "footprints", name: "Muddy Footprints", type: "hunting", built: false },
-  { id: "portraits", name: "Portrait Gallery", type: "hunting", built: false },
-  { id: "treasure", name: "Treasure Hunt", type: "hunting", built: false },
+  { id: "where", name: "Who Was Where?", type: "memory", built: true,
+    how: "Look at who is in each room. Then answer: who was where?" },
+  { id: "jumble", name: "Letter Jumble", type: "puzzle", built: true,
+    how: "Tap the letters to spell each name. The first one might leave you a note!" },
+  { id: "code", name: "Secret Code", type: "puzzle", built: true,
+    how: "Use the key to crack the code. Tap the letters to spell each secret word." },
+  { id: "maze", name: "Garden Maze", type: "puzzle", built: true,
+    how: "Find your way out of the hedge maze. Tap the next square to walk!" },
+  { id: "keys", name: "Lost Keys", type: "hunting", built: true,
+    how: "Five keys are hidden in the library. Find them all, quick!" },
+  { id: "footprints", name: "Muddy Footprints", type: "hunting", built: true,
+    how: "Remember the boot print. Then follow the right footprints where the trail splits!" },
+  { id: "portraits", name: "Portrait Gallery", type: "hunting", built: true,
+    how: "Look at the pictures. When the lights come back on, which picture is new?" },
+  { id: "treasure", name: "Treasure Hunt", type: "hunting", built: true,
+    how: "Gold is hidden in the castle. Tap to search. Warmer means you're getting close!" },
   { id: "cooking", name: "Cooking Challenge", type: "puzzle", built: true,
     how: "Someone is coming to dinner. Cook them the food they hate! Then find the shield." },
   { id: "catapults", name: "Catapults", type: "hunting", built: true,
     how: "Fire stones at the pictures. Whoever gets hit is up for murder tonight! Don't hit the shield." },
-  { id: "lights", name: "Lights Out", type: "puzzle", built: false },
+  { id: "lights", name: "Lights Out", type: "puzzle", built: true,
+    how: "Look at the shield. Then the lights flicker! Put the pieces back. Tap a piece, then its place." },
 ];
 
 // Who is good (+1) or bad (-1) at each type, from their personality.
@@ -206,4 +216,205 @@ export function finishCooking(game, diner, meal, box, stillIn, mission = MISSION
   const found = box === shieldTruck(game);
   const score = cookScore(diner, meal);
   return { ...finishMission(game, score, stillIn, mission, found ? game.playerId : undefined), found, score };
+}
+
+// ─── Notes from people who have gone (Sam: "a note from them") ──────────────
+// Who has left the game, newest first; the murdered ones first of all.
+export function gone(game) {
+  const murdered = [], banished = [];
+  for (const h of [...game.history].reverse()) {
+    if (h.murdered) murdered.push(h.murdered);
+    if (h.banished) banished.push(h.banished);
+  }
+  return [...murdered, ...banished];
+}
+// `who` (gone) names the person they suspected most. They might be wrong!
+export function noteFrom(game, who) {
+  if (!game.scores[who]) return null;
+  return { from: who, suspect: suspectList(game, who)[0] };
+}
+
+// A seeded shuffle.
+function shuffled(list, r) {
+  const out = [...list];
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(r() * (i + 1));
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  return out;
+}
+
+// ─── Who Was Where? ─────────────────────────────────────────────────────────
+// Up to 3 people in each room; then 3 questions, each with 4 names.
+export function whereRounds(game, stillIn) {
+  const r = rng(game, "where", game.day);
+  const people = shuffled(stillIn.filter((id) => id !== game.playerId), r);
+  const per = Math.min(3, Math.floor(people.length / ROOMS.length));
+  const rooms = Object.fromEntries(ROOMS.map((room, i) => [room.id, people.slice(i * per, i * per + per)]));
+  const placed = Object.values(rooms).flat();
+  const questions = shuffled(ROOMS, r).slice(0, 3).map((room) => {
+    const answer = rooms[room.id][Math.floor(r() * per)];
+    const others = shuffled(placed.filter((id) => !rooms[room.id].includes(id)), r).slice(0, 3);
+    return { room: room.id, answer, options: shuffled([answer, ...others], r) };
+  });
+  return { rooms, questions };
+}
+
+// ─── Letter Jumble ──────────────────────────────────────────────────────────
+// Three names to unjumble. The first is the last person murdered (or
+// banished): spell it to get their note.
+export function jumbleWords(game, stillIn) {
+  const r = rng(game, "jumble", game.day);
+  const first = gone(game)[0] ?? null;
+  const pool = shuffled([...stillIn, ...gone(game)].filter((id) => id !== first && id !== game.playerId && id.length >= 3), r);
+  const ids = [first ?? pool.pop(), pool[0], pool[1]];
+  return ids.map((id) => {
+    const word = id.toUpperCase();
+    let letters = shuffled([...word], r);
+    for (let k = 0; letters.join("") === word && k < 10; k++) letters = shuffled([...word], r);
+    return { id, word, letters, note: id === first };
+  });
+}
+
+// ─── Secret Code ────────────────────────────────────────────────────────────
+// Each letter has a coloured shape. Three words to spell from their shapes.
+export const SHAPES = ["circle", "square", "triangle", "diamond", "cross"];
+export const SHAPE_COLOURS = ["#e2453c", "#3b7dd8", "#3fa34d"];
+export const CODE_WORDS = ["SHIELD", "CASTLE", "TOWER", "CROWN", "FEAST", "KNIGHT", "SECRET", "DRAGON", "TORCH", "SWORD", "GOLD", "TRAIN"];
+export function secretCode(game) {
+  const r = rng(game, "code", game.day);
+  let words, letters;
+  do {
+    words = shuffled(CODE_WORDS, r).slice(0, 3);
+    letters = [...new Set(words.join(""))];
+  } while (letters.length > SHAPES.length * SHAPE_COLOURS.length);
+  const symbols = shuffled(SHAPES.flatMap((shape) => SHAPE_COLOURS.map((colour) => ({ shape, colour }))), r);
+  const key = Object.fromEntries(shuffled(letters, r).map((l, i) => [l, symbols[i]]));
+  return { words, key };
+}
+export const CODE_TRIES = 3;
+
+// ─── Garden Maze ────────────────────────────────────────────────────────────
+// A hedge maze, made by a seeded walk. walls[y][x] = { n, e, s, w } (true =
+// a hedge). Start top left, way out bottom right.
+export const MAZE_W = 9, MAZE_H = 7, MAZE_SECONDS = 60;
+export function makeMaze(game) {
+  const r = rng(game, "maze", game.day);
+  const walls = Array.from({ length: MAZE_H }, () => Array.from({ length: MAZE_W }, () => ({ n: true, e: true, s: true, w: true })));
+  const seen = new Set(["0,0"]);
+  const stack = [[0, 0]];
+  const steps = { n: [0, -1, "s"], e: [1, 0, "w"], s: [0, 1, "n"], w: [-1, 0, "e"] };
+  while (stack.length) {
+    const [x, y] = stack[stack.length - 1];
+    const next = Object.entries(steps)
+      .map(([d, [dx, dy, back]]) => [d, x + dx, y + dy, back])
+      .filter(([, nx, ny]) => nx >= 0 && ny >= 0 && nx < MAZE_W && ny < MAZE_H && !seen.has(`${nx},${ny}`));
+    if (!next.length) { stack.pop(); continue; }
+    const [d, nx, ny, back] = next[Math.floor(r() * next.length)];
+    walls[y][x][d] = false;
+    walls[ny][nx][back] = false;
+    seen.add(`${nx},${ny}`);
+    stack.push([nx, ny]);
+  }
+  return { walls, start: [0, 0], exit: [MAZE_W - 1, MAZE_H - 1] };
+}
+// Can you step from (x, y) to the square next door at (nx, ny)?
+export function canStep(maze, [x, y], [nx, ny]) {
+  const dx = nx - x, dy = ny - y;
+  if (Math.abs(dx) + Math.abs(dy) !== 1) return false;
+  const d = dx === 1 ? "e" : dx === -1 ? "w" : dy === 1 ? "s" : "n";
+  return !maze.walls[y][x][d];
+}
+// Steps from `from` to the way out.
+export function stepsOut(maze, from) {
+  const key = ([x, y]) => `${x},${y}`;
+  const dist = new Map([[key(from), 0]]);
+  const queue = [from];
+  while (queue.length) {
+    const at = queue.shift();
+    if (key(at) === key(maze.exit)) return dist.get(key(at));
+    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      const n = [at[0] + dx, at[1] + dy];
+      if (n[0] < 0 || n[1] < 0 || n[0] >= MAZE_W || n[1] >= MAZE_H || dist.has(key(n)) || !canStep(maze, at, n)) continue;
+      dist.set(key(n), dist.get(key(at)) + 1);
+      queue.push(n);
+    }
+  }
+  return Infinity;
+}
+export const mazeScore = (maze, at) => Math.max(0, 1 - stepsOut(maze, at) / stepsOut(maze, maze.start));
+
+// ─── Lost Keys ──────────────────────────────────────────────────────────────
+export const KEYS = 5, KEYS_SECONDS = 40;
+export function keySpots(game) {
+  const r = rng(game, "keys", game.day);
+  const spots = [];
+  while (spots.length < KEYS) {
+    const s = { x: 0.08 + r() * 0.84, y: 0.12 + r() * 0.76, turn: Math.floor(r() * 360) };
+    if (spots.every((o) => Math.hypot(o.x - s.x, o.y - s.y) > 0.15)) spots.push(s);
+  }
+  return spots;
+}
+
+// ─── Muddy Footprints ───────────────────────────────────────────────────────
+export const SOLES = ["stripes", "dots", "zigzag", "star", "squares"];
+export function footprintTrail(game) {
+  const r = rng(game, "footprints", game.day);
+  const boot = SOLES[Math.floor(r() * SOLES.length)];
+  const splits = [0, 1, 2].map(() => shuffled([boot, ...shuffled(SOLES.filter((s) => s !== boot), r).slice(0, 2)], r));
+  return { boot, splits };
+}
+export const footprintNote = (right) => right >= 2;
+
+// ─── Portrait Gallery ───────────────────────────────────────────────────────
+// Three rounds: a wall of 6, 8 then 10 portraits, then one new one. The
+// last new one is someone who has gone (with a note), if anyone has.
+export function galleryRounds(game) {
+  const r = rng(game, "gallery", game.day);
+  const left = gone(game);
+  const all = shuffled(game.players.map((p) => p.id).filter((id) => id !== game.playerId), r);
+  const last = left[0] ?? all[0];
+  const others = all.filter((id) => id !== last);
+  return [6, 8, 10].map((n, i) => {
+    const newcomer = i === 2 ? last : others[i];
+    const wall = shuffled(others.filter((id) => id !== newcomer), r).slice(0, n);
+    const after = [...wall];
+    after.splice(Math.floor(r() * (n + 1)), 0, newcomer);
+    return { wall, after, newcomer, note: i === 2 && left.length > 0 };
+  });
+}
+
+// ─── Treasure Hunt ──────────────────────────────────────────────────────────
+export const TREASURE_TAPS = 12;
+export function treasureSpot(game) {
+  const r = rng(game, "treasure", game.day);
+  return { room: ROOMS[Math.floor(r() * ROOMS.length)].id, x: 0.15 + r() * 0.7, y: 0.3 + r() * 0.6 };
+}
+// A tap at (x, y) in `room`: "found", "warmer", "colder" or "wrong room".
+// `before`: the last distance in the right room (or null).
+export const FOUND_NEAR = 0.09;
+export function treasureTap(spot, room, x, y, before) {
+  if (room !== spot.room) return { said: "wrong room", dist: null };
+  const dist = Math.hypot(x - spot.x, y - spot.y);
+  if (dist <= FOUND_NEAR) return { said: "found", dist };
+  if (before === null) return { said: dist < 0.3 ? "warm" : "cold", dist };
+  return { said: dist < before ? "warmer" : "colder", dist };
+}
+export const treasureScore = (found, taps) => (found ? Math.max(0.3, 1 - (taps - 1) / TREASURE_TAPS) : 0);
+
+// ─── Lights Out ─────────────────────────────────────────────────────────────
+export const PIECES = 9, LIGHTS_SECONDS = 45;
+export const lightsTray = (game) => shuffled([...Array(PIECES).keys()], rng(game, "lights", game.day));
+export const lightsScore = (placed) => placed.filter((p, slot) => p === slot).length / PIECES;
+
+// Doing a mission as badly as possible (the tests' "give up"): nobody hit,
+// a meal without the hated food and the wrong box, or a score of 0.
+export function flopResult(game, stillIn, mission = todaysMission(game)) {
+  if (mission.id === "catapults") return finishCatapults(game, [null, null, null], stillIn, mission);
+  if (mission.id === "cooking") {
+    const diner = cookingDiner(game, stillIn);
+    const meal = TRUCKS.map((t) => t.foods.find((f) => f !== HATES[diner][0]));
+    return finishCooking(game, diner, meal, (shieldTruck(game) + 1) % TRUCKS.length, stillIn, mission);
+  }
+  return finishMission(game, 0, stillIn, mission);
 }

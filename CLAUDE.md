@@ -210,7 +210,7 @@ so, kindly.
   crashes partway can look like a pass (learned in Project 2126).
 
 ## Current status
-Updated 2026-10-24 (v0.10.0).
+Updated 2026-10-24 (v0.11.0).
 - **Phase 0 (web setup) done.** Tests in headless Chrome; GitHub Pages;
   Turbo Town archived.
 - **Phase 1 done.** The game: like The Traitors, starting at Havenbrook
@@ -240,7 +240,8 @@ Updated 2026-10-24 (v0.10.0).
 - **Phase 5 (missions) started (v0.8.0)**: each day opens with a mission
   (`js/missions.js` rules, `js/mission-ui.js` screens): the pot, the shield
   (stops that night's murder), Castle Bells, Chilli Pie Shuffle,
-  Catapults and Cooking (v0.10.0). Sam's 13
+  Catapults and Cooking (v0.10.0); all 13 built (v0.11.0; the other nine
+  are in `js/mission-more.js`). Sam's 13
   missions and answers: `docs/missions.md`. Test one mission on its own:
   add `?debug` to the address (or `tools/playtest.sh missions`).
 - **12 days (v0.9.0)**: always 12 days; murders every other night;

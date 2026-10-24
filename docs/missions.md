@@ -63,6 +63,35 @@ In Sam's words, then his answers:
   food in the meal scores 1 (a nice meal without it scores 0.3). Find the
   shield and you win it; otherwise the best player does.
 
+## The other nine (spec, v0.11.0; Sam's answers 2026-10-24)
+
+Clue missions (Letter Jumble, Muddy Footprints, Portrait Gallery) give a
+**note from someone who has gone**, naming who they suspected. They might
+be wrong (a banished Traitor's note points at a Faithful). Before anyone
+has gone, there's no note.
+
+- **Who Was Where?** (memory): the four rooms flash up with people in
+  them; then "Who was in the library?" with four names. 3 questions.
+- **Letter Jumble** (puzzle, clue): tap jumbled letters to spell three
+  names; the first is the last person murdered (or banished). Spell it and
+  you get their note.
+- **Secret Code** (puzzle): a key of coloured shapes and letters; spell
+  three secret words from their shapes. Three wrong letters lose a word.
+- **Garden Maze** (puzzle): tap the next square to walk out of the hedge
+  maze within a minute. Part-way counts for some.
+- **Lost Keys** (hunting): find 5 keys hidden in the library in 40 seconds.
+- **Muddy Footprints** (hunting, clue): remember the boot print; at three
+  places the trail splits; pick the matching print. Two right and you find
+  the note at the end.
+- **Portrait Gallery** (hunting, clue): look at the wall; the lights go
+  out; a new portrait has gone up. Which one? Three rounds, more pictures
+  each time; the last new portrait is someone who has gone, with a note.
+- **Treasure Hunt** (hunting): the gold is hidden in one room. Tap to
+  search: "warmer", "colder", or "not in this room". 12 taps.
+- **Lights Out** (puzzle): see the shield picture, then the lights
+  flicker while you put its 9 pieces back (tap a piece, then its place).
+  45 seconds. Everyone builds; the best builder wins the shield.
+
 ## How many
 
 13 missions for 12 days: each game picks 12 at random, so one is left out
