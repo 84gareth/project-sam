@@ -25,3 +25,14 @@ test("the page loads its code with the version stamped on", async () => {
   assert.gt(loaded.length, 5, "it loaded its modules");
   for (const n of loaded) assert.ok(n.includes(`?v=${VERSION}`), `stamped: ${n}`);
 });
+
+test("a Home Screen icon (the castle) for the iPad", async () => {
+  const page = await openPage();
+  const link = page.document.querySelector('link[rel="apple-touch-icon"]');
+  assert.ok(link, "the icon is linked");
+  const img = new Image();
+  img.src = link.href;
+  await img.decode();
+  assert.eq(img.naturalWidth, 180);
+  assert.eq(img.naturalHeight, 180);
+});

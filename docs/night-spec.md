@@ -45,4 +45,4 @@ to breakfast! Nobody was murdered last night... strange!"
 ## 12 days (v0.9.0)
 The night rules changed with missions: see `docs/missions.md`, "The
 12-day rules". In short, murders every other night, recruiting at 2
-Traitors up to night 8, and no early Traitor win.
+Traitors up to night 5, and no early Traitor win.

@@ -267,13 +267,13 @@ function wholeGame(seed) {
   return g;
 }
 
-test("nights: recruit on night 1; murder every other night; recruit at 2 Traitors only up to night 8", () => {
+test("nights: recruit on night 1; murder every other night; recruit at 2 Traitors only up to night 5", () => {
   for (let seed = 1; seed <= 100; seed++) {
     const g = wholeGame(seed);
     for (const [i, h] of g.history.entries()) {
       const n = i + 1;
       if (n === 1) assert.ok(h.recruited, "night 1 recruits");
-      if (h.recruited && n > 1) assert.ok(n <= 8, `recruit on night ${n}`);
+      if (h.recruited && n > 1) assert.ok(n <= 5, `recruit on night ${n}`);
       if (h.murdered) assert.eq(n % 2, 0, `murders on even nights only (night ${n})`);
       if (n % 2 === 1 && n > 1) assert.notOk(h.murdered);
     }
@@ -281,7 +281,7 @@ test("nights: recruit on night 1; murder every other night; recruit at 2 Traitor
   }
 });
 
-test("only 2 Traitors left by night 8: they recruit again", () => {
+test("only 2 Traitors left by night 5: they recruit again", () => {
   let seen = 0;
   for (let seed = 1; seed <= 200; seed++) {
     const g = wholeGame(seed);
@@ -306,11 +306,11 @@ test("balance over 12 days: both sides win sometimes; most games go the distance
   }
   left.sort((a, b) => a - b);
   const tag = `Faithfuls win ${(faithfulWins / N * 100).toFixed(0)}%, ${(fullLength / N * 100).toFixed(0)}% reach day 12, median ${left[N >> 1]} people left, Traitors left ${(tl.reduce((a, b) => a + b, 0) / N).toFixed(2)}, recruits ${(rec / N).toFixed(2)}, caught ${(caught / N).toFixed(2)} (averages)`;
-  // Measured 2026-10-24 with recruiting up to night 8: Faithfuls win ~15%
-  // (up to night 6: ~41%; night 4: ~61%). Gareth to choose; see roadmap.
-  assert.gt(faithfulWins / N, 0.1, tag);
+  // Recruiting up to night 5 (Gareth): Faithfuls win ~55% (measured
+  // 2026-10-24; night 8 gave ~15%, which was too hard).
+  assert.gt(faithfulWins / N, 0.4, tag);
   assert.lt(faithfulWins / N, 0.75, tag);
-  assert.gt(fullLength / N, 0.5, tag);
+  assert.gt(fullLength / N, 0.4, tag);
   assert.gt(left[0], 2, "always a few people at the end: " + tag);
 });
 

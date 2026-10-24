@@ -73,7 +73,7 @@ First two missions:
 - Nights: night 1 the Traitors recruit. After that they murder every other
   night (nights 2, 4, 6...) and only plot on the others.
 - When only 2 Traitors are left, they recruit instead, but only up to
-  night 8 (Gareth's pick, option 2), so they can still all be caught.
-- Balance, measured over 300 computer games: Faithfuls win about 15%.
-  Recruiting up to night 6 instead gives about 41%; night 4, about 61%.
-  Gareth to choose (`RECRUIT_UNTIL` in `js/castle.js`).
+  night 5, so they can still all be caught (Gareth, v0.9.1; `RECRUIT_UNTIL`
+  in `js/castle.js`).
+- Balance, measured over 300 computer games: Faithfuls win about 55%.
+  (Night 8 gave about 15%; night 6, 41%; night 4, 61%.)

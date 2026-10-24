@@ -210,7 +210,7 @@ so, kindly.
   crashes partway can look like a pass (learned in Project 2126).
 
 ## Current status
-Updated 2026-10-24 (v0.9.0).
+Updated 2026-10-24 (v0.9.1).
 - **Phase 0 (web setup) done.** Tests in headless Chrome; GitHub Pages;
   Turbo Town archived.
 - **Phase 1 done.** The game: like The Traitors, starting at Havenbrook
@@ -243,7 +243,7 @@ Updated 2026-10-24 (v0.9.0).
   missions and answers: `docs/missions.md`. Test one mission on its own:
   add `?debug` to the address (or `tools/playtest.sh missions`).
 - **12 days (v0.9.0)**: always 12 days; murders every other night;
-  recruit on night 1 and at 2 Traitors up to night 8 (`nightKind`).
+  recruit on night 1 and at 2 Traitors up to night 5 (`nightKind`).
 - **Roadmap OK'd by Gareth.** All 22 of Sam's drawings are in (
   how to add one: how to add one is in `docs/characters.md`); voices
   are the iPad's own (Web Speech), arriving with Phase 3.

@@ -527,12 +527,13 @@ export function playerSays(game, option) {
 // becomes a Traitor (Sam: "Yes, no choice"). Whoever is picked says yes.
 
 // What happens tonight (after the day just finished):
-// - "recruit": night 1, and any night up to night 8 when only 2 Traitors
-//   are left (Sam; Gareth: "option 2", so they can still all be caught);
+// - "recruit": night 1, and any night up to night 5 when only 2 Traitors
+//   are left (Sam; Gareth chose night 5, so they can still all be caught:
+//   up to night 8, Faithfuls won only ~15% of games);
 // - "murder": every other night (nights 2, 4, 6...), so 12 days fit;
 // - "quiet": the Traitors only plot;
 // - "done": tonight has already happened.
-export const RECRUIT_UNTIL = 8;
+export const RECRUIT_UNTIL = 5;
 export function nightKind(game) {
   const last = game.history[game.history.length - 1];
   if (last.recruited || last.murdered || last.quiet) return "done";
