@@ -8,7 +8,7 @@ import {
 import {
   todaysMission, bellTune, pieRound, cookingDiner, shieldTruck, TRUCKS, HATES, flopResult, MISSIONS,
   whereRounds, jumbleWords, secretCode, makeMaze, canStep, MAZE_W, MAZE_H, galleryRounds,
-  treasureSpot, truckFoods, SLING, SLING_POWER, FLIGHT,
+  treasureSpot, truckFoods, SLING, SLING_POWER, FLIGHT, keyHides,
 } from "../../js/missions.js";
 
 // What flopMission does, as rules (for rehearsing a game to find a seed).
@@ -691,12 +691,26 @@ test("Garden Maze: steer out with the joystick", async () => {
   assert.eq(await result(doc), "You found the way out!");
 });
 
-test("Lost Keys: find all five", async () => {
-  const { doc, box } = await playMission("keys");
-  await until(() => box.querySelectorAll(".key").length === 5, "the keys");
-  for (const k of box.querySelectorAll(".key")) k.click();
+test("Lost Keys: look behind the right things and find all five", async () => {
+  const { page, doc, box } = await playMission("keys");
+  const h = keyHides(page.game);
+  await until(() => box.querySelectorAll(".hide").length === 14, "the hiding places");
+  const empty = [...Array(14).keys()].find((i) => !h.keys.includes(i));
+  box.querySelector(`.hide[data-place="${empty}"]`).click();
+  assert.ok(doc.getElementById("mission-status").textContent.startsWith("Nothing"), "nothing behind that one");
+  for (const k of h.keys) box.querySelector(`.hide[data-place="${k}"]`).click();
   assert.eq(await result(doc), "You found all 5 keys!");
 });
+
+test("Lost Keys: run out of looks", async () => {
+  const { page, doc, box } = await playMission("keys");
+  const h = keyHides(page.game);
+  await until(() => box.querySelectorAll(".hide").length === 14, "the hiding places");
+  const empties = [...Array(14).keys()].filter((i) => !h.keys.includes(i));
+  for (const i of empties.slice(0, 9)) box.querySelector(`.hide[data-place="${i}"]`).click();
+  assert.eq(await result(doc), "Out of looks! You found 0 out of 5 keys.");
+});
+
 
 test("Muddy Footprints: tap every boot print, never a fox or duck", async () => {
   const { doc, box } = await playMission("footprints");

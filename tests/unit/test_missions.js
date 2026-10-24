@@ -209,7 +209,7 @@ test("Cooking: the hated food scores; the right box wins the shield", () => {
 // ─── The other nine ─────────────────────────────────────────────────────────
 import {
   gone, noteFrom, whereRounds, jumbleWords, secretCode, SHAPES, SHAPE_COLOURS, makeMaze, canStep, stepsOut,
-  mazeScore, MAZE_W, MAZE_H, keySpots, footprintEvents, footprintScore, footprintNote, BOOT_PRINTS, galleryRounds, treasureSpot, treasureTap,
+  mazeScore, MAZE_W, MAZE_H, keyHides, jingles, KEYS, LOOKS, HIDING_PLACES, footprintEvents, footprintScore, footprintNote, BOOT_PRINTS, galleryRounds, treasureSpot, treasureTap,
   treasureScore, FOUND_NEAR, lightsTray, lightsScore, flopResult,
 } from "../../js/missions.js";
 
@@ -299,13 +299,32 @@ test("Garden Maze: always a way out; steps only between open squares", () => {
   for (let y = 0; y < MAZE_H; y++) for (let x = 0; x + 1 < MAZE_W; x++) assert.eq(m.walls[y][x].e, m.walls[y][x + 1].w);
 });
 
-test("Lost Keys: 5 keys, spread out, on the picture", () => {
+test("Lost Keys: 14 hiding places, 5 keys, fewer looks than places", () => {
   for (let seed = 1; seed <= 20; seed++) {
-    const spots = keySpots(castle(seed));
-    assert.eq(spots.length, 5);
-    for (const s of spots) assert.ok(s.x > 0.05 && s.x < 0.95 && s.y > 0.1 && s.y < 0.9);
+    const h = keyHides(castle(seed));
+    assert.eq(h.spots.length, HIDING_PLACES);
+    assert.eq(new Set(h.keys).size, KEYS);
+    for (const k of h.keys) assert.ok(k >= 0 && k < HIDING_PLACES);
+    for (const s of h.spots) assert.ok(s.x > 0.05 && s.x < 0.95 && s.y > 0.2 && s.y < 0.9 && s.kind);
   }
+  assert.lt(LOOKS, HIDING_PLACES, "you can't just look everywhere");
+  assert.ok(LOOKS >= KEYS);
 });
+
+test("Lost Keys: a jingle means a key is near", () => {
+  for (let seed = 1; seed <= 20; seed++) {
+    const h = keyHides(castle(seed));
+    h.spots.forEach((s, i) => {
+      const near = h.keys.filter((k) => k !== i && Math.hypot(h.spots[k].x - s.x, (h.spots[k].y - s.y) * 0.56) < 0.24);
+      assert.eq(jingles(h, i), near.length);
+    });
+  }
+  const h = { spots: [{ x: 0.1, y: 0.3 }, { x: 0.15, y: 0.3 }, { x: 0.9, y: 0.8 }], keys: [1] };
+  assert.eq(jingles(h, 0), 1, "next door");
+  assert.eq(jingles(h, 2), 0, "far away");
+  assert.eq(jingles(h, 1), 0, "not the one behind you");
+});
+
 
 test("Muddy Footprints: 16 boot prints in order round the garden, getting quicker, with foxes and ducks", () => {
   const kinds = new Set();
@@ -475,7 +494,7 @@ test("every mission changes from game to game", () => {
     seen.lights.add(lightsDesign(g));
     seen.maze.add(JSON.stringify(makeMaze(g).walls));
     seen.bells.add(tuneOf(g).join());
-    seen.keys.add(JSON.stringify(keySpots(g)));
+    seen.keys.add(JSON.stringify(keyHides(g)));
   }
   assert.eq(seen.lights.size, SHIELD_DESIGNS, "all the shield pictures come up");
   assert.eq(seen.maze.size, 20);

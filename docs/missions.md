@@ -82,7 +82,10 @@ has gone, there's no note.
 - **Garden Maze** (puzzle): steer a counter out of the hedge maze with an
   on-screen joystick, within a minute (Gareth, v0.12.5: smooth movement;
   start and way out in random opposite corners). Part-way counts for some.
-- **Lost Keys** (hunting): find 5 keys hidden in the library in 40 seconds.
+- **Lost Keys** (hunting; remade v0.12.10, Sam: "look behind things"):
+  14 things in the library (books, chairs, paintings, clocks...), 5 hide
+  a key, and you can look behind 9. An empty one might jingle: a key is
+  close by.
 - **Muddy Footprints** (hunting, clue; remade v0.12.8, Gareth: "a complete
   rework"): boot prints pop up one by one along a trail round the garden;
   tap each before it fades (1.7 s, getting quicker). Fox and duck prints
@@ -94,8 +97,8 @@ has gone, there's no note.
 - **Treasure Hunt** (hunting): the gold is hidden in one room. Tap to
   search: "warmer", "colder", or "not in this room". 12 taps.
 - **Lights Out** (puzzle): see the shield picture, then the lights
-  flicker while you put its 9 pieces back (tap a piece, then its place).
-  45 seconds. Everyone builds; the best builder wins the shield.
+  flicker while you put its 9 pieces back (tap a piece, then its place;
+  tap a placed piece to move or swap it; Finished! when done). 45 seconds. Everyone builds; the best builder wins the shield.
 
 ## Fresh every time (Gareth, v0.12.6)
 

@@ -444,16 +444,26 @@ export function stepsOut(maze, from) {
 }
 export const mazeScore = (maze, at) => Math.max(0, 1 - stepsOut(maze, at) / stepsOut(maze, maze.start));
 
-// ─── Lost Keys ──────────────────────────────────────────────────────────────
-export const KEYS = 5, KEYS_SECONDS = 40;
-export function keySpots(game) {
+// ─── Lost Keys (remade: Sam, "look behind things") ──────────────────────────
+// 14 things in the library; 5 hide a key. You can look behind 9 of them.
+// Look behind one with no key and you might hear a jingle: a key is close.
+export const KEYS = 5, HIDING_PLACES = 14, LOOKS = 9, JINGLE_NEAR = 0.24;
+export const HIDING_KINDS = ["books", "chair", "painting", "clock", "globe", "lamp", "chest", "plant"];
+export function keyHides(game) {
   const r = rng(game, "keys", game.day);
   const spots = [];
-  while (spots.length < KEYS) {
-    const s = { x: 0.08 + r() * 0.84, y: 0.12 + r() * 0.76, turn: Math.floor(r() * 360) };
-    if (spots.every((o) => Math.hypot(o.x - s.x, o.y - s.y) > 0.15)) spots.push(s);
+  for (let tries = 0; spots.length < HIDING_PLACES && tries < 5000; tries++) {
+    const s = { x: 0.07 + r() * 0.86, y: 0.22 + r() * 0.64 };
+    if (spots.every((o) => Math.hypot(o.x - s.x, (o.y - s.y) * 0.56) > 0.085)) spots.push(s);
   }
-  return spots;
+  spots.forEach((s, i) => { s.kind = HIDING_KINDS[i % HIDING_KINDS.length]; });
+  const keys = shuffled([...spots.keys()], r).slice(0, KEYS).sort((x, y) => x - y);
+  return { spots, keys };
+}
+// How many hidden keys are near place i (not counting one behind it).
+export function jingles(hides, i) {
+  const s = hides.spots[i];
+  return hides.keys.filter((k) => k !== i && Math.hypot(hides.spots[k].x - s.x, (hides.spots[k].y - s.y) * 0.56) < JINGLE_NEAR).length;
 }
 
 // ─── Muddy Footprints (remade: Gareth, "it needs a complete rework") ────────

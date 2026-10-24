@@ -3,7 +3,7 @@
 // missions.js; this file draws and listens.
 import {
   whereRounds, jumbleWords, noteFrom, secretCode, CODE_TRIES, makeMaze, mazeMove, mazeSquare, MAZE_SPEED, mazeScore,
-  MAZE_W, MAZE_H, MAZE_SECONDS, keySpots, KEYS, KEYS_SECONDS, footprintEvents, footprintScore, footprintNote,
+  MAZE_W, MAZE_H, MAZE_SECONDS, keyHides, jingles, KEYS, LOOKS, footprintEvents, footprintScore, footprintNote,
   galleryRounds, treasureSpot, treasureTap, treasureScore, TREASURE_TAPS, lightsTray, lightsScore,
   PIECES, LIGHTS_SECONDS, gone, lightsDesign, lightsStart, lightsTap,
 } from "./missions.js";
@@ -300,30 +300,51 @@ function maze(ctx) {
 
 // ─── Lost Keys ──────────────────────────────────────────────────────────────
 
-const KEY_SVG = '<svg viewBox="0 0 60 24" width="54" height="22"><circle cx="11" cy="12" r="8" fill="none" stroke="#c9a227" stroke-width="5"/><rect x="18" y="9" width="38" height="6" rx="2" fill="#c9a227"/><rect x="44" y="14" width="5" height="8" fill="#c9a227"/><rect x="51" y="14" width="5" height="6" fill="#c9a227"/></svg>';
+const KEY_SVG = '<svg viewBox="0 0 60 24" width="54" height="22"><circle cx="11" cy="12" r="8" fill="none" stroke="#f2c14e" stroke-width="5"/><rect x="18" y="9" width="38" height="6" rx="2" fill="#f2c14e"/><rect x="44" y="14" width="5" height="8" fill="#f2c14e"/><rect x="51" y="14" width="5" height="6" fill="#f2c14e"/></svg>';
+const THINGS = {
+  books: '<rect x="8" y="30" width="12" height="44" fill="#8b1a1a"/><rect x="21" y="24" width="12" height="50" fill="#1e5aa8"/><rect x="34" y="34" width="12" height="40" fill="#2e8b57"/><rect x="47" y="28" width="12" height="46" fill="#c98a3a"/>',
+  chair: '<rect x="18" y="10" width="44" height="40" rx="8" fill="#6b3d1f"/><rect x="12" y="46" width="56" height="14" rx="5" fill="#8b5a2b"/><rect x="16" y="58" width="6" height="18" fill="#4a2a12"/><rect x="58" y="58" width="6" height="18" fill="#4a2a12"/>',
+  painting: '<rect x="8" y="12" width="64" height="50" fill="#c9a227"/><rect x="15" y="19" width="50" height="36" fill="#5d8aa8"/><path d="M15 55 L35 35 L48 47 L56 40 L65 55 Z" fill="#2e8b57"/>',
+  clock: '<rect x="24" y="4" width="32" height="72" rx="6" fill="#5a3a1a"/><circle cx="40" cy="24" r="12" fill="#f4e9c8"/><path d="M40 24 V16 M40 24 H47" stroke="#222" stroke-width="2"/>',
+  globe: '<circle cx="40" cy="34" r="24" fill="#3b7dd8"/><path d="M28 24 q8 6 4 14 q-6 4 -2 10 M48 20 q-4 8 4 12" stroke="#2e8b57" stroke-width="6" fill="none"/><rect x="34" y="58" width="12" height="6" fill="#5a3a1a"/><rect x="24" y="64" width="32" height="8" rx="3" fill="#5a3a1a"/>',
+  lamp: '<polygon points="22,40 58,40 50,12 30,12" fill="#f2d16b"/><rect x="37" y="40" width="6" height="28" fill="#5a3a1a"/><rect x="26" y="66" width="28" height="8" rx="3" fill="#5a3a1a"/>',
+  chest: '<rect x="10" y="30" width="60" height="40" rx="4" fill="#8b5a2b"/><path d="M10 34 q30 -24 60 0" fill="#a0692f"/><rect x="36" y="40" width="8" height="12" fill="#c9a227"/>',
+  plant: '<path d="M40 44 q-20 -10 -18 -34 q14 10 18 34 q4 -24 18 -34 q2 24 -18 34" fill="#2e8b57"/><polygon points="26,44 54,44 50,74 30,74" fill="#b5651d"/>',
+};
 
 function keys(ctx) {
   const { game, box } = ctx;
+  const hides = keyHides(game);
   const room = el("div", "key-room");
   room.style.backgroundImage = 'url("assets/rooms/library.jpg")';
-  let found = 0;
-  keySpots(game).forEach((s, i) => {
-    const k = button("key");
-    k.dataset.key = i;
-    k.innerHTML = KEY_SVG;
-    k.style.left = `${s.x * 100}%`;
-    k.style.top = `${s.y * 100}%`;
-    k.style.transform = `translate(-50%, -50%) rotate(${s.turn}deg)`;
-    k.onclick = () => {
-      k.classList.add("found");
-      k.disabled = true;
-      found += 1;
+  let found = 0, looks = 0;
+  const left = () => `${LOOKS - looks} looks left. Keys found: ${found} of ${KEYS}.`;
+  hides.spots.forEach((s, i) => {
+    const b = button("hide");
+    b.dataset.place = i;
+    b.innerHTML = `<span class="key-behind">${KEY_SVG}</span><svg class="thing" viewBox="0 0 80 80" width="74" height="74">${THINGS[s.kind]}</svg>`;
+    b.style.left = `${s.x * 100}%`;
+    b.style.top = `${s.y * 100}%`;
+    b.onclick = () => {
+      if (b.disabled || looks >= LOOKS) return;
+      b.disabled = true;
+      looks += 1;
+      if (hides.keys.includes(i)) {
+        found += 1;
+        b.classList.add("has-key");
+        ctx.status(`A key! ${left()}`);
+      } else {
+        b.classList.add("empty");
+        const n = jingles(hides, i);
+        ctx.status(`${n === 0 ? "Nothing there. Not even a jingle." : n === 1 ? "Nothing... but you hear a jingle nearby!" : "Nothing... but you hear lots of jingling nearby!"} ${left()}`);
+      }
       if (found === KEYS) ctx.finish(1, "You found all 5 keys!");
+      else if (looks >= LOOKS) setTimeout(() => ctx.finish(found / KEYS, `Out of looks! You found ${found} out of ${KEYS} keys.`), FAST ? 0 : 1200);
     };
-    room.append(k);
+    room.append(b);
   });
   box.replaceChildren(room);
-  countdown(ctx, KEYS_SECONDS, "Find the keys!", () => ctx.finish(found / KEYS, `Time's up! You found ${found} out of ${KEYS} keys.`));
+  ctx.status(`Tap things to look behind them. Listen for jingles! ${left()}`);
 }
 
 // ─── Muddy Footprints ───────────────────────────────────────────────────────

@@ -626,10 +626,13 @@ button.small {
 .knob { position: absolute; left: 50%; top: 50%; width: 76px; height: 76px; margin: -38px 0 0 -38px; border-radius: 50%; background: var(--accent); box-shadow: 0 3px 8px rgba(0,0,0,0.5); pointer-events: none; }
 /* Lost Keys, Treasure Hunt */
 .key-room, .treasure-room { position: relative; width: 880px; max-width: 92cqw; aspect-ratio: 16 / 9; max-height: 52cqh; background-size: cover; background-position: center; border-radius: 14px; border: 4px solid #2a1d0c; overflow: hidden; }
-.key { position: absolute; width: 64px; height: 64px; border: none; background: transparent; padding: 0; opacity: 0.6; }
-.key svg { width: 40px; height: 16px; }
-.key svg { filter: drop-shadow(0 1px 1px #000a); }
-.key.found { opacity: 0; transition: opacity 0.4s; }
+.hide { position: absolute; width: 80px; height: 80px; transform: translate(-50%, -50%); border: none; background: transparent; padding: 0; }
+.hide .thing { position: relative; z-index: 1; filter: drop-shadow(0 3px 3px rgba(0,0,0,0.6)); transition: transform 0.5s; }
+.hide .key-behind { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); opacity: 0; }
+.hide.has-key .thing { transform: translateX(46px) rotate(18deg); }
+.hide.has-key .key-behind { opacity: 1; filter: drop-shadow(0 0 6px #fff6b0); }
+.hide.empty .thing { animation: wobble 0.4s; opacity: 0.55; }
+@keyframes wobble { 25% { transform: rotate(-8deg); } 75% { transform: rotate(8deg); } }
 .treasure-tabs { display: flex; gap: 8px; }
 .treasure-tabs .picked { background: var(--accent); color: #1c1f29; }
 .treasure-pop { position: absolute; transform: translate(-50%, -50%); background: #fff; color: #1c1f29; font-weight: 800; padding: 2px 8px; border-radius: 10px; pointer-events: none; animation: pop 0.3s ease-out; }
