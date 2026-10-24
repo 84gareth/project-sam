@@ -8,7 +8,7 @@ import {
 import {
   todaysMission, bellTune, pieRound, cookingDiner, shieldTruck, TRUCKS, HATES, flopResult, MISSIONS,
   whereRounds, jumbleWords, secretCode, makeMaze, canStep, MAZE_W, MAZE_H, galleryRounds,
-  treasureSpot, truckFoods,
+  treasureSpot, truckFoods, SLING, SLING_POWER, FLIGHT,
 } from "../../js/missions.js";
 
 // What flopMission does, as rules (for rehearsing a game to find a seed).
@@ -526,31 +526,66 @@ test("everyone walks to the Round Table in slow motion, to drums", async () => {
   await until(() => visible(doc, "screen-talk"), "then the talk", 8000);
 });
 
-test("Catapults: whoever is under the red line when you fire gets hit, and is up for murder", async () => {
+// Fire one stone at `id`, aiming where it will be when the stone lands.
+async function fireAt(page, doc, id) {
+  const field = doc.querySelector(".gallery-field");
+  const t = doc.querySelector(`.flyer[data-id="${id}"]`).dataset;
+  const aim = { x: +t.x + +t.vx * FLIGHT, y: +t.y + +t.vy * FLIGHT };
+  const pull = { x: (SLING.x - aim.x) / SLING_POWER, y: (SLING.y - aim.y) / SLING_POWER };
+  const r = field.getBoundingClientRect();
+  const at = (x, y) => ({ bubbles: true, pointerId: 1, clientX: r.left + x * r.width, clientY: r.top + y * r.height });
+  const before = doc.querySelector(".stones").textContent;
+  field.dispatchEvent(new page.PointerEvent("pointerdown", at(SLING.x, SLING.y)));
+  field.dispatchEvent(new page.PointerEvent("pointermove", at(SLING.x + pull.x, SLING.y + pull.y)));
+  field.dispatchEvent(new page.PointerEvent("pointerup", at(SLING.x + pull.x, SLING.y + pull.y)));
+  await until(() => doc.querySelector(".stones").textContent !== before || visible(doc, "mission-result"), "the stone lands", 8000);
+}
+// A target well away from the edges, so it won't bounce mid-flight.
+const easyTarget = (doc, want) => [...doc.querySelectorAll(".flyer:not(.hit)")].find((f) => {
+  const d = f.dataset;
+  const x = +d.x + +d.vx * FLIGHT, y = +d.y + +d.vy * FLIGHT;
+  return want(f.dataset.id) && x > 0.2 && x < 0.8 && y > 0.2 && y < 0.6;
+});
+
+test("Catapults: pull back, let go, and hit someone flying round; they're up for murder", async () => {
   const { page, doc } = await toMission("catapults");
   doc.getElementById("mission-go").click();
-  const wall = doc.getElementById("wall");
-  const hit = [];
-  for (let k = 0; k < 3; k++) {
-    await until(() => wall.dataset.aim && wall.dataset.aim !== "shield" && !hit.includes(wall.dataset.aim), "someone lined up", 15000);
-    hit.push(wall.dataset.aim);
-    doc.getElementById("fire").click();
+  let hit = null;
+  for (let k = 0; k < 5 && !hit; k++) {
+    await until(() => easyTarget(doc, (id) => id !== "shield"), "a target in reach", 8000);
+    const id = easyTarget(doc, (x) => x !== "shield").dataset.id;
+    await fireAt(page, doc, id);
+    if (doc.querySelector(`.flyer.hit[data-id="${id}"]`)) hit = id;
   }
-  await until(() => visible(doc, "mission-result"), "the result", 8000);
-  assert.ok(doc.getElementById("mission-score").textContent.includes("3 out of 3"));
-  for (const id of hit) assert.ok(page.game.upForMurder.ids.includes(id), `${id} is up for murder`);
+  assert.ok(hit, "one of five aimed stones hits");
+  // Barely pulling doesn't throw.
+  const field = doc.querySelector(".gallery-field");
+  if (!visible(doc, "mission-result")) {
+    const before = doc.querySelector(".stones").textContent;
+    const r = field.getBoundingClientRect();
+    const at = { bubbles: true, pointerId: 1, clientX: r.left + SLING.x * r.width, clientY: r.top + SLING.y * r.height };
+    field.dispatchEvent(new page.PointerEvent("pointerdown", at));
+    field.dispatchEvent(new page.PointerEvent("pointerup", at));
+    assert.eq(doc.querySelector(".stones").textContent, before, "no stone used");
+  }
+  while (!visible(doc, "mission-result")) {
+    const t = easyTarget(doc, () => true) ?? doc.querySelector(".flyer:not(.hit)");
+    await fireAt(page, doc, t.dataset.id);
+  }
+  await result(doc);
+  assert.ok(page.game.upForMurder.ids.includes(hit), "up for murder");
   assert.ok(doc.getElementById("mission-extra").textContent.startsWith("Up for murder tonight"));
 });
 
 test("Catapults: hit the shield and it breaks", async () => {
   const { page, doc } = await toMission("catapults");
   doc.getElementById("mission-go").click();
-  const wall = doc.getElementById("wall");
-  await until(() => wall.dataset.aim === "shield", "the shield lined up", 20000);
-  doc.getElementById("fire").click();
-  doc.getElementById("fire").click();
-  doc.getElementById("fire").click();
-  await until(() => visible(doc, "mission-result"), "the result", 8000);
+  for (let k = 0; k < 5 && !doc.querySelector('.flyer.hit[data-id="shield"]'); k++) {
+    await until(() => easyTarget(doc, (id) => id === "shield"), "the shield in reach", 15000);
+    await fireAt(page, doc, "shield");
+  }
+  while (!visible(doc, "mission-result")) await fireAt(page, doc, doc.querySelector(".flyer:not(.hit)").dataset.id);
+  await result(doc);
   assert.eq(page.game.shield, null);
   assert.ok(doc.getElementById("mission-shield").textContent.includes("broken"));
 });

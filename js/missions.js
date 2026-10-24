@@ -154,7 +154,7 @@ export const pieScore = (right) => right / PIE_ROUNDS.length;
 // Everyone else throws one stone; Sam throws three. Whoever is hit is up
 // for murder tonight (and that night always has a murder). Hit the shield
 // and it breaks: nobody gets it tonight.
-export const STONES = 3;
+export const STONES = 5;
 const SHIELD_SLIP = 0.03;   // a miss that hits the shield instead
 export function computerThrows(game, stillIn) {
   const mission = MISSIONS.find((m) => m.id === "catapults");
@@ -173,6 +173,52 @@ export function finishCatapults(game, samHits, stillIn, mission = MISSIONS.find(
   const result = finishMission(game, samScore, stillIn, mission, broken ? "broken" : undefined);
   game.upForMurder = { day: game.day, ids: hit };
   return { ...result, hit, broken, throws };
+}
+
+// The shooting gallery (Gareth: pictures "moving around all around the
+// screen like a proper shooting gallery", and a slingshot with a pull-back).
+// Positions are fractions of the gallery (x across, y down). A target is
+// hit if the stone lands within its oval.
+export const TARGET_RX = 0.045, TARGET_RY = 0.08;
+export const SLING = { x: 0.5, y: 0.9 };        // where the stone sits
+export const SLING_POWER = 3.4;                 // landing = sling - pull x power
+export const SLING_MAX_PULL = 0.2;
+export const FLIGHT = 0.7;                      // seconds in the air
+export function galleryTargets(game, ids) {
+  const r = rng(game, "gallery-targets", game.day);
+  return ids.map((id) => {
+    const speed = 0.12 + r() * 0.2;
+    const a = r() * Math.PI * 2;
+    return { id, x: 0.1 + r() * 0.8, y: 0.1 + r() * 0.55, vx: Math.cos(a) * speed, vy: Math.sin(a) * speed * 1.6 };
+  });
+}
+// Move everyone on by dt seconds, bouncing off the edges (they stay in the
+// top part; the slingshot is at the bottom).
+export function moveTargets(targets, dt) {
+  return targets.map((t) => {
+    let { x, y, vx, vy } = t;
+    x += vx * dt; y += vy * dt;
+    if (x < TARGET_RX) { x = 2 * TARGET_RX - x; vx = Math.abs(vx); }
+    if (x > 1 - TARGET_RX) { x = 2 * (1 - TARGET_RX) - x; vx = -Math.abs(vx); }
+    if (y < TARGET_RY) { y = 2 * TARGET_RY - y; vy = Math.abs(vy); }
+    if (y > 0.7) { y = 1.4 - y; vy = -Math.abs(vy); }
+    return { ...t, x, y, vx, vy };
+  });
+}
+// Where a stone lands for a pull of (dx, dy) back from the sling.
+export function landing(dx, dy) {
+  const len = Math.hypot(dx, dy);
+  const k = len > SLING_MAX_PULL ? SLING_MAX_PULL / len : 1;
+  return { x: SLING.x - dx * k * SLING_POWER, y: SLING.y - dy * k * SLING_POWER };
+}
+// Which target (if any) is at that spot: the nearest one whose oval covers it.
+export function hitAt(targets, at) {
+  let best = null, bestD = 1;
+  for (const t of targets) {
+    const d = ((at.x - t.x) / TARGET_RX) ** 2 + ((at.y - t.y) / TARGET_RY) ** 2;
+    if (d <= 1 && d < bestD) { best = t.id; bestD = d; }
+  }
+  return best;
 }
 
 // ─── Cooking Challenge (Sam's idea) ─────────────────────────────────────────

@@ -51,12 +51,14 @@ In Sam's words, then his answers:
   open one box.
 
 ### How they play (spec, v0.10.0)
-- **Catapults**: the pictures of everyone else, plus a shield, slide
-  along the castle wall. A target in the middle; tap Fire. Sam has 3
-  stones. Everyone else throws one stone: a good thrower hits who they
-  suspect most (a Traitor aims at a Faithful), and now and then a stone
-  hits the shield. Score = hits / 3. Everyone hit is up for murder.
-  On a recruiting night the Traitors still recruit instead.
+- **Catapults** (remade v0.12.9, Gareth: a proper shooting gallery with a
+  pull-back slingshot): everyone's pictures, plus the shield, fly round
+  the gallery, bouncing off the edges. Drag the stone back and let go:
+  the further you pull, the further it goes (opposite way to the pull);
+  it flies in a curve for 0.7 s, so aim ahead. Sam has 5 stones. Everyone
+  else throws one: a good thrower hits who they suspect most, and now and
+  then a stone hits the shield. Score = hits / 5. Everyone hit is up for
+  murder. On a recruiting night the Traitors still recruit instead.
 - **Cooking Challenge**: someone comes to dinner and gives a clue about
   the food they hate. Three trucks (healthy, meat, dessert), four foods
   each; pick one from each. Then open one truck's secret box. The hated

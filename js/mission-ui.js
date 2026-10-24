@@ -3,7 +3,7 @@
 // missions.js; these files draw and listen.
 import {
   finishMission, todaysMission, bellTune, BELL_ROUNDS, BELLS, bellScore, pieRound, PIE_ROUNDS, pieScore,
-  STONES, finishCatapults, TRUCKS, HATES, cookingDiner, shieldTruck, finishCooking, flopResult, truckFoods,
+  STONES, finishCatapults, galleryTargets, moveTargets, landing, hitAt, SLING, SLING_MAX_PULL, FLIGHT, TRUCKS, HATES, cookingDiner, shieldTruck, finishCooking, flopResult, truckFoods,
 } from "./missions.js";
 import { PLAY } from "./mission-more.js";
 import { stillIn } from "./castle.js";
@@ -230,76 +230,150 @@ async function playPies() {
   finish(pieScore(right), `You found the chilli pie ${right} time${right === 1 ? "" : "s"} out of ${PIE_ROUNDS.length}.`);
 }
 
-// ─── Catapults ──────────────────────────────────────────────────────────────
-// Pictures slide along the wall; whatever is under the red line when Sam
-// taps Fire is hit. The wall's `data-aim` says what's under it (tests).
-
-const SLOT = 110;      // each picture's space on the wall
-const PICTURE = 90;    // the picture itself; the rest is a gap (a miss)
-const BELT_SPEED = 170;   // pixels a second
+// ─── Catapults: a shooting gallery ──────────────────────────────────────────
+// Everyone's pictures fly round the gallery. Drag the stone back and let go:
+// it flies in a curve and lands a moment later, so aim ahead of them.
+// Targets carry data-x/-y/-vx/-vy (where they are and how they're moving),
+// for the tests.
 
 async function playCatapults() {
-  const r = Math.random;
-  const ids = stillIn(game).filter((id) => id !== game.playerId);
-  const order = [...ids];
-  order.splice(Math.floor(order.length / 2 + (r() - 0.5) * 6), 0, "shield");
-  const belt = $("belt");
-  belt.replaceChildren(...order.map((id) => {
-    const t = document.createElement("div");
-    t.className = "target";
-    t.dataset.id = id;
-    if (id === "shield") {
+  const box = $("catapult");
+  box.replaceChildren();
+  const field = document.createElement("div");
+  field.className = "gallery-field";
+  const ids = [...stillIn(game).filter((id) => id !== game.playerId), "shield"];
+  let targets = galleryTargets(game, ids);
+  const els = {};
+  for (const t of targets) {
+    const e = document.createElement("div");
+    e.className = "flyer";
+    e.dataset.id = t.id;
+    if (t.id === "shield") {
       const s = document.createElement("div");
       s.className = "shield-target";
-      t.append(s, "Shield");
+      e.append(s);
     } else {
-      t.append(badge(character(id)), character(id).name);
+      e.append(badge(character(t.id)));
     }
-    return t;
-  }));
-  $("catapult").hidden = false;
+    els[t.id] = e;
+    field.append(e);
+  }
+  const bands = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  bands.setAttribute("class", "bands");
+  bands.setAttribute("viewBox", "0 0 100 100");
+  bands.setAttribute("preserveAspectRatio", "none");
+  const stone = document.createElement("div");
+  stone.className = "stone";
+  const fork = document.createElement("div");
+  fork.className = "fork";
+  field.append(fork, bands, stone);
+  const left = document.createElement("p");
+  left.className = "stones";
+  box.append(field, left);
+  box.hidden = false;
   $("mission-how").hidden = true;
-  const wall = $("wall");
-  const width = order.length * SLOT;
-  let offset = Math.floor(r() * (width - wall.clientWidth));
-  let dir = 1;
-  let last = performance.now();
-  const aimAt = () => {
-    const x = offset + wall.clientWidth / 2;
-    const slot = Math.floor(x / SLOT);
-    return x - slot * SLOT < PICTURE + (SLOT - PICTURE) / 2 && x - slot * SLOT > (SLOT - PICTURE) / 2 ? order[slot] ?? "" : "";
+
+  const place = (e, x, y) => { e.style.left = `${x * 100}%`; e.style.top = `${y * 100}%`; };
+  const draw = () => {
+    for (const t of targets) {
+      const e = els[t.id];
+      place(e, t.x, t.y);
+      Object.assign(e.dataset, { x: t.x, y: t.y, vx: t.vx, vy: t.vy });
+    }
   };
-  const move = every(30, () => {
+  let last = performance.now();
+  every(16, () => {
     const now = performance.now();
-    offset += dir * BELT_SPEED * Math.min(0.1, (now - last) / 1000);
+    targets = moveTargets(targets, Math.min(0.05, (now - last) / 1000));
     last = now;
-    const max = width - wall.clientWidth;
-    if (offset < 0) { offset = 0; dir = 1; }
-    if (offset > max) { offset = max; dir = -1; }
-    belt.style.transform = `translateX(${-offset}px)`;
-    wall.dataset.aim = aimAt();
+    draw();
   });
+  draw();
+
   const hits = [];
-  $("stones").textContent = `Stones left: ${STONES}`;
-  $("mission-status").textContent = "Wait for someone to line up, then fire!";
+  let flying = false;
+  let pull = null;
+  const restStone = () => { place(stone, SLING.x, SLING.y); stone.style.transform = "translate(-50%, -50%)"; bands.innerHTML = ""; };
+  restStone();
+  left.textContent = `Stones left: ${STONES}`;
+  $("mission-status").textContent = "Drag the stone back, aim, and let go!";
+  const frac = (e) => {
+    const r = field.getBoundingClientRect();
+    return { x: (e.clientX - r.left) / r.width, y: (e.clientY - r.top) / r.height };
+  };
+  const drawPull = () => {
+    const len = Math.hypot(pull.x, pull.y);
+    const k = len > SLING_MAX_PULL ? SLING_MAX_PULL / len : 1;
+    const sx = SLING.x + pull.x * k, sy = SLING.y + pull.y * k;
+    place(stone, sx, sy);
+    bands.innerHTML = `<line x1="${(SLING.x - 0.04) * 100}" y1="${SLING.y * 100 - 6}" x2="${sx * 100}" y2="${sy * 100}"/>`
+      + `<line x1="${(SLING.x + 0.04) * 100}" y1="${SLING.y * 100 - 6}" x2="${sx * 100}" y2="${sy * 100}"/>`;
+  };
   await new Promise((resolve) => {
-    $("fire").onclick = () => {
-      const aim = aimAt() || null;
-      hits.push(aim);
-      wall.classList.remove("thud");
-      void wall.offsetWidth;
-      wall.classList.add("thud");
-      if (aim === "shield") $("mission-status").textContent = "Oh no! You hit the shield!";
-      else if (aim) {
-        belt.querySelector(`[data-id="${aim}"]`).classList.add("hit");
-        $("mission-status").textContent = `Splat! You hit ${character(aim).name}!`;
-      } else $("mission-status").textContent = "Missed!";
-      $("stones").textContent = `Stones left: ${STONES - hits.length}`;
+    let down = null;
+    field.onpointerdown = (e) => {
+      if (flying || hits.length >= STONES) return;
+      const p = frac(e);
+      if (Math.hypot(p.x - SLING.x, (p.y - SLING.y) * 0.56) > 0.08) return;   // grab the stone
+      down = e.pointerId;
+      field.setPointerCapture?.(down);
+      pull = { x: 0, y: 0 };
+      drawPull();
+    };
+    field.onpointermove = (e) => {
+      if (e.pointerId !== down) return;
+      const p = frac(e);
+      pull = { x: p.x - SLING.x, y: p.y - SLING.y };
+      drawPull();
+    };
+    field.onpointerup = async (e) => {
+      if (e.pointerId !== down) return;
+      down = null;
+      if (!pull || Math.hypot(pull.x, pull.y) < 0.02) { restStone(); return; }   // barely pulled: no throw
+      const land = landing(pull.x, pull.y);
+      const from = { ...SLING };
+      flying = true;
+      bands.innerHTML = "";
+      // Fly in a curve, getting smaller as it goes further away.
+      const t0 = performance.now();
+      const seconds = FLIGHT;
+      await new Promise((done) => {
+        const step = () => {
+          const t = Math.min(1, (performance.now() - t0) / 1000 / seconds);
+          const x = from.x + (land.x - from.x) * t;
+          const y = from.y + (land.y - from.y) * t - Math.sin(Math.PI * t) * 0.25;
+          place(stone, x, y);
+          stone.style.transform = `translate(-50%, -50%) scale(${1 - 0.55 * t})`;
+          if (t >= 1) done(); else setTimeout(step, 16);
+        };
+        step();
+      });
+      const hit = hitAt(targets, land);
+      hits.push(hit);
+      const splat = document.createElement("div");
+      splat.className = "splat";
+      place(splat, land.x, land.y);
+      field.append(splat);
+      setTimeout(() => splat.remove(), 800);
+      if (hit === "shield") {
+        $("mission-status").textContent = "Oh no! You hit the shield! It's broken!";
+        els.shield.classList.add("hit");
+        targets = targets.filter((t) => t.id !== "shield");
+      } else if (hit) {
+        $("mission-status").textContent = `Splat! You hit ${character(hit).name}!`;
+        els[hit].classList.add("hit");
+        targets = targets.filter((t) => t.id !== hit);
+      } else {
+        $("mission-status").textContent = "Missed!";
+      }
+      left.textContent = `Stones left: ${STONES - hits.length}`;
+      flying = false;
+      pull = null;
+      restStone();
       if (hits.length === STONES) resolve();
     };
   });
-  $("fire").onclick = null;
-  clearInterval(move);
+  field.onpointerdown = field.onpointermove = field.onpointerup = null;
   await wait(900);
   const result = finishCatapults(game, hits, stillIn(game), mission);
   const mine = hits.filter((h) => h && h !== "shield");

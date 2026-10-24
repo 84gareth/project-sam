@@ -136,7 +136,7 @@ test("Catapults: good throwers hit who they suspect; everyone hit is up for murd
   assert.ok(r.hit.includes("puddle") && r.hit.includes("gumdrop"));
   for (const t of throws) if (t.target && t.target !== "shield") assert.ok(r.hit.includes(t.target));
   assert.eq(g.upForMurder, { day: 1, ids: r.hit });
-  assert.eq(r.scores.find(([id]) => id === "dot")[1], 2 / 3, "Sam's score: hits out of 3");
+  assert.eq(r.scores.find(([id]) => id === "dot")[1], 2 / STONES, "Sam's score: hits out of the stones");
 });
 
 test("Catapults: hit the shield and nobody gets it", () => {
@@ -508,4 +508,38 @@ test("Lights Out: place, swap placed pieces, and put one back in the tray", () =
   assert.eq(s.placed[0], a);
   assert.ok(s.tray.includes(b));
   assert.eq(s.tray.length + s.placed.filter((x) => x !== null).length, 9, "no piece lost or doubled");
+});
+
+// ─── Catapults: the shooting gallery ───────────────────────────────────────
+import {
+  STONES, galleryTargets, moveTargets, landing, hitAt, SLING, SLING_POWER, SLING_MAX_PULL, TARGET_RX, TARGET_RY,
+} from "../../js/missions.js";
+
+test("Catapults: everyone flies round the gallery and stays inside it", () => {
+  const g = castle(3);
+  let t = galleryTargets(g, [...stillIn(g).filter((id) => id !== "dot"), "shield"]);
+  assert.eq(t.length, 22);
+  const start = t.map((x) => [x.x, x.y]);
+  for (let k = 0; k < 2000; k++) {
+    t = moveTargets(t, 0.02);
+    for (const x of t) assert.ok(x.x >= TARGET_RX - 1e-9 && x.x <= 1 - TARGET_RX + 1e-9 && x.y >= TARGET_RY - 1e-9 && x.y <= 0.7 + 1e-9);
+  }
+  assert.ok(t.every((x, i) => x.x !== start[i][0] || x.y !== start[i][1]), "everyone moved");
+});
+
+test("Catapults: pull further, throw further; the pull has a limit", () => {
+  const near = landing(0, 0.05), far = landing(0, 0.15);
+  assert.lt(far.y, near.y, "a bigger pull goes further up the gallery");
+  assert.near(near.y, SLING.y - 0.05 * SLING_POWER, 1e-9);
+  const left = landing(0.1, 0.1);
+  assert.lt(left.x, SLING.x, "pull right, it flies left");
+  const huge = landing(0, 5);
+  assert.near(huge.y, SLING.y - SLING_MAX_PULL * SLING_POWER, 1e-9, "can't pull forever");
+});
+
+test("Catapults: a stone hits whoever's oval it lands in, the nearest first", () => {
+  const t = [{ id: "a", x: 0.5, y: 0.4 }, { id: "b", x: 0.52, y: 0.4 }, { id: "c", x: 0.2, y: 0.2 }];
+  assert.eq(hitAt(t, { x: 0.515, y: 0.4 }), "b");
+  assert.eq(hitAt(t, { x: 0.2, y: 0.2 + TARGET_RY * 0.9 }), "c");
+  assert.eq(hitAt(t, { x: 0.8, y: 0.6 }), null);
 });
