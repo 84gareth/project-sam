@@ -3,7 +3,7 @@ extends SceneTree
 # everything left of the cut line (plus a margin). Paper colour is taken
 # from the right edge of each row. Below y=1650 dark pen lines are kept
 # (Lola Loud's mic stand crossed the line); change that for other photos.
-#   Godot --headless --path tools/image-fix --script tools/image-fix/fix_edge.gd -- \
+#   Godot --headless --path tools/image-fix --script res://fix_edge.gd -- \
 #       in.jpg out.jpg x0,y0 x1,y1 ...   (points along the cut line, top down)
 func _initialize() -> void:
 	var a := OS.get_cmdline_user_args()

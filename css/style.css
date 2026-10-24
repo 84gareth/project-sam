@@ -229,14 +229,18 @@ button.small {
 .game-over { display: flex; flex-direction: column; align-items: center; gap: 12px; }
 .game-over p { font-size: 26px; font-weight: 700; margin: 0; text-align: center; text-shadow: 0 2px 6px #000; }
 
-/* 9-10. Night: the Traitors' room (castle picture, dark, until Gareth's
-   own picture arrives), and the letter. */
-.night, .traitors-room {
+/* 9-10. Night: a Faithful waits under the dark castle; the Traitors meet
+   in their secret room (Gareth's pictures). */
+.night {
   justify-content: center;
   background: linear-gradient(rgba(8, 4, 16, 0.78), rgba(8, 4, 16, 0.78)),
               url("../assets/castle.jpg") center / cover no-repeat;
 }
-.traitors-room { justify-content: flex-start; }
+.traitors-room {
+  justify-content: flex-start;
+  background: linear-gradient(rgba(8, 4, 16, 0.45), rgba(8, 4, 16, 0.45)),
+              url("../assets/traitors-room.jpg") center / cover no-repeat;
+}
 .traitors-room .cards { background: rgba(40, 0, 0, 0.45); border-radius: 14px; padding: 8px; box-sizing: border-box; }
 .night-text { font-size: 26px; margin: 0; text-align: center; }
 .letter {
@@ -256,11 +260,11 @@ button.small {
 .ideas { display: flex; flex-direction: column; gap: 6px; width: 100%; max-width: 760px; }
 .idea { margin: 0; background: rgba(120, 10, 10, 0.75); padding: 8px 14px; border-radius: 10px; font-size: 19px; }
 
-/* 11. Breakfast (Round Table room picture, in the morning). */
+/* 11. Breakfast (Gareth's breakfast room picture). */
 .breakfast {
   justify-content: flex-start;
-  background: linear-gradient(rgba(60, 40, 10, 0.35), rgba(60, 40, 10, 0.35)),
-              url("../assets/round-table.jpg") center / cover no-repeat;
+  background: linear-gradient(rgba(30, 20, 5, 0.3), rgba(30, 20, 5, 0.3)),
+              url("../assets/breakfast.jpg") center / cover no-repeat;
 }
 .breakfast h2 { text-shadow: 0 2px 6px #000; }
 .arrivals { flex: 1; width: 100%; overflow-y: auto; touch-action: pan-y; display: flex; flex-wrap: wrap; gap: 10px; align-content: flex-start; justify-content: center; }
@@ -270,7 +274,7 @@ button.small {
 .arrival-person .badge { width: 48px; height: 48px; font-size: 18px; }
 
 /* Gone from the castle: greyed out with a red X (Sam's idea). */
-.gone-box { background: rgba(20, 22, 30, 0.75); border-radius: 14px; padding: 6px 12px 10px; max-width: 100%; }
+.gone-box { background: rgba(20, 22, 30, 0.8); border-radius: 14px; padding: 6px 12px 10px; max-width: 100%; overflow-y: auto; touch-action: pan-y; animation: pop 0.4s ease-out; }
 .gone-title { margin: 0 0 6px; font-weight: 700; text-align: center; color: #ffb3a8; }
 .gone-row { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
 .gone-person { position: relative; width: 80px; color: #aaa; }
@@ -286,3 +290,23 @@ button.small {
     linear-gradient(45deg, transparent 44%, #e22 44%, #e22 56%, transparent 56%),
     linear-gradient(-45deg, transparent 44%, #e22 44%, #e22 56%, transparent 56%);
 }
+
+/* The missing one at breakfast: a big panel, then a red X is drawn
+   across it, one stroke at a time. */
+.crossout { display: flex; flex-direction: column; align-items: center; gap: 12px; margin: auto 0; animation: pop 0.4s ease-out; }
+.crossout-frame { position: relative; background: rgba(20, 22, 30, 0.8); padding: 14px; border-radius: 18px; }
+.crossout-frame .big-portrait { height: min(42vh, 300px); }
+/* Two strokes, corner to corner, drawn one after the other. */
+.red-x { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+.red-x line {
+  stroke: #e22;
+  stroke-width: 7;
+  stroke-linecap: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.6));
+}
+.crossout.crossed .red-x line:nth-child(1) { animation: draw 0.4s ease-out forwards; }
+.crossout.crossed .red-x line:nth-child(2) { animation: draw 0.4s ease-out 0.45s forwards; }
+.crossout.crossed .big-portrait, .crossout.crossed .big-badge { filter: grayscale(1); transition: filter 0.6s 0.8s; }
+@keyframes draw { to { stroke-dashoffset: 0; } }

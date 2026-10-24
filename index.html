@@ -119,9 +119,20 @@
   <section id="screen-breakfast" class="screen breakfast" hidden>
     <h2>Breakfast</h2>
     <div id="arrivals" class="arrivals"></div>
-    <p id="missing" class="most-votes" hidden></p>
+    <!-- The missing one, in a big panel; a red X is drawn across them. -->
+    <div id="crossout" class="crossout" hidden>
+      <div class="crossout-frame">
+        <div id="crossout-picture"></div>
+        <svg class="red-x" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+          <line x1="6" y1="6" x2="94" y2="94" pathLength="1"/>
+          <line x1="94" y1="6" x2="6" y2="94" pathLength="1"/>
+        </svg>
+      </div>
+      <p id="missing" class="most-votes"></p>
+    </div>
+    <!-- Then everyone: the ones who have gone are crossed out. -->
     <div id="gone-box" class="gone-box" hidden>
-      <p class="gone-title">Gone from the castle</p>
+      <p class="gone-title">Everyone at the castle</p>
       <div id="gone" class="gone-row"></div>
     </div>
     <button id="start-day" class="big" hidden>Start the day</button>

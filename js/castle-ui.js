@@ -234,10 +234,11 @@ function traitorsMeeting() {
 async function breakfast(victim) {
   const arrivals = $("arrivals");
   arrivals.replaceChildren();
-  $("missing").hidden = true;
   $("start-day").hidden = true;
   $("breakfast-over").hidden = true;
   $("gone-box").hidden = true;
+  $("crossout").hidden = true;
+  arrivals.hidden = false;
   show("screen-breakfast");
   for (const group of breakfastGroups(game)) {
     await wait(900);
@@ -255,19 +256,30 @@ async function breakfast(victim) {
     arrivals.append(row);
   }
   await wait(1200);
+  // The missing one, big, then a red X is drawn across them (Gareth: "an
+  // animated panel before showing the full roster").
   const name = character(victim).name;
+  $("arrivals").hidden = true;
+  $("crossout-picture").replaceChildren(badge(character(victim), true));
+  $("crossout").classList.remove("crossed");
+  $("missing").textContent = `${name} never came to breakfast...`;
+  $("crossout").hidden = false;
+  await wait(1400);
+  $("crossout").classList.add("crossed");
   $("missing").textContent = `${name} never came to breakfast. ${name} was murdered by the Traitors!`;
-  $("missing").hidden = false;
-  // Everyone who has left, greyed out with a red X (Sam, 2026-10-24).
+  await wait(2200);
+  // Then everyone, in the usual order: the ones who've gone are greyed out
+  // with a red X (Sam, 2026-10-24).
+  $("crossout").hidden = true;
   const gone = $("gone");
   gone.replaceChildren();
-  for (const p of game.players.filter((p) => !p.inGame)) {
+  for (const p of game.players) {
     const who = document.createElement("div");
-    who.className = "arrival-person gone-person";
+    who.className = "arrival-person" + (p.inGame ? "" : " gone-person");
     who.dataset.id = p.id;
     who.append(badge(character(p.id)));
     const label = document.createElement("span");
-    label.textContent = character(p.id).name;
+    label.textContent = p.id === game.playerId ? "You" : character(p.id).name;
     who.append(label);
     gone.append(who);
   }

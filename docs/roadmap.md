@@ -49,7 +49,9 @@ Spec: `docs/night-spec.md`.
 - ✅ The letter: "By order of the Traitors, you have been murdered."
 - ✅ Breakfast in little groups; who never came?
 - ✅ Tactical voting (Gareth's request): crowd, staying safe, unsure
-- Pictures for the Traitors' room and breakfast (prompts given)
+- ✅ Pictures for the Traitors' room and breakfast (Gareth's)
+- ✅ Breakfast: the missing one crossed out with an animated red X, then
+  everyone, with the gone crossed out
 - Gate: Sam plays it
 
 ## Phase 5: Missions and the prize pot
@@ -63,4 +65,4 @@ you got to.
 Anything else for the look and sound, once the game is fun.
 
 ## Ongoing: Sam's character drawings
-Added as they come in. Done: 9 of 22 (Captain Puddle, Granny Gumdrop, Professor Fizz, Ruby Rails, Chef Pepper, Sir Reginald Waffle, Doctor Plaster, Lola Loud, Farmer Fern).
+Added as they come in. Done: 10 of 22 (Captain Puddle, Granny Gumdrop, Professor Fizz, Ruby Rails, Chef Pepper, Sir Reginald Waffle, Doctor Plaster, Lola Loud, Farmer Fern, Detective Dot).

@@ -102,7 +102,9 @@ test("Round Table: vote, everyone shows a chalkboard, drum roll, reveal, next da
   await until(() => visible(doc, "start-day") || visible(doc, "breakfast-over"), "breakfast", 8000);
   const murdered = page.game.history[0].murdered;
   assert.ok(doc.getElementById("missing").textContent.includes("never came to breakfast"));
-  assert.eq(doc.querySelectorAll("#arrivals .arrival-person").length, 20, "20 come to breakfast");
+  assert.eq(doc.querySelectorAll("#arrivals .arrival-person").length, 20, "20 came to breakfast");
+  assert.ok(doc.getElementById("crossout").hidden, "the crossed-out panel has made way for everyone");
+  assert.eq(doc.querySelectorAll("#gone .arrival-person").length, 22, "everyone on the list");
   const gone = [...doc.querySelectorAll("#gone .gone-person")].map((g) => g.dataset.id).sort();
   assert.eq(gone, [out.banished, murdered].sort(), "the banished and the murdered, greyed out with a red X");
   doc.getElementById("start-day").click();
