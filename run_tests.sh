@@ -33,7 +33,7 @@ SERVER=$!
 # A throwaway Chrome profile, so this never touches the Chrome you use.
 PROFILE="$(mktemp -d)"
 OUTFILE="$(mktemp)"
-trap 'kill "$SERVER" 2>/dev/null; wait "$SERVER" 2>/dev/null; rm -r "$PROFILE"; rm -f "$OUTFILE"' EXIT
+trap 'kill "$SERVER" 2>/dev/null; wait "$SERVER" 2>/dev/null || true; rm -r "$PROFILE"; rm -f "$OUTFILE"' EXIT
 python3 - "$PORT" <<'EOF'
 import socket, sys, time
 for _ in range(100):

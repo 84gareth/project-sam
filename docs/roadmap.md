@@ -14,8 +14,36 @@ started).
 - ✅ `tools/playtest.sh` serves it on the Mac and the home Wi-Fi
 - ✅ Repo public; published on GitHub Pages
 
-## Phase 1: Sam's new idea — in progress
+## Phase 1: Sam's new idea ✅
 - ✅ Sam's idea: a game like The Traitors, starting at Havenbrook Station
 - ✅ Interview: `docs/pitch.md`
-- 22 characters drafted, waiting for approval: `docs/characters.md`
-- Replace this phase list with the real roadmap to a first playable
+- ✅ 22 characters, all approved by Sam: `docs/characters.md`
+
+The phases below are PROPOSED (2026-10-24), waiting for Gareth's OK. Phase 2
+was started straight away because Sam asked for the characters in the game,
+and choosing a character is the first thing the pitch describes.
+
+## Phase 2: Choose who you are — built, waiting for Sam (v0.2.0)
+Spec: `docs/start-spec.md`.
+- ✅ The station screen with Sam's picture and a Start button
+- ✅ All 22 characters to pick from
+- ✅ Faithful or Traitor; the game secretly picks the other Traitors
+- Gate: Sam plays it on the iPad
+
+## Phase 3: A day at the castle
+The Round Table: chat to people (some act sneaky), everyone votes, the one
+banished shows if they were a Traitor. The core of the game: fun first.
+
+## Phase 4: The night train
+The Traitors send someone home on the train each night. If Sam is a
+Traitor, he helps choose.
+
+## Phase 5: Missions and the prize pot
+Mini-games in the day that win money for the pot.
+
+## Phase 6: A whole game, with saving
+Days and nights until the end; who wins the pot; the game remembers where
+you got to.
+
+## Phase 7: Look and sound
+Character pictures and anything else, once the game is fun.

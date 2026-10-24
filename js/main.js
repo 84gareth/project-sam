@@ -1,8 +1,65 @@
-// Placeholder start: shows the game's name and version so there is
-// something to open on the iPad from day one. Replaced once Sam's game
-// exists.
+// The page: shows one screen at a time and handles taps. The rules live in
+// game.js; this file only draws and listens.
 import { GAME_NAME, VERSION } from "./version.js";
+import { CHARACTERS, initials } from "./characters.js";
+import { newGame, FAITHFUL, TRAITOR } from "./game.js";
+
+const $ = (id) => document.getElementById(id);
+
+let pickedId = null;
+// The game in progress, once a side is chosen. Exposed for the live tests.
+window.game = null;
+
+function show(screenId) {
+  for (const s of document.querySelectorAll(".screen")) s.hidden = s.id !== screenId;
+}
+
+function badge(character, extraClass = "") {
+  const b = document.createElement("div");
+  b.className = "badge " + extraClass;
+  b.style.background = character.colour;
+  b.textContent = initials(character.name);
+  return b;
+}
+
+function buildCards() {
+  const cards = $("cards");
+  for (const c of CHARACTERS) {
+    const card = document.createElement("button");
+    card.className = "card";
+    card.dataset.id = c.id;
+    card.append(badge(c));
+    const name = document.createElement("span");
+    name.className = "card-name";
+    name.textContent = c.name;
+    const about = document.createElement("span");
+    about.className = "card-about";
+    about.textContent = c.about;
+    card.append(name, about);
+    card.addEventListener("click", () => {
+      pickedId = c.id;
+      for (const other of cards.children) other.classList.toggle("picked", other === card);
+      $("choose").disabled = false;
+    });
+    cards.append(card);
+  }
+}
+
+function chooseSide(side) {
+  window.game = newGame(pickedId, side);
+  const c = CHARACTERS.find((x) => x.id === pickedId);
+  $("ready-badge").replaceWith(Object.assign(badge(c, "big-badge"), { id: "ready-badge" }));
+  $("ready-who").textContent = `You are ${c.name}.`;
+  $("ready-side").textContent = side === TRAITOR ? "You are a Traitor. Shh!" : "You are a Faithful.";
+  $("ready-side").className = "ready-side " + side;
+  show("screen-ready");
+}
 
 document.title = GAME_NAME;
-document.getElementById("title").textContent = GAME_NAME;
-document.getElementById("version").textContent = "v" + VERSION;
+$("title").textContent = GAME_NAME;
+$("version").textContent = "v" + VERSION;
+buildCards();
+$("start").addEventListener("click", () => show("screen-pick"));
+$("choose").addEventListener("click", () => pickedId && show("screen-side"));
+$("pick-faithful").addEventListener("click", () => chooseSide(FAITHFUL));
+$("pick-traitor").addEventListener("click", () => chooseSide(TRAITOR));

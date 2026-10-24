@@ -1,7 +1,7 @@
-# The 22 characters (draft, waiting for Sam and Gareth to approve)
+# The 22 characters ✅ all approved
 
-Made up by Claude, 2026-10-24. Each one says yes or no; a "no" gets a
-new idea. Approved ones get a tick.
+Made up by Claude, 2026-10-24. Sam approved every one: "put all of them
+in the game!!!" The game's copy is `js/characters.js`.
 
 | # | Name | About them |
 |---|------|-----------|

@@ -188,8 +188,12 @@ so, kindly.
   crashes partway can look like a pass (learned in Project 2126).
 
 ## Current status
-Updated 2026-10-24 (v0.1.0).
-- **Phase 0 (web setup) done.** An empty page showing the name and version,
-  sized for the iPad; tests in headless Chrome; GitHub Pages; Turbo Town
-  archived.
-- **Next: Phase 1, Sam's new idea.** He knows what it is and will say.
+Updated 2026-10-24 (v0.2.0).
+- **Phase 0 (web setup) done.** Tests in headless Chrome; GitHub Pages;
+  Turbo Town archived.
+- **Phase 1 done.** The game: like The Traitors, starting at Havenbrook
+  Station (`docs/pitch.md`). 22 characters, all approved by Sam
+  (`js/characters.js`, `docs/characters.md`).
+- **Phase 2 (choose who you are) built, waiting for Sam (v0.2.0).**
+  Station, character picker, Faithful or Traitor. Rules in `js/game.js`.
+- **The roadmap (Phases 3-7) is PROPOSED, waiting for Gareth's OK.**

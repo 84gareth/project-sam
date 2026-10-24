@@ -1,8 +1,12 @@
 /* Whole-screen game page for the iPad. */
 :root {
   --bg: #1c1f29;
+  --panel: rgba(20, 22, 30, 0.82);
   --text: #ffffff;
-  --muted: #9aa1b3;
+  --muted: #b5bccc;
+  --accent: #f2c14e;
+  --faithful: #2e86c1;
+  --traitor: #c0392b;
 }
 
 html, body {
@@ -19,24 +23,122 @@ html, body {
   overflow: hidden;
 }
 
-#game {
-  height: 100%;
+[hidden] { display: none !important; }
+
+/* Every screen fills the iPad, clear of the rounded corners and home bar. */
+.screen {
+  position: fixed;
+  inset: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  /* Keep clear of the iPad's rounded corners and home bar. */
-  padding: env(safe-area-inset-top) env(safe-area-inset-right)
-           env(safe-area-inset-bottom) env(safe-area-inset-left);
+  gap: 16px;
+  padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right))
+           max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
   box-sizing: border-box;
 }
 
-#title {
-  font-size: 64px;
-  margin: 0;
-}
+h1, h2 { margin: 0; text-align: center; }
+h2 { font-size: 34px; }
 
-#version {
-  font-size: 20px;
-  color: var(--muted);
+button.big {
+  min-height: 64px;
+  min-width: 200px;
+  padding: 12px 32px;
+  border: none;
+  border-radius: 16px;
+  background: var(--accent);
+  color: #1c1f29;
+  font: 700 28px -apple-system, system-ui, sans-serif;
 }
+button.big:disabled { opacity: 0.4; }
+button.big:active { transform: scale(0.97); }
+
+/* 1. Station */
+.station { padding: 0; justify-content: flex-end; }
+#station-picture {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.station-panel {
+  position: relative;
+  margin-bottom: max(24px, env(safe-area-inset-bottom));
+  padding: 20px 40px;
+  border-radius: 20px;
+  background: var(--panel);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+#title { font-size: 48px; }
+#version { margin: 0; font-size: 16px; color: var(--muted); }
+
+/* 2. Pick a character: the grid can scroll (in portrait it won't all fit). */
+.pick { justify-content: flex-start; }
+.cards {
+  flex: 1;
+  width: 100%;
+  overflow-y: auto;
+  touch-action: pan-y;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+  align-content: start;
+}
+.card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 6px;
+  min-height: 140px;
+  border: 3px solid transparent;
+  border-radius: 14px;
+  background: #2a2f3d;
+  color: var(--text);
+  font-family: inherit;
+}
+.card.picked { border-color: var(--accent); background: #3a3524; }
+.card-name { font-size: 17px; font-weight: 700; text-align: center; }
+.card-about { font-size: 13px; color: var(--muted); text-align: center; }
+
+.badge {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  font-weight: 800;
+  color: #fff;
+  flex: none;
+}
+.big-badge { width: 120px; height: 120px; font-size: 48px; }
+
+/* 3. Faithful or Traitor */
+.sides { display: flex; gap: 24px; flex-wrap: wrap; justify-content: center; }
+button.big.side-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 260px;
+  min-height: 160px;
+  justify-content: center;
+  color: #fff;
+  font-size: 36px;
+}
+.side-button small { font-size: 18px; font-weight: 500; margin-top: 8px; }
+.side-button.faithful { background: var(--faithful); }
+.side-button.traitor { background: var(--traitor); }
+
+/* 4. Ready */
+.ready-side { font-size: 28px; font-weight: 700; margin: 0; }
+.ready-side.faithful { color: #7fc4f5; }
+.ready-side.traitor { color: #ff7b6b; }
+.ready-next { font-size: 20px; color: var(--muted); }
