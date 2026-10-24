@@ -14,7 +14,8 @@ started).
 - ✅ `tools/playtest.sh` serves it on the Mac and the home Wi-Fi
 - ✅ Repo public; published on GitHub Pages
 
-## Phase 1: Sam's new idea
-- Sam says what the game is; interview to fill the gaps
-- One-page pitch in `docs/pitch.md`, in Sam's words where possible
+## Phase 1: Sam's new idea — in progress
+- ✅ Sam's idea: a game like The Traitors, starting at Havenbrook Station
+- ✅ Interview: `docs/pitch.md`
+- 22 characters drafted, waiting for approval: `docs/characters.md`
 - Replace this phase list with the real roadmap to a first playable
