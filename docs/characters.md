@@ -16,7 +16,7 @@ keeps only pen (dark) and crayon (colourful) and makes the rest plain paper;
 `assets/characters/<id>.jpg`, and listed as `picture` in
 `js/characters.js`. A test fails if a listed picture is missing.
 
-Done (14 of 22):
+Done (15 of 22):
 - Captain Puddle (2026-10-24: pirate hat with a "no water" sign, peg leg,
   skull shirt; re-photographed without the shadow)
 - Granny Gumdrop (2026-10-24: purple dress, hair in a bun, a bag of sweets)
@@ -35,6 +35,10 @@ Done (14 of 22):
 - Tiny Tom (2026-10-24: very long legs; cut-out paper cleaned with
   `tools/image-fix/clean_paper.gd` then `fix_edge.gd ... hard=30`)
 - Zara Zoom (2026-10-24: helmet, racing bike, the Olympic rings on her jersey)
+- Mr Grumble (2026-10-24: glasses, a grumpy face, a walking stick)
+
+Redrawn with more detail (coloured faces), 2026-10-24: Tiny Tom (photo on a
+tablecloth: `paper_only.gd` then `clean_paper.gd`), Zara Zoom, Madame Mystic.
 
 | # | Name | About them |
 |---|------|-----------|
