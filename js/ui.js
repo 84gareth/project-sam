@@ -16,8 +16,13 @@ let meId = null;
 export const setMe = (id) => { meId = id; };
 export const isMe = (id) => id === meId;
 
+// Screens with no pause button: before the game, and during missions.
+const NO_PAUSE = ["screen-station", "screen-pick", "screen-ready", "screen-train", "screen-mission", "screen-debug"];
+
 export function show(screenId) {
   for (const s of document.querySelectorAll(".screen")) s.hidden = s.id !== screenId;
+  const pause = document.getElementById("pause");
+  if (pause) pause.hidden = NO_PAUSE.includes(screenId);
 }
 
 // Sam's drawing of the character if there is one, else a coloured circle

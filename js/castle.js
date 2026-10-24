@@ -703,3 +703,25 @@ export function joinChat(game, a, b) {
     `Just in time! We were talking about ${n}.`,
   ], r), r), [pick]);
 }
+
+// ─── Who's who (Gareth: a pause button showing everyone, and whether the
+// ones who've gone were Traitors or Faithfuls) ──────────────────────────────
+// What Sam knows about everyone: who has gone and how, what side they were
+// (banished people are revealed; the murdered were always Faithful), Sam's
+// own side, his fellow Traitors if he is one, and who has the shield.
+export function whosWho(game) {
+  const how = {};
+  for (const h of game.history) {
+    if (h.banished) how[h.banished] = "banished";
+    if (h.murdered) how[h.murdered] = "murdered";
+  }
+  const samTraitor = game.playerSide === TRAITOR;
+  return game.players.map((p) => {
+    const gone = how[p.id] ?? null;
+    let side = null;
+    if (gone) side = p.side;
+    else if (p.id === game.playerId) side = game.playerSide;
+    else if (samTraitor && p.side === TRAITOR) side = TRAITOR;
+    return { id: p.id, gone, side, you: p.id === game.playerId, shield: game.shield === p.id };
+  });
+}

@@ -548,3 +548,41 @@ test("gossip gives a real clue: who voted out a Faithful yesterday", () => {
   }
   assert.gt(clues, 20);
 });
+
+// ─── Who's who (the pause page) ─────────────────────────────────────────────
+import { whosWho } from "../../js/castle.js";
+
+test("who's who: the banished show their side, the murdered were Faithful, the rest are secret", () => {
+  for (let seed = 1; seed <= 30; seed++) {
+    const g = castle(seed);
+    if (g.playerSide !== FAITHFUL) continue;
+    const out = roundTable(g, stillIn(g).find((id) => id !== "dot")).banished;
+    if (!stillIn(g).includes("dot")) continue;
+    recruit(g);
+    roundTable(g, stillIn(g).find((id) => id !== "dot"));
+    if (!stillIn(g).includes("dot") || winner(g)) continue;
+    const victim = night(g);
+    const w = Object.fromEntries(whosWho(g).map((p) => [p.id, p]));
+    assert.eq(w[out].gone, "banished");
+    assert.eq(w[out].side, g.players.find((p) => p.id === out).side, "the banished: revealed");
+    if (victim !== "dot") {
+      assert.eq(w[victim].gone, "murdered");
+      assert.eq(w[victim].side, FAITHFUL);
+    }
+    assert.ok(w.dot.you);
+    for (const p of Object.values(w)) if (!p.gone && !p.you) assert.eq(p.side, null, `${p.id} is secret`);
+  }
+});
+
+test("who's who: a Traitor Sam sees his fellow Traitors; the shield is shown", () => {
+  for (let seed = 1; seed <= 300; seed++) {
+    const g = castle(seed);
+    if (g.playerSide !== TRAITOR) continue;
+    g.shield = stillIn(g).find((id) => !isTraitor(g, id));
+    const w = whosWho(g);
+    for (const p of w) if (isTraitor(g, p.id)) assert.eq(p.side, TRAITOR);
+    assert.eq(w.filter((p) => p.shield).map((p) => p.id), [g.shield]);
+    return;
+  }
+  assert.ok(false, "no game found");
+});

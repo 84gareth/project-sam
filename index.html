@@ -15,24 +15,24 @@
   <!-- STAMP (tools/stamp.py writes this; don't edit by hand) -->
   <script type="importmap">{
   "imports": {
-    "./js/castle-ui.js": "./js/castle-ui.js?v=0.12.3",
-    "./js/castle.js": "./js/castle.js?v=0.12.3",
-    "./js/characters.js": "./js/characters.js?v=0.12.3",
-    "./js/dialogue.js": "./js/dialogue.js?v=0.12.3",
-    "./js/fit.js": "./js/fit.js?v=0.12.3",
-    "./js/game.js": "./js/game.js?v=0.12.3",
-    "./js/main.js": "./js/main.js?v=0.12.3",
-    "./js/mission-more.js": "./js/mission-more.js?v=0.12.3",
-    "./js/mission-ui.js": "./js/mission-ui.js?v=0.12.3",
-    "./js/missions.js": "./js/missions.js?v=0.12.3",
-    "./js/puppets.js": "./js/puppets.js?v=0.12.3",
-    "./js/sound.js": "./js/sound.js?v=0.12.3",
-    "./js/ui.js": "./js/ui.js?v=0.12.3",
-    "./js/version.js": "./js/version.js?v=0.12.3",
-    "./js/voice.js": "./js/voice.js?v=0.12.3"
+    "./js/castle-ui.js": "./js/castle-ui.js?v=0.12.4",
+    "./js/castle.js": "./js/castle.js?v=0.12.4",
+    "./js/characters.js": "./js/characters.js?v=0.12.4",
+    "./js/dialogue.js": "./js/dialogue.js?v=0.12.4",
+    "./js/fit.js": "./js/fit.js?v=0.12.4",
+    "./js/game.js": "./js/game.js?v=0.12.4",
+    "./js/main.js": "./js/main.js?v=0.12.4",
+    "./js/mission-more.js": "./js/mission-more.js?v=0.12.4",
+    "./js/mission-ui.js": "./js/mission-ui.js?v=0.12.4",
+    "./js/missions.js": "./js/missions.js?v=0.12.4",
+    "./js/puppets.js": "./js/puppets.js?v=0.12.4",
+    "./js/sound.js": "./js/sound.js?v=0.12.4",
+    "./js/ui.js": "./js/ui.js?v=0.12.4",
+    "./js/version.js": "./js/version.js?v=0.12.4",
+    "./js/voice.js": "./js/voice.js?v=0.12.4"
   }
 }</script>
-  <link rel="stylesheet" href="css/style.css?v=0.12.3">
+  <link rel="stylesheet" href="css/style.css?v=0.12.4">
   <!-- /STAMP -->
 </head>
 <body>
@@ -249,6 +249,14 @@
         <button id="breakfast-play-again" class="big">Play again</button>
       </div>
     </section>
+    <!-- Pause: who's who (Gareth). -->
+    <button id="pause" class="pause" hidden aria-label="Pause">||</button>
+    <div id="overview" class="overview" hidden>
+      <h2 id="overview-title">Who's who</h2>
+      <p id="overview-pot" class="overview-pot"></p>
+      <div id="overview-people" class="overview-people"></div>
+      <button id="overview-close" class="big">Back to the game</button>
+    </div>
   </div>
   <!-- Phones held upright: please turn sideways. -->
   <div id="turn" class="turn" hidden>
@@ -256,6 +264,6 @@
     <p>Turn your phone sideways to play!</p>
   </div>
 
-  <script type="module" src="js/main.js?v=0.12.3"></script>
+  <script type="module" src="js/main.js?v=0.12.4"></script>
 </body>
 </html>

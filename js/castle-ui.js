@@ -4,7 +4,7 @@ import { TRAITOR, FAITHFUL } from "./game.js";
 import {
   arriveAtCastle, answer, roundTable, winner, stillIn, isTraitor, QUESTIONS,
   night, murderIdeas, breakfastGroups, tableTalk, talkOptions, playerSays,
-  isRecruitNight, recruit, recruitIdeas, joinChat, nightKind, quietNight,
+  isRecruitNight, recruit, recruitIdeas, joinChat, nightKind, quietNight, whosWho,
 } from "./castle.js";
 import { DAYS } from "./game.js";
 import { $, show, badge, card, character, wait, FAST } from "./ui.js";
@@ -725,7 +725,43 @@ function showRoster() {
   }
 }
 
+// ─── Pause: who's who ───────────────────────────────────────────────────────
+
+function openOverview() {
+  const people = $("overview-people");
+  people.replaceChildren();
+  for (const p of whosWho(game)) {
+    const tile = document.createElement("div");
+    tile.className = "who" + (p.gone ? " who-gone" : "") + (p.you ? " who-you" : "");
+    tile.dataset.id = p.id;
+    tile.append(badge(character(p.id)));
+    const name = document.createElement("span");
+    name.className = "who-name";
+    name.textContent = p.you ? `You (${character(p.id).name})` : character(p.id).name;
+    tile.append(name);
+    const lines = [];
+    if (p.gone === "banished") lines.push(["Banished", ""]);
+    if (p.gone === "murdered") lines.push(["Murdered", ""]);
+    if (p.side) lines.push([p.side === TRAITOR ? "Traitor" : "Faithful", p.side]);
+    if (p.shield) lines.push(["Has the shield", "shield"]);
+    for (const [text, kind] of lines) {
+      const tag = document.createElement("span");
+      tag.className = "who-tag " + kind;
+      tag.textContent = text;
+      tile.append(tag);
+    }
+    people.append(tile);
+  }
+  const left = stillIn(game).length;
+  $("overview-title").textContent = `Day ${Math.min(game.day, DAYS)} of ${DAYS}`;
+  $("overview-pot").textContent = `${left} people left. The pot: £${(game.pot ?? 0).toLocaleString("en-GB")}.`;
+  $("overview").hidden = false;
+}
+
 // ─── Buttons ────────────────────────────────────────────────────────────────
+
+$("pause").addEventListener("click", openOverview);
+$("overview-close").addEventListener("click", () => { $("overview").hidden = true; });
 
 $("voices").addEventListener("click", () => {
   setVoices(!voicesOn());

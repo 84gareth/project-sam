@@ -701,3 +701,14 @@ test("your own character is marked: the walk, your chalkboard, the reveal list",
   await until(() => doc.querySelector(".chalkboard.me-board"), "your chalkboard", 20000);
   assert.ok(doc.querySelector(".chalkboard.me-board").textContent.includes("You"));
 });
+
+test("pause: shows everyone, and closes again", async () => {
+  const { doc } = await toCastle(seedFor("pepper", FAITHFUL));
+  assert.ok(visible(doc, "pause"));
+  doc.getElementById("pause").click();
+  assert.ok(visible(doc, "overview"));
+  assert.eq(doc.querySelectorAll("#overview-people .who").length, 22);
+  assert.ok(doc.querySelector('.who.who-you[data-id="pepper"]'));
+  doc.getElementById("overview-close").click();
+  assert.notOk(visible(doc, "overview"));
+});
