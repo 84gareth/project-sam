@@ -6,6 +6,7 @@ import { CHARACTERS } from "./characters.js";
 import { newGame, TRAITOR } from "./game.js";
 import { $, show, badge, card, character } from "./ui.js";
 import { goToCastle } from "./castle-ui.js";
+import { unlockSounds, play } from "./sound.js";
 
 let pickedId = null;
 // The game in progress, once a character is chosen. Exposed for the live tests.
@@ -45,3 +46,8 @@ buildCards();
 $("start").addEventListener("click", () => show("screen-pick"));
 $("choose").addEventListener("click", () => pickedId && startGame());
 $("to-castle").addEventListener("click", () => goToCastle(window.game));
+// The first tap switches sound on (iPad rule); every button tap clicks.
+document.addEventListener("pointerdown", unlockSounds, { capture: true });
+document.addEventListener("click", (e) => {
+  if (e.target.closest("button")) play("click");
+}, { capture: true });

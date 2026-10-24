@@ -18,9 +18,14 @@ export function setVoices(value) {
   if (!value && window.speechSynthesis) window.speechSynthesis.cancel();
 }
 
+// Sam's voice swaps: this character uses that character's voice.
+// (2026-10-24: Professor Fizz should sound like Granny Gumdrop did.)
+const SWAPS = { fizz: "gumdrop", gumdrop: "fizz" };
+
 // Each character's voice: a pitch, a speed, and which of the iPad's English
 // voices to use. Pure and fixed per character, so they always sound the same.
-export function voiceFor(id) {
+export function voiceFor(who) {
+  const id = SWAPS[who] ?? who;
   const i = CHARACTERS.findIndex((c) => c.id === id);
   let h = 2166136261;
   for (const ch of id) h = Math.imul(h ^ ch.charCodeAt(0), 16777619) >>> 0;

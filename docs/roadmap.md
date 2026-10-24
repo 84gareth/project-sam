@@ -54,6 +54,21 @@ Spec: `docs/night-spec.md`.
   everyone, with the gone crossed out
 - Gate: Sam plays it
 
+## Sound effects ✅ (v0.5.0)
+Real recordings for every tap, the chalkboards, the drum roll, the reveal
+(crying and booing for a Faithful, cheering for a Traitor), the night and
+the letter: `docs/sound-spec.md`.
+
+## Phase 4.5: Walk around the castle (paper puppets)
+Agreed 2026-10-24 (Sam: "actually move around the castle and actually see
+the other characters moving around"; Gareth picked paper puppets). Sam's
+drawings cut out like stickers, wobbling as they walk through side-on rooms.
+- Tap where to go; tap someone to chat
+- Rooms: great hall, library, garden, kitchen (pictures: Gareth, from
+  Claude's prompts)
+- Others walk room to room and sometimes chat to each other
+- Characters without a drawing yet: a cut-out of their coloured circle
+
 ## Phase 5: Missions and the prize pot
 Mini-games in the day that win money for the pot.
 

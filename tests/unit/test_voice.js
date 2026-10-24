@@ -16,3 +16,10 @@ test("characters sound different from each other", () => {
   const pitches = new Set(CHARACTERS.map((c) => voiceFor(c.id).pitch.toFixed(2)));
   assert.gt(pitches.size, 15, `${pitches.size} different pitches for 22 people`);
 });
+
+test("Sam's swap: Professor Fizz has Granny Gumdrop's voice, and back", () => {
+  const plain = (id) => { const v = voiceFor(id); return [v.pitch, v.rate]; };
+  assert.ne(plain("fizz"), plain("gumdrop"), "they still sound different from each other");
+  assert.ok(voiceFor("fizz").voiceIndex === 1, "Fizz uses Gumdrop's iPad voice");
+  assert.ok(voiceFor("gumdrop").voiceIndex === 2, "Gumdrop uses Fizz's");
+});

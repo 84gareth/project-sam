@@ -7,7 +7,7 @@ import {
 } from "./castle.js";
 import { $, show, badge, card, character, wait } from "./ui.js";
 import { say, voicesOn, setVoices } from "./voice.js";
-import { drumRoll } from "./sound.js";
+import { drumRoll, play } from "./sound.js";
 
 let game = null;
 let tableVote = null;
@@ -125,6 +125,7 @@ async function castVote() {
     chalk.textContent = character(target).name;
     b.append(who, chalk);
     boards.append(b);
+    play("chalk");
     await wait(350);
   }
   const out = character(result.banished);
@@ -146,10 +147,17 @@ async function reveal(result) {
   $("game-over").hidden = true;
   show("screen-banished");
   $("reveal").textContent = "I am a...";
-  await Promise.all([drumRoll(), wait(2200)]);
+  await drumRoll();
   const word = result.side === TRAITOR ? "TRAITOR!" : "FAITHFUL!";
   $("reveal").textContent = `I am a... ${word}`;
   $("reveal").className = "reveal " + result.side;
+  // Sam: a Faithful gets crying and booing; a Traitor gets cheering.
+  if (result.side === TRAITOR) {
+    play("cheering");
+  } else {
+    play("boo");
+    play("crying");
+  }
   say(`I am a ${result.side === TRAITOR ? "Traitor" : "Faithful"}!`, result.banished);
 
   const won = winner(game);
@@ -182,12 +190,14 @@ async function goNight() {
   $("to-breakfast").hidden = true;
   $("night-over").hidden = true;
   show("screen-night");
+  play("night");
   const victim = night(game);
   await wait(1800);
   if (victim === me) {
     $("night-text").textContent = "There's a letter under your door...";
     await wait(1200);
     $("letter").hidden = false;
+    play("letter");
     $("night-over").hidden = false;
   } else {
     $("night-text").textContent = "Phew! No letter for you tonight.";
@@ -197,6 +207,7 @@ async function goNight() {
 
 // Sam is a Traitor: the other Traitors give ideas, Sam picks.
 function traitorsMeeting() {
+  play("night");
   victimPick = null;
   $("murder").disabled = true;
   const ideas = murderIdeas(game);
@@ -266,6 +277,7 @@ async function breakfast(victim) {
   $("crossout").hidden = false;
   await wait(1400);
   $("crossout").classList.add("crossed");
+  play("chalk");
   $("missing").textContent = `${name} never came to breakfast. ${name} was murdered by the Traitors!`;
   await wait(2200);
   // Then everyone, in the usual order: the ones who've gone are greyed out
