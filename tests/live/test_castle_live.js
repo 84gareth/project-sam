@@ -151,3 +151,42 @@ test("the voices button switches voices off and on", async () => {
   btn.click();
   assert.eq(btn.textContent, before);
 });
+
+// Listen in on what the page says out loud (instead of really speaking).
+function listen(page) {
+  const said = [];
+  page.speechSynthesis.cancel = () => {};
+  page.speechSynthesis.speak = (u) => said.push({ text: u.text, pitch: u.pitch, rate: u.rate });
+  page.localStorage.setItem("project-sam-voices", "on");
+  return said;
+}
+
+test("every chat answer is spoken, in that character's own voice every time", async () => {
+  const { voiceFor } = await import("../../js/voice.js");
+  const { page, doc } = await toCastle(seedFor("pepper", FAITHFUL));
+  const said = listen(page);
+  const cardEl = doc.querySelector("#castle-cards .card");
+  const id = cardEl.dataset.id;
+  cardEl.click();
+  for (const b of doc.querySelectorAll("#questions .question")) b.click();
+  const lines = said.filter((s) => !s.text.startsWith("Day "));
+  assert.eq(lines.length, 4, "four answers, four spoken lines");
+  for (const l of lines) {
+    assert.near(l.pitch, voiceFor(id).pitch, 1e-6, "same voice every line");
+    assert.near(l.rate, voiceFor(id).rate, 1e-6);
+  }
+  assert.eq(lines[3].text, doc.getElementById("bubble-text").textContent, "it says what the bubble says");
+});
+
+test("at the secret meeting, each Traitor says their idea out loud", async () => {
+  const { voiceFor } = await import("../../js/voice.js");
+  const { page, doc } = await toCastle(nightSeed(TRAITOR));
+  await voteAndReveal(doc);
+  const said = listen(page);
+  doc.getElementById("next-day").click();
+  const ideas = [...doc.querySelectorAll("#traitor-ideas .idea")];
+  const spoken = said.filter((s) => s.text.startsWith("Let's pick"));
+  assert.eq(spoken.length, ideas.length, "one spoken line per idea");
+  const fellows = page.game.players.filter((p) => p.side === TRAITOR && p.id !== "pepper" && p.inGame);
+  spoken.forEach((s, i) => assert.near(s.pitch, voiceFor(fellows[i].id).pitch, 1e-6, "in their own voice"));
+});

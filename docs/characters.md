@@ -4,12 +4,15 @@ Made up by Claude, 2026-10-24. Sam approved every one: "put all of them
 in the game!!!" The game's copy is `js/characters.js`.
 
 ## Sam's drawings
-Gareth sends photos as Sam finishes them. Each is cropped to the drawing
+Gareth sends photos as Sam finishes them. Messy backgrounds: `clean_paper.gd`
+keeps only pen (dark) and crayon (colourful) and makes the rest plain paper;
+`fix_edge.gd` paints out a cut line; `paint_rect.gd` a box (all in
+`tools/image-fix/`). Each is cropped to the drawing
 (`sips -c <h> <w> --cropOffset <y> <x>`, then `sips -Z 700`), saved as
 `assets/characters/<id>.jpg`, and listed as `picture` in
 `js/characters.js`. A test fails if a listed picture is missing.
 
-Done (12 of 22):
+Done (13 of 22):
 - Captain Puddle (2026-10-24: pirate hat with a "no water" sign, peg leg,
   skull shirt; re-photographed without the shadow)
 - Granny Gumdrop (2026-10-24: purple dress, hair in a bun, a bag of sweets)
@@ -25,6 +28,8 @@ Done (12 of 22):
   tablecloth at the edge painted out with `tools/image-fix/paint_rect.gd`)
 - Benny Biscuit (2026-10-24: baker's hat, a biscuit in each hand)
 - Madame Mystic (2026-10-24: a crown, a long blue dress, a crystal ball)
+- Tiny Tom (2026-10-24: very long legs; cut-out paper cleaned with
+  `tools/image-fix/clean_paper.gd` then `fix_edge.gd ... hard=30`)
 
 | # | Name | About them |
 |---|------|-----------|

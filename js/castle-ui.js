@@ -6,7 +6,7 @@ import {
   night, murderIdeas, breakfastGroups,
 } from "./castle.js";
 import { $, show, badge, card, character, wait } from "./ui.js";
-import { say, voicesOn, setVoices } from "./voice.js";
+import { say, narrate, voicesOn, setVoices } from "./voice.js";
 import { drumRoll, play } from "./sound.js";
 
 let game = null;
@@ -23,6 +23,7 @@ export function goToCastle(g) {
 
 function startDay() {
   $("castle-day").textContent = `Day ${game.day} at the castle`;
+  narrate(`Day ${game.day} at the castle.`);
   const me = game.playerId;
   if (game.playerSide === TRAITOR) {
     const fellows = stillIn(game).filter((id) => id !== me && isTraitor(game, id));
@@ -131,6 +132,7 @@ async function castVote() {
   const out = character(result.banished);
   $("most-votes").textContent = `${out.name} has the most votes: ${result.counts[result.banished]}.`;
   $("most-votes").hidden = false;
+  narrate($("most-votes").textContent);
   $("to-reveal").hidden = false;
   $("to-reveal").onclick = () => reveal(result);
 }
@@ -173,6 +175,7 @@ async function reveal(result) {
 
 function gameOver(text) {
   $("game-over-text").textContent = text;
+  narrate(text, { queue: true });
   $("game-over").hidden = false;
 }
 
@@ -191,16 +194,20 @@ async function goNight() {
   $("night-over").hidden = true;
   show("screen-night");
   play("night");
+  narrate("Night falls. The Traitors are meeting in secret.");
   const victim = night(game);
   await wait(1800);
   if (victim === me) {
     $("night-text").textContent = "There's a letter under your door...";
+    narrate("There's a letter under your door...", { queue: true });
     await wait(1200);
     $("letter").hidden = false;
     play("letter");
+    narrate("By order of the Traitors, you have been murdered.", { queue: true });
     $("night-over").hidden = false;
   } else {
     $("night-text").textContent = "Phew! No letter for you tonight.";
+    narrate("Phew! No letter for you tonight.", { queue: true });
     $("to-breakfast").hidden = false;
   }
 }
@@ -218,14 +225,17 @@ function traitorsMeeting() {
     const idea = character(ideas[Math.min(i, ideas.length - 1)]).name;
     const p = document.createElement("p");
     p.className = "idea";
-    p.textContent = `${character(f).name}: "Let's pick ${idea}. They're getting close to us!"`;
+    const line = `Let's pick ${idea}. They're getting close to us!`;
+    p.textContent = `${character(f).name}: "${line}"`;
     box.append(p);
+    say(line, f, { queue: true });
   });
   if (fellows.length === 0) {
     const p = document.createElement("p");
     p.className = "idea";
     p.textContent = "You're the last Traitor. It's all up to you!";
     box.append(p);
+    narrate(p.textContent, { queue: true });
   }
   const cards = $("victim-cards");
   cards.replaceChildren();
@@ -274,11 +284,13 @@ async function breakfast(victim) {
   $("crossout-picture").replaceChildren(badge(character(victim), true));
   $("crossout").classList.remove("crossed");
   $("missing").textContent = `${name} never came to breakfast...`;
+  narrate($("missing").textContent);
   $("crossout").hidden = false;
   await wait(1400);
   $("crossout").classList.add("crossed");
   play("chalk");
   $("missing").textContent = `${name} never came to breakfast. ${name} was murdered by the Traitors!`;
+  narrate(`${name} was murdered by the Traitors!`, { queue: true });
   await wait(2200);
   // Then everyone, in the usual order: the ones who've gone are greyed out
   // with a red X (Sam, 2026-10-24).
@@ -301,6 +313,7 @@ async function breakfast(victim) {
     const traitors = game.players.filter((p) => p.side === TRAITOR).map((p) => character(p.id).name);
     $("breakfast-over-text").textContent =
       `${won === FAITHFUL ? "The Faithfuls win!" : "The Traitors win!"} The Traitors were ${traitors.join(", ")}.`;
+    narrate($("breakfast-over-text").textContent, { queue: true });
     $("breakfast-over").hidden = false;
   } else {
     $("start-day").hidden = false;

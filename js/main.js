@@ -7,6 +7,7 @@ import { newGame, TRAITOR } from "./game.js";
 import { $, show, badge, card, character } from "./ui.js";
 import { goToCastle } from "./castle-ui.js";
 import { unlockSounds, play } from "./sound.js";
+import { narrate } from "./voice.js";
 
 let pickedId = null;
 // The game in progress, once a character is chosen. Exposed for the live tests.
@@ -37,6 +38,7 @@ function startGame() {
   $("ready-side").textContent = side === TRAITOR ? "You are a Traitor. Shh!" : "You are a Faithful.";
   $("ready-side").className = "ready-side " + side;
   show("screen-ready");
+  narrate(`${$("ready-who").textContent} ${$("ready-side").textContent}`);
 }
 
 document.title = GAME_NAME;

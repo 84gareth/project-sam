@@ -57,7 +57,10 @@ test("every question gets an answer that names real people", () => {
 test("everyone says they're not a Traitor", () => {
   for (let seed = 1; seed <= 20; seed++) {
     const g = castle(seed);
-    for (const id of computers(g)) assert.ok(/^(No|Me\? No)/.test(answer(g, id, "traitor").text), id);
+    for (const id of computers(g)) {
+      if (g.playerSide === TRAITOR && isTraitor(g, id)) continue;   // whispers instead
+      assert.ok(/^(No|Me\? No)/.test(answer(g, id, "traitor").text), id);
+    }
   }
 });
 
@@ -266,4 +269,24 @@ test("balance with nights: Faithfuls win most games, but not all; a game lasts d
   assert.lt(faithfulWins / N, 0.85, tag);
   assert.gt(days[N >> 1], 5, tag);
   assert.lt(days[N >> 1], 13, tag);
+});
+
+test("Traitors whisper the truth to a Traitor Sam, and fib to a Faithful Sam", () => {
+  let checked = 0;
+  for (let seed = 1; seed <= 400 && checked < 10; seed++) {
+    const g = castle(seed);
+    const fellows = traitorsOf(g).filter((t) => t !== g.playerId);
+    for (const t of fellows) {
+      const a = answer(g, t, "traitor").text;
+      if (g.playerSide === TRAITOR) {
+        assert.ok(a.startsWith("Shh!"), `whisper to a fellow Traitor: ${a}`);
+        assert.eq(answer(g, t, "vote").names[0], computerVote(g, t), "they tell Sam their real vote");
+        for (const n of answer(g, t, "list").names) assert.notOk(isTraitor(g, n), "the list is only Faithfuls to blame");
+        checked++;
+      } else {
+        assert.notOk(a.startsWith("Shh!"), "a Faithful Sam gets no whispers");
+      }
+    }
+  }
+  assert.gt(checked, 0, "found games with Sam as a Traitor");
 });

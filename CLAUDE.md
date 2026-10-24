@@ -198,7 +198,7 @@ so, kindly.
   crashes partway can look like a pass (learned in Project 2126).
 
 ## Current status
-Updated 2026-10-24 (v0.5.1).
+Updated 2026-10-24 (v0.5.2).
 - **Phase 0 (web setup) done.** Tests in headless Chrome; GitHub Pages;
   Turbo Town archived.
 - **Phase 1 done.** The game: like The Traitors, starting at Havenbrook
@@ -211,11 +211,13 @@ Updated 2026-10-24 (v0.5.1).
   in `js/castle.js` (pure, balance-tested); screens in `js/castle-ui.js`;
   voices `js/voice.js`; drum roll `js/sound.js`. `?fast=1` skips pauses.
 - **Sound effects (v0.5.0)**: real Mixkit recordings, `docs/sound-spec.md`.
+  Every line is voiced, plus a storyteller; Traitors whisper to a Traitor
+  Sam (v0.5.2). Panels are see-through so the pictures show.
 - **Next: walk around the castle as paper puppets** (Sam and Gareth's
   pick). Sam's answers: tap where to go; rooms are the great hall, library,
   garden and kitchen; others wander and sometimes chat to each other.
 - **Phase 4 (the night) built, waiting for Sam (v0.4.0).** Traitors'
   meeting, the letter, breakfast; tactical voting (`docs/night-spec.md`).
-- **Roadmap OK'd by Gareth.** Sam draws the 22 pictures as we go (12 of 22
+- **Roadmap OK'd by Gareth.** Sam draws the 22 pictures as we go (13 of 22
   in: how to add one is in `docs/characters.md`); voices
   are the iPad's own (Web Speech), arriving with Phase 3.

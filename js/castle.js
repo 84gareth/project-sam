@@ -78,6 +78,24 @@ export function answer(game, id, question) {
   const list = suspectList(game, id);
   const sneaky = isTraitor(game, id);
   const say = (text, names = []) => ({ text, names });
+  // Sam is a Traitor talking to another Traitor: no fibs between them, just
+  // sneaky whispers (Gareth, 2026-10-24).
+  if (sneaky && game.playerSide === TRAITOR && id !== game.playerId) {
+    const target = traitorTarget(game);
+    const vote = computerVote(game, id);
+    switch (question) {
+      case "list":
+        return say("Shh! Here's who we should get the others to blame:", list.filter((o) => !isTraitor(game, o)).slice(0, LIST_LENGTH));
+      case "suspect":
+        return say(`Between you and me? Let's point everyone at ${nameOf(target)}.`, [target]);
+      case "traitor":
+        return say("Shh! Not so loud! You know we're on the same side...");
+      case "vote":
+        return say(vote === target
+          ? `${nameOf(vote)}. All us Traitors stick together!`
+          : `I'll vote ${nameOf(vote)}, so nobody sees us voting the same. Sneaky!`, [vote]);
+    }
+  }
   switch (question) {
     case "list": {
       const names = list.slice(0, LIST_LENGTH);

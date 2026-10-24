@@ -310,3 +310,47 @@ button.small {
 .crossout.crossed .red-x line:nth-child(2) { animation: draw 0.4s ease-out 0.45s forwards; }
 .crossout.crossed .big-portrait, .crossout.crossed .big-badge { filter: grayscale(1); transition: filter 0.6s 0.8s; }
 @keyframes draw { to { stroke-dashoffset: 0; } }
+
+/* ─── Show off the pictures (Gareth, 2026-10-24: "they get hidden but the
+   panels quite a bit"). Panels are see-through and only as tall as they
+   need to be; every screen has a picture behind it. ─────────────────────── */
+.card { background: rgba(30, 34, 46, 0.78); backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px); }
+.card.picked { background: rgba(70, 60, 25, 0.88); }
+.castle .cards, .table .cards, .traitors-room .cards { background: none; padding: 0; }
+.castle { justify-content: space-between; }
+.castle .cards, .table .cards, .traitors-room .cards {
+  flex: 0 1 auto;
+  max-height: 52vh;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+}
+.castle .card, .table .card, .traitors-room .card { min-height: 0; padding: 6px 4px; }
+.castle .card .card-about { display: none; }
+.castle .portrait, .table .portrait, .traitors-room .portrait { height: 64px; }
+.castle .badge, .table .badge, .traitors-room .badge { width: 48px; height: 48px; font-size: 18px; }
+
+.table { background: linear-gradient(rgba(10, 8, 6, 0.15), rgba(10, 8, 6, 0.15)), url("../assets/round-table.jpg") center / cover no-repeat; justify-content: space-between; }
+.boards { flex: 0 1 auto; max-height: 60vh; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
+.chalkboard { padding: 6px 6px 8px; border-width: 5px; }
+.chalk { font-size: 18px; }
+
+.chat {
+  background: linear-gradient(rgba(20, 14, 30, 0.35), rgba(20, 14, 30, 0.35)),
+              url("../assets/rooms/hall.jpg") center / cover no-repeat;
+}
+.chat h2 { text-shadow: 0 2px 6px #000; }
+.ready {
+  background: linear-gradient(rgba(20, 22, 30, 0.5), rgba(20, 22, 30, 0.5)),
+              url("../assets/station.webp") center / cover no-repeat;
+}
+.ready h2, .ready p { text-shadow: 0 2px 6px #000; }
+.night {
+  background: linear-gradient(rgba(8, 4, 16, 0.55), rgba(8, 4, 16, 0.55)),
+              url("../assets/castle.jpg") center / cover no-repeat;
+}
+.night h2, .night-text { text-shadow: 0 2px 6px #000; }
+.pick {
+  background: linear-gradient(rgba(20, 22, 30, 0.55), rgba(20, 22, 30, 0.55)),
+              url("../assets/station.webp") center / cover no-repeat;
+}
+.arrivals { flex: 0 1 auto; }
+.arrival { background: rgba(20, 22, 30, 0.6); }

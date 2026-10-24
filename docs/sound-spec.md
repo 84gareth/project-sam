@@ -31,3 +31,16 @@ rule).
 ## Voices
 Sam's swap (2026-10-24): Professor Fizz gets Granny Gumdrop's voice and
 she gets his (`js/voice.js`, SWAPS).
+
+Gareth, later the same day: "all lines should be voiced ... Each character
+needs its own voice it uses for every line it says." Now:
+- Every character line is spoken in that character's voice: chat answers,
+  the reveal, and each Traitor's idea at the secret meeting (queued, so they
+  take turns).
+- A storyteller voice (`narrate`) reads the big moments: who you are, each
+  new day, the most votes, night falling, the letter, who was murdered at
+  breakfast, and who won.
+- The iPad's voices are sorted by name so each character always gets the
+  same one, and the list is re-read when it arrives late.
+- A Traitor talking to another Traitor whispers the truth ("Shh! ...").
+Tested by listening in on what the page says (`test_castle_live.js`).

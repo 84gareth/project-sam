@@ -36,17 +36,39 @@ export function voiceFor(who) {
   };
 }
 
-// Say `text` in character `id`'s voice (nothing happens with voices off,
-// or where the browser can't speak).
-export function say(text, id) {
+// The iPad's English voices, in a fixed order (by name), so each character
+// always gets the same one. The list can arrive late, so it's re-read when
+// the browser says it has changed.
+let english = [];
+function loadVoices() {
+  if (!window.speechSynthesis) return;
+  english = window.speechSynthesis.getVoices()
+    .filter((x) => x.lang && x.lang.startsWith("en"))
+    .sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
+}
+if (window.speechSynthesis) {
+  loadVoices();
+  window.speechSynthesis.addEventListener?.("voiceschanged", loadVoices);
+}
+
+// The storyteller who reads out the big moments (not a character).
+export const NARRATOR = "narrator";
+
+// Say `text` in character `id`'s voice: the same voice for every line they
+// say (Sam). `queue`: wait for whoever is talking to finish, instead of
+// interrupting. Nothing happens with voices off, or where it can't speak.
+export function say(text, id, { queue = false } = {}) {
   if (!on || !window.speechSynthesis || !window.SpeechSynthesisUtterance) return;
   const synth = window.speechSynthesis;
-  synth.cancel();
+  if (!queue) synth.cancel();
+  if (english.length === 0) loadVoices();
   const u = new SpeechSynthesisUtterance(text);
-  const v = voiceFor(id);
-  const english = synth.getVoices().filter((x) => x.lang && x.lang.startsWith("en"));
+  const v = id === NARRATOR ? { pitch: 1.0, rate: 0.95, voiceIndex: CHARACTERS.length } : voiceFor(id);
   if (english.length > 0) u.voice = english[v.voiceIndex % english.length];
+  u.lang = u.voice ? u.voice.lang : "en-GB";
   u.pitch = v.pitch;
   u.rate = v.rate;
   synth.speak(u);
 }
+
+export const narrate = (text, opts) => say(text, NARRATOR, opts);

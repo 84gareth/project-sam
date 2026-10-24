@@ -64,8 +64,8 @@ Agreed 2026-10-24 (Sam: "actually move around the castle and actually see
 the other characters moving around"; Gareth picked paper puppets). Sam's
 drawings cut out like stickers, wobbling as they walk through side-on rooms.
 - Tap where to go; tap someone to chat
-- Rooms: great hall, library, garden, kitchen (pictures: Gareth, from
-  Claude's prompts)
+- ✅ Rooms: great hall, library, garden, kitchen (Gareth's pictures,
+  `assets/rooms/`)
 - Others walk room to room and sometimes chat to each other
 - Characters without a drawing yet: a cut-out of their coloured circle
 
@@ -80,4 +80,4 @@ you got to.
 Anything else for the look and sound, once the game is fun.
 
 ## Ongoing: Sam's character drawings
-Added as they come in. Done: 12 of 22 (Captain Puddle, Granny Gumdrop, Professor Fizz, Ruby Rails, Chef Pepper, Sir Reginald Waffle, Doctor Plaster, Lola Loud, Farmer Fern, Detective Dot, Benny Biscuit, Madame Mystic).
+Added as they come in. Done: 13 of 22 (Captain Puddle, Granny Gumdrop, Professor Fizz, Ruby Rails, Chef Pepper, Sir Reginald Waffle, Doctor Plaster, Lola Loud, Farmer Fern, Detective Dot, Benny Biscuit, Madame Mystic, Tiny Tom).
