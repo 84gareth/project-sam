@@ -70,7 +70,9 @@ setInterval(() => {
 
 function tick(now, fromBackup = false) {
   if ($("screen-castle").hidden) { looping = false; return; }
-  const dt = Math.min(0.1, (now - lastTime) / 1000);
+  // In test mode (?fast=1) big steady steps, so tests don't depend on how
+  // fast the test browser happens to run.
+  const dt = FAST ? 0.5 : Math.min(0.1, (now - lastTime) / 1000);
   lastTime = now;
   step(world, stillIn(game), dt, Math.random);
   if (chatTarget && nextTo(world, chatTarget)) {

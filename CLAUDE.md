@@ -197,6 +197,10 @@ so, kindly.
 - **Browsers pause animation frames in hidden or off-screen pages**, and
   headless Chrome may never send them. The puppet castle has a backup
   timer that keeps it moving; the test frame sits on-screen at 2% opacity.
+  Even so, in the FULL headless run frames stop partway (2026-10-24): test
+  movement in the pure rules (`test_puppets.js`), and only wiring live.
+- **Gate a commit on run_tests.sh's own exit code**, never on `| tail`'s:
+  v0.6.0 was pushed with a failing test that way.
 - **Test the crash trap when changing the runner.** Without it, a test that
   crashes partway can look like a pass (learned in Project 2126).
 
