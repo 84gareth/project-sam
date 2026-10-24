@@ -16,7 +16,7 @@ keeps only pen (dark) and crayon (colourful) and makes the rest plain paper;
 `assets/characters/<id>.jpg`, and listed as `picture` in
 `js/characters.js`. A test fails if a listed picture is missing.
 
-Done (18 of 22):
+Done (19 of 22):
 - Captain Puddle (2026-10-24: pirate hat with a "no water" sign, peg leg,
   skull shirt; re-photographed without the shadow)
 - Granny Gumdrop (2026-10-24: purple dress, hair in a bun, a bag of sweets)
@@ -39,6 +39,7 @@ Done (18 of 22):
 - Penny Pockets (2026-10-24: green cloak, a belt of pockets, a shiny blue gem)
 - Coach Kick (2026-10-24: striped kit, shouting through a megaphone, a red card)
 - Stationmaster Stan (2026-10-24: cap, big moustache, blowing his whistle)
+- Ivy Inkwell (2026-10-24: glasses, a pencil and a notebook)
 
 Redrawn with more detail (coloured faces), 2026-10-24: Tiny Tom (photo on a
 tablecloth: `paper_only.gd` then `clean_paper.gd`), Zara Zoom, Madame Mystic.
