@@ -47,7 +47,10 @@ $("version").textContent = "v" + VERSION;
 buildCards();
 $("start").addEventListener("click", () => show("screen-pick"));
 $("choose").addEventListener("click", () => pickedId && startGame());
-$("to-castle").addEventListener("click", () => goToCastle(window.game));
+$("to-castle").addEventListener("click", () => {
+  play("train");   // Sam: a train whistle for All aboard!
+  goToCastle(window.game);
+});
 // The first tap switches sound on (iPad rule); every button tap clicks.
 document.addEventListener("pointerdown", unlockSounds, { capture: true });
 document.addEventListener("click", (e) => {

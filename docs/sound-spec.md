@@ -24,6 +24,7 @@ sound licence is fine yes") and approved this list (2.8 MB) before download:
 | cheering.mp3 | 462 Huge crowd cheering victory | a Traitor is banished | 5 s, fade |
 | night.mp3 | 698 Spooky wind metal music | night falls; the Traitors' meeting | 6 s, fade |
 | letter.mp3 | 1530 Paper slide | the murder letter | 1.2 s |
+| train.mp3 | 1630 Steam train passing (462 KB, approved by Gareth) | All aboard! (Sam) | 5 s, 2 s fade |
 
 Code: `js/sound.js` (Web Audio; the first tap switches sound on, an iPad
 rule).

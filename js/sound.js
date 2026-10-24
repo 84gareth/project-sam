@@ -15,6 +15,7 @@ const SOUNDS = {
   cheering: ["cheering.mp3", 5.0, 0.7],
   night: ["night.mp3", 6.0, 0.6],
   letter: ["letter.mp3", 1.2, 0.9],
+  train: ["train.mp3", 5.0, 0.8],
 };
 
 let audio = null;
@@ -51,7 +52,7 @@ export function play(name) {
     const now = audio.currentTime;
     gain.gain.setValueAtTime(volume, now);
     if (buf.duration > longest) {
-      gain.gain.setValueAtTime(volume, now + longest - 0.8);
+      gain.gain.setValueAtTime(volume, now + longest - 2.0);
       gain.gain.linearRampToValueAtTime(0, now + longest);
     }
     src.connect(gain).connect(audio.destination);
