@@ -209,7 +209,7 @@ test("Cooking: the hated food scores; the right box wins the shield", () => {
 // ─── The other nine ─────────────────────────────────────────────────────────
 import {
   gone, noteFrom, whereRounds, jumbleWords, secretCode, SHAPES, SHAPE_COLOURS, makeMaze, canStep, stepsOut,
-  mazeScore, MAZE_W, MAZE_H, keySpots, footprintTrail, footprintNote, galleryRounds, treasureSpot, treasureTap,
+  mazeScore, MAZE_W, MAZE_H, keySpots, footprintEvents, footprintScore, footprintNote, BOOT_PRINTS, galleryRounds, treasureSpot, treasureTap,
   treasureScore, FOUND_NEAR, lightsTray, lightsScore, flopResult,
 } from "../../js/missions.js";
 
@@ -307,18 +307,28 @@ test("Lost Keys: 5 keys, spread out, on the picture", () => {
   }
 });
 
-test("Muddy Footprints: the boot is in every split once; two right finds the note", () => {
+test("Muddy Footprints: 16 boot prints in order round the garden, getting quicker, with foxes and ducks", () => {
+  const kinds = new Set();
   for (let seed = 1; seed <= 20; seed++) {
-    const { boot, splits } = footprintTrail(castle(seed));
-    assert.eq(splits.length, 3);
-    for (const s of splits) {
-      assert.eq(s.length, 3);
-      assert.eq(s.filter((x) => x === boot).length, 1);
+    const ev = footprintEvents(castle(seed));
+    const boots = ev.filter((e) => e.kind === "boot");
+    assert.eq(boots.length, BOOT_PRINTS);
+    for (let i = 1; i < ev.length; i++) assert.ok(ev[i].at >= ev[i - 1].at, "in time order");
+    for (const e of ev) {
+      assert.ok(e.x > 0.03 && e.x < 0.97 && e.y > 0.55 && e.y < 0.95, `on the ground: ${e.x}, ${e.y}`);
+      kinds.add(e.kind);
     }
+    assert.gt(boots[0].life, boots[boots.length - 1].life, "faster later");
+    for (let i = 1; i < boots.length; i++) assert.lt(Math.hypot(boots[i].x - boots[i - 1].x, boots[i].y - boots[i - 1].y), 0.2, "a trail: each print near the last");
   }
-  assert.ok(footprintNote(2));
-  assert.notOk(footprintNote(1));
+  assert.eq([...kinds].sort(), ["boot", "duck", "fox"]);
+  assert.eq(footprintScore(BOOT_PRINTS, 0), 1);
+  assert.eq(footprintScore(8, 0), 0.5);
+  assert.lt(footprintScore(BOOT_PRINTS, 3), 1, "wrong taps cost");
+  assert.ok(footprintNote(0.6));
+  assert.notOk(footprintNote(0.5));
 });
+
 
 test("Portrait Gallery: one new picture each round; the last is someone who's gone", () => {
   const g = fewDaysIn(7);

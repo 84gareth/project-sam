@@ -7,7 +7,7 @@ import {
 } from "../../js/castle.js";
 import {
   todaysMission, bellTune, pieRound, cookingDiner, shieldTruck, TRUCKS, HATES, flopResult, MISSIONS,
-  whereRounds, jumbleWords, secretCode, makeMaze, canStep, MAZE_W, MAZE_H, footprintTrail, galleryRounds,
+  whereRounds, jumbleWords, secretCode, makeMaze, canStep, MAZE_W, MAZE_H, galleryRounds,
   treasureSpot, truckFoods,
 } from "../../js/missions.js";
 
@@ -663,15 +663,22 @@ test("Lost Keys: find all five", async () => {
   assert.eq(await result(doc), "You found all 5 keys!");
 });
 
-test("Muddy Footprints: follow the right boot every time", async () => {
-  const { page, doc, box } = await playMission("footprints");
-  const { boot } = footprintTrail(page.game);
-  for (let i = 0; i < 3; i++) {
-    await until(() => box.dataset.split === String(i) && box.querySelector(".print-option"), `split ${i + 1}`, 8000);
-    box.querySelector(`.print-option[data-sole="${boot}"]`).click();
-  }
+test("Muddy Footprints: tap every boot print, never a fox or duck", async () => {
+  const { doc, box } = await playMission("footprints");
+  await until(() => {
+    for (const p of box.querySelectorAll('.print[data-kind="boot"]:not(:disabled)')) p.click();
+    return visible(doc, "mission-result");
+  }, "the trail ends", 20000);
   assert.ok((await result(doc)).includes("You followed the trail"));
 });
+
+test("Muddy Footprints: tapping a fox print costs you", async () => {
+  const { doc, box } = await playMission("footprints");
+  await until(() => box.querySelector('.print[data-kind="fox"], .print[data-kind="duck"]'), "an animal print", 20000);
+  box.querySelector('.print[data-kind="fox"], .print[data-kind="duck"]').click();
+  assert.ok(doc.getElementById("mission-status").textContent.startsWith("Oops!"));
+});
+
 
 test("Portrait Gallery: spot every new picture", async () => {
   const { page, doc, box } = await playMission("portraits");

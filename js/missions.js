@@ -410,15 +410,42 @@ export function keySpots(game) {
   return spots;
 }
 
-// ─── Muddy Footprints ───────────────────────────────────────────────────────
-export const SOLES = ["stripes", "dots", "zigzag", "star", "squares"];
-export function footprintTrail(game) {
+// ─── Muddy Footprints (remade: Gareth, "it needs a complete rework") ────────
+// Boot prints pop up one at a time along a trail round the garden; tap each
+// before it fades. Fox and duck prints pop up too: don't tap those! It gets
+// faster. Follow the trail well and you find a note at the end.
+export const BOOT_PRINTS = 16;
+export function footprintEvents(game) {
   const r = rng(game, "footprints", game.day);
-  const boot = SOLES[Math.floor(r() * SOLES.length)];
-  const splits = [0, 1, 2].map(() => shuffled([boot, ...shuffled(SOLES.filter((s) => s !== boot), r).slice(0, 2)], r));
-  return { boot, splits };
+  const events = [];
+  // On the ground: the bottom part of the garden picture.
+  const TOP = 0.58, BOTTOM = 0.92;
+  let x = 0.08, y = TOP + r() * (BOTTOM - TOP), heading = (r() - 0.5) * 0.8;
+  let at = 600;
+  for (let i = 0; i < BOOT_PRINTS; i++) {
+    // Wander on, turning a little, bouncing off the edges of the garden.
+    heading += (r() - 0.5) * 1.1;
+    let nx = x + Math.cos(heading) * 0.075, ny = y + Math.sin(heading) * 0.07;
+    if (nx < 0.06 || nx > 0.94) { heading = Math.PI - heading; nx = x + Math.cos(heading) * 0.075; }
+    if (ny < TOP || ny > BOTTOM) { heading = -heading; ny = y + Math.sin(heading) * 0.07; }
+    x = Math.min(0.94, Math.max(0.06, nx));
+    y = Math.min(BOTTOM, Math.max(TOP, ny));
+    const side = i % 2 ? 1 : -1;   // left foot, right foot
+    const life = Math.round(1700 - (1000 * i) / (BOOT_PRINTS - 1));   // 1.7 s down to 0.7 s
+    events.push({ kind: "boot", x: x + Math.sin(heading) * 0.012 * side, y: y - Math.cos(heading) * 0.02 * side,
+      angle: (heading * 180) / Math.PI + 90, at, life });
+    // Now and then a fox or a duck crosses the trail too.
+    if (i > 1 && r() < 0.45) {
+      events.push({ kind: r() < 0.5 ? "fox" : "duck", x: 0.08 + r() * 0.84, y: TOP + r() * (BOTTOM - TOP),
+        angle: r() * 360, at: at + Math.round(r() * 300), life: life + 300 });
+    }
+    at += Math.round(life * 0.8);
+  }
+  return events.sort((p, q) => p.at - q.at);
 }
-export const footprintNote = (right) => right >= 2;
+// Score: boot prints tapped out of all of them, less a bit for each wrong tap.
+export const footprintScore = (hits, wrong) => Math.max(0, Math.min(1, hits / BOOT_PRINTS - wrong * 0.1));
+export const footprintNote = (score) => score >= 0.6;
 
 // ─── Portrait Gallery ───────────────────────────────────────────────────────
 // Three rounds: a wall of 6, 8 then 10 portraits, then one new one. The

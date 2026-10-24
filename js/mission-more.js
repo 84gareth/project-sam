@@ -3,7 +3,7 @@
 // missions.js; this file draws and listens.
 import {
   whereRounds, jumbleWords, noteFrom, secretCode, CODE_TRIES, makeMaze, mazeMove, mazeSquare, MAZE_SPEED, mazeScore,
-  MAZE_W, MAZE_H, MAZE_SECONDS, keySpots, KEYS, KEYS_SECONDS, footprintTrail, footprintNote,
+  MAZE_W, MAZE_H, MAZE_SECONDS, keySpots, KEYS, KEYS_SECONDS, footprintEvents, footprintScore, footprintNote,
   galleryRounds, treasureSpot, treasureTap, treasureScore, TREASURE_TAPS, lightsTray, lightsScore,
   PIECES, LIGHTS_SECONDS, gone, lightsDesign, lightsStart, lightsTap,
 } from "./missions.js";
@@ -328,54 +328,61 @@ function keys(ctx) {
 
 // ─── Muddy Footprints ───────────────────────────────────────────────────────
 
-function print(sole) {
-  const patterns = {
-    stripes: '<path d="M14 22h32M12 34h36M12 46h36M14 58h32M18 70h24" stroke="#3a2510" stroke-width="5"/>',
-    dots: '<g fill="#3a2510"><circle cx="22" cy="24" r="4"/><circle cx="38" cy="24" r="4"/><circle cx="20" cy="40" r="4"/><circle cx="40" cy="40" r="4"/><circle cx="22" cy="56" r="4"/><circle cx="38" cy="56" r="4"/><circle cx="30" cy="72" r="4"/></g>',
-    zigzag: '<polyline points="14,24 22,34 30,24 38,34 46,24" fill="none" stroke="#3a2510" stroke-width="5"/><polyline points="14,50 22,60 30,50 38,60 46,50" fill="none" stroke="#3a2510" stroke-width="5"/>',
-    star: '<polygon points="30,24 35,38 50,38 38,47 42,62 30,53 18,62 22,47 10,38 25,38" fill="#3a2510"/>',
-    squares: '<g fill="#3a2510"><rect x="16" y="20" width="10" height="10"/><rect x="34" y="20" width="10" height="10"/><rect x="16" y="40" width="10" height="10"/><rect x="34" y="40" width="10" height="10"/><rect x="25" y="62" width="10" height="10"/></g>',
-  };
-  const svg = document.createElementNS(SVG, "svg");
-  svg.setAttribute("viewBox", "0 0 60 90");
-  svg.setAttribute("width", 80);
-  svg.setAttribute("height", 120);
-  svg.innerHTML = `<ellipse cx="30" cy="45" rx="25" ry="40" fill="#8a5a2b" stroke="#3a2510" stroke-width="3"/>${patterns[sole]}`;
-  return svg;
-}
+const PRINTS = {
+  boot: '<svg viewBox="0 0 40 70" width="44" height="76"><ellipse cx="20" cy="24" rx="15" ry="20" fill="#5b3a1a"/><ellipse cx="20" cy="57" rx="11" ry="11" fill="#5b3a1a"/><path d="M10 18h20M9 26h22M11 34h18" stroke="#3a2510" stroke-width="3"/></svg>',
+  fox: '<svg viewBox="0 0 40 40" width="52" height="52"><ellipse cx="20" cy="26" rx="10" ry="9" fill="#a0522d"/><circle cx="9" cy="13" r="4" fill="#a0522d"/><circle cx="17" cy="8" r="4" fill="#a0522d"/><circle cx="25" cy="8" r="4" fill="#a0522d"/><circle cx="32" cy="13" r="4" fill="#a0522d"/></svg>',
+  duck: '<svg viewBox="0 0 40 40" width="56" height="56"><path d="M20 38 L4 10 Q12 16 20 6 Q28 16 36 10 Z" fill="#c98a3a"/></svg>',
+};
 
-async function footprints(ctx) {
+function footprints(ctx) {
   const { game, box } = ctx;
-  const { boot, splits } = footprintTrail(game);
-  const big = el("div", "boot");
-  big.append(print(boot));
-  box.replaceChildren(big);
-  ctx.status("Remember this muddy boot print!");
-  await wait(3500);
-  let right = 0;
-  for (const [i, options] of splits.entries()) {
-    box.dataset.split = i;
-    ctx.status(`The trail splits! Which way? (${i + 1} of 3)`);
-    const buttons = options.map((sole) => {
-      const b = button("print-option");
-      b.dataset.sole = sole;
-      b.append(print(sole));
-      return b;
-    });
-    const row = el("div", "print-options");
-    row.append(...buttons);
-    box.replaceChildren(row);
-    const picked = options[await tapOne(buttons)];
-    if (picked === boot) right += 1;
-    ctx.status(picked === boot ? "Yes! The trail goes on..." : "Oops! Those were a fox's footprints. Back you go!");
-    await wait(1300);
-  }
-  const who = gone(game)[0];
-  const note = footprintNote(right) && who ? readNote(game, who) : "";
-  const line = footprintNote(right)
-    ? (who ? "You followed the trail to a hidden note!" : `You followed the trail! (${right} out of 3)`)
-    : `You lost the trail. (${right} out of 3)`;
-  ctx.finish(right / 3, line, null, note);
+  const garden = el("div", "footprint-garden");
+  garden.style.backgroundImage = 'url("assets/rooms/garden.jpg")';
+  box.replaceChildren(garden);
+  const events = footprintEvents(game);
+  const speed = FAST ? 4 : 1;   // tests run faster
+  let hits = 0, wrong = 0, next = 0;
+  const start = performance.now();
+  const live = [];
+  ctx.status("Tap the muddy boot prints before they fade! Not the fox or duck ones!");
+  const end = () => {
+    const score = footprintScore(hits, wrong);
+    const who = gone(game)[0];
+    const note = footprintNote(score) && who ? readNote(game, who) : "";
+    const line = footprintNote(score)
+      ? (who ? "You followed the trail all the way to a hidden note!" : `You followed the trail! ${hits} out of ${events.filter((e) => e.kind === "boot").length} prints.`)
+      : `You lost the trail. ${hits} prints found${wrong ? `, ${wrong} wrong taps` : ""}.`;
+    ctx.finish(score, line, null, note);
+  };
+  ctx.every(30, () => {
+    const now = (performance.now() - start) * speed;
+    while (next < events.length && events[next].at <= now) {
+      const e = events[next++];
+      const p = button("print " + e.kind);
+      p.innerHTML = PRINTS[e.kind];
+      p.dataset.kind = e.kind;
+      p.style.left = `${e.x * 100}%`;
+      p.style.top = `${e.y * 100}%`;
+      p.style.transform = `translate(-50%, -50%) rotate(${e.angle}deg)`;
+      p.onclick = () => {
+        if (p.disabled) return;
+        p.disabled = true;
+        if (e.kind === "boot") { hits += 1; p.classList.add("got"); }
+        else { wrong += 1; p.classList.add("wrong"); ctx.status(`Oops! That was a ${e.kind}!`); }
+      };
+      garden.append(p);
+      live.push([p, e]);
+    }
+    for (const [p, e] of live) {
+      if (!p.isConnected) continue;
+      const age = now - e.at;
+      p.style.opacity = String(Math.max(0, 1 - age / e.life));
+      if (age > e.life) p.remove();
+    }
+    box.dataset.shown = String(next);
+    const last = events[events.length - 1];
+    if (next === events.length && now > last.at + last.life) end();
+  });
 }
 
 // ─── Portrait Gallery ───────────────────────────────────────────────────────

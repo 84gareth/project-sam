@@ -81,8 +81,10 @@ has gone, there's no note.
   on-screen joystick, within a minute (Gareth, v0.12.5: smooth movement;
   start and way out in random opposite corners). Part-way counts for some.
 - **Lost Keys** (hunting): find 5 keys hidden in the library in 40 seconds.
-- **Muddy Footprints** (hunting, clue): remember the boot print; at three
-  places the trail splits; pick the matching print. Two right and you find
+- **Muddy Footprints** (hunting, clue; remade v0.12.8, Gareth: "a complete
+  rework"): boot prints pop up one by one along a trail round the garden;
+  tap each before it fades (1.7 s, getting quicker). Fox and duck prints
+  pop up too; tapping one costs points. Follow it well (60%+) and you find
   the note at the end.
 - **Portrait Gallery** (hunting, clue): look at the wall; the lights go
   out; a new portrait has gone up. Which one? Three rounds, more pictures
