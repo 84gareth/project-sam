@@ -356,3 +356,12 @@ test("All aboard! plays the train ride before the castle", async () => {
   assert.ok(visible(doc, "screen-train"), "the train ride shows first");
   await until(() => visible(doc, "screen-castle"), "then the castle", 8000);
 });
+
+test("each room has its own sound, and it stops at the Round Table", async () => {
+  const { page, doc } = await toCastle(seedFor("pepper", FAITHFUL));
+  await until(() => doc.body.dataset.roomSound === "hall", "the great hall's sound");
+  page.world.me.room = "garden";
+  await until(() => doc.body.dataset.roomSound === "garden", "the garden's sound");
+  doc.getElementById("to-table").click();
+  await until(() => doc.body.dataset.roomSound === "", "quiet at the Round Table");
+});

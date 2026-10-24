@@ -11,7 +11,7 @@ import {
   ROOMS, FLOOR, createWorld, step, tapTo, walkUpTo, nextTo, neighbour, peopleIn,
 } from "./puppets.js";
 import { say, narrate, voicesOn, setVoices } from "./voice.js";
-import { drumRoll, play } from "./sound.js";
+import { drumRoll, play, setRoomSound } from "./sound.js";
 
 let game = null;
 let tableVote = null;
@@ -84,7 +84,12 @@ setInterval(() => {
 }, 100);
 
 function tick(now, fromBackup = false) {
-  if ($("screen-castle").hidden) { looping = false; return; }
+  if ($("screen-castle").hidden) {
+    looping = false;
+    // Still chatting in the room? Keep its sound. Anywhere else: quiet.
+    if ($("screen-chat").hidden && $("screen-join").hidden) setRoomSound(null);
+    return;
+  }
   // In test mode (?fast=1) big steady steps, so tests don't depend on how
   // fast the test browser happens to run.
   const dt = FAST ? 0.5 : Math.min(0.1, (now - lastTime) / 1000);
@@ -181,6 +186,7 @@ const pos = (id) => (id === game.playerId ? world.me : world.people[id]);
 // Draw the room Sam is in, and everyone in it, where they are now.
 function render() {
   const room = world.me.room;
+  setRoomSound(room);
   const left = neighbour(room, "left");
   const right = neighbour(room, "right");
   const here = stillIn(game);

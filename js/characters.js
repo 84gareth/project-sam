@@ -46,7 +46,8 @@ export const CHARACTERS = [
     picture: "assets/characters/max.jpg" },
   { id: "olive", name: "Olive Oddsocks", about: "Never wears socks that match.", colour: "#808b38",
     picture: "assets/characters/olive.jpg" },
-  { id: "barry", name: "Barry Banjo", about: "Plays the banjo. Badly.", colour: "#ca6f1e" },
+  { id: "barry", name: "Barry Banjo", about: "Plays the banjo. Badly.", colour: "#ca6f1e",
+    picture: "assets/characters/barry.jpg" },
 ];
 
 // "Chef Pepper" -> "CP"; one-word names give one letter.

@@ -80,5 +80,5 @@ test("Sam's drawings show on the picker; the rest show their initials", async ()
   assert.ok(img, "Captain Puddle's card has a picture");
   await until(() => img.complete && img.naturalWidth > 0, "the drawing loaded");
   assert.ok(cards[1].querySelector("img.portrait"), "Granny Gumdrop's card has a picture");
-  assert.ok(cards[21].querySelector(".badge"), "Barry Banjo still has his circle");
+  assert.eq(doc.querySelectorAll("#cards .card img.portrait").length, 22, "all 22 are Sam's drawings now");
 });

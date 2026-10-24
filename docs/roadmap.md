@@ -79,6 +79,11 @@ suspects); otherwise the computer Traitors pick, and if they pick Sam he
 becomes a Traitor (no choice). Whoever is picked says yes. Balance stays in
 band with four Traitors.
 
+## Room sounds ✅ (v0.7.4)
+Gareth: background sounds for each room. Quiet chatting in the great hall,
+birds in the garden, cooking in the kitchen, a ticking clock in the
+library; they loop softly and fade between rooms (`docs/sound-spec.md`).
+
 ## Phase 5: Missions and the prize pot
 Mini-games in the day that win money for the pot.
 
@@ -89,5 +94,5 @@ you got to.
 ## Phase 7: Look and sound
 Anything else for the look and sound, once the game is fun.
 
-## Ongoing: Sam's character drawings
-Added as they come in. Done: 21 of 22 (Captain Puddle, Granny Gumdrop, Professor Fizz, Ruby Rails, Chef Pepper, Sir Reginald Waffle, Doctor Plaster, Lola Loud, Farmer Fern, Detective Dot, Benny Biscuit, Madame Mystic, Tiny Tom, Zara Zoom, Mr Grumble, Penny Pockets, Coach Kick, Stationmaster Stan, Ivy Inkwell, Max Muddle, Olive Oddsocks).
+## Sam's character drawings ✅ all 22 (2026-10-24)
+Added as they come in. Done: 22 of 22 (Captain Puddle, Granny Gumdrop, Professor Fizz, Ruby Rails, Chef Pepper, Sir Reginald Waffle, Doctor Plaster, Lola Loud, Farmer Fern, Detective Dot, Benny Biscuit, Madame Mystic, Tiny Tom, Zara Zoom, Mr Grumble, Penny Pockets, Coach Kick, Stationmaster Stan, Ivy Inkwell, Max Muddle, Olive Oddsocks, Barry Banjo).

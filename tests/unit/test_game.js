@@ -82,3 +82,7 @@ test("every drawing listed for a character really exists", async () => {
     assert.ok(res.ok, `${c.name}: ${c.picture} (${res.status})`);
   }
 });
+
+test("Sam has drawn all 22 characters", () => {
+  assert.eq(CHARACTERS.filter((c) => c.picture).length, 22);
+});

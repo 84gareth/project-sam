@@ -65,3 +65,52 @@ export function play(name) {
 // The drum roll before the reveal: a real one this time (the made-up one
 // "sounds a bit broken like its glitching", Gareth).
 export const drumRoll = () => play("drumRoll");
+
+// ─── Room sounds (Gareth, 2026-10-24: "background sound effects appropriate
+// to each room") ─────────────────────────────────────────────────────────────
+// Each loops quietly while Sam is in that room and fades when he leaves it.
+const ROOM_SOUNDS = {
+  hall: ["room-hall.mp3", 0.22],       // people chatting quietly
+  garden: ["room-garden.mp3", 0.35],   // birds singing
+  kitchen: ["room-kitchen.mp3", 0.25], // cooking sizzling
+  library: ["room-library.mp3", 0.3],  // a quiet ticking clock
+};
+const roomBuffers = {};
+let roomNow = null;   // { room, src, gain }
+
+function loadRooms() {
+  for (const [room, [file]] of Object.entries(ROOM_SOUNDS)) {
+    if (roomBuffers[room]) continue;
+    fetch(`assets/sounds/${file}`)
+      .then((r) => r.arrayBuffer())
+      .then((data) => audio.decodeAudioData(data))
+      .then((buf) => { roomBuffers[room] = buf; if (roomNow && roomNow.room === room && !roomNow.src) setRoomSound(room, true); })
+      .catch(() => {});
+  }
+}
+
+// Play `room`'s sound (or none, with null), fading across over a second.
+export function setRoomSound(room, force = false) {
+  if (!force && (roomNow ? roomNow.room : null) === room) return;
+  document.body.dataset.roomSound = room || "";   // which one (live tests read it)
+  if (roomNow && roomNow.src && audio) {
+    const old = roomNow;
+    old.gain.gain.setTargetAtTime(0, audio.currentTime, 0.3);
+    setTimeout(() => { try { old.src.stop(); } catch { /* already stopped */ } }, 1500);
+  }
+  roomNow = room ? { room, src: null, gain: null } : null;
+  if (!room || !audio) return;
+  loadRooms();
+  const buf = roomBuffers[room];
+  if (!buf) return;   // starts when it has loaded
+  const src = audio.createBufferSource();
+  src.buffer = buf;
+  src.loop = true;
+  const gain = audio.createGain();
+  gain.gain.setValueAtTime(0, audio.currentTime);
+  gain.gain.setTargetAtTime(ROOM_SOUNDS[room][1], audio.currentTime, 0.4);
+  src.connect(gain).connect(audio.destination);
+  src.start();
+  roomNow.src = src;
+  roomNow.gain = gain;
+}
