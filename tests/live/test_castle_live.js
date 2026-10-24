@@ -682,3 +682,16 @@ test("staying quiet at the Round Table: someone notices", async () => {
   assert.eq(lines.length, before + 1, "one reply, no line from Sam");
   assert.ok(lines[lines.length - 1].textContent.includes("Chef Pepper"), "they say Sam's name");
 });
+
+test("your own character is marked: the walk, your chalkboard, the reveal list", async () => {
+  const { doc } = await toCastle(seedFor("pepper", FAITHFUL));
+  assert.ok(doc.querySelector('.puppet.me'), "your puppet glows in the castle");
+  doc.getElementById("to-table").click();
+  assert.ok(doc.querySelector('#walk-line .me-cutout[data-id="pepper"]'), "you glow in the walk");
+  assert.eq(doc.querySelectorAll("#walk-line .me-cutout").length, 1, "only you");
+  await talkThenTable(doc);
+  doc.querySelector("#table-cards .card").click();
+  doc.getElementById("cast-vote").click();
+  await until(() => doc.querySelector(".chalkboard.me-board"), "your chalkboard", 20000);
+  assert.ok(doc.querySelector(".chalkboard.me-board").textContent.includes("You"));
+});

@@ -5,7 +5,7 @@ import "./fit.js";
 import { GAME_NAME, VERSION } from "./version.js";
 import { CHARACTERS } from "./characters.js";
 import { newGame, TRAITOR } from "./game.js";
-import { $, show, badge, card, character } from "./ui.js";
+import { $, show, badge, card, character, setMe } from "./ui.js";
 import { goToCastle } from "./castle-ui.js";
 import { unlockSounds, play } from "./sound.js";
 import { narrate } from "./voice.js";
@@ -35,6 +35,7 @@ function startGame() {
   // ?seed=123 in the address fixes the deal (the live tests use it).
   const seed = Number(new URLSearchParams(location.search).get("seed")) || Date.now();
   window.game = newGame(pickedId, seed);
+  setMe(pickedId);
   const side = window.game.playerSide;
   const c = character(pickedId);
   $("ready-badge").replaceWith(Object.assign(badge(c, true), { id: "ready-badge" }));

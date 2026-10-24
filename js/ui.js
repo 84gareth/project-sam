@@ -9,6 +9,13 @@ export const wait = (ms) => new Promise((r) => setTimeout(r, FAST ? 0 : ms));
 
 export const character = (id) => CHARACTERS.find((c) => c.id === id);
 
+// Who Sam is playing, so their picture is marked everywhere (Gareth: "a
+// clear way of marking which character you are ... it's easy to lose
+// track!").
+let meId = null;
+export const setMe = (id) => { meId = id; };
+export const isMe = (id) => id === meId;
+
 export function show(screenId) {
   for (const s of document.querySelectorAll(".screen")) s.hidden = s.id !== screenId;
 }
@@ -18,13 +25,13 @@ export function show(screenId) {
 export function badge(c, big = false) {
   if (c.picture) {
     const img = document.createElement("img");
-    img.className = "portrait" + (big ? " big-portrait" : "");
+    img.className = "portrait" + (big ? " big-portrait" : "") + (isMe(c.id) ? " me-badge" : "");
     img.src = c.picture;
     img.alt = c.name;
     return img;
   }
   const b = document.createElement("div");
-  b.className = "badge" + (big ? " big-badge" : "");
+  b.className = "badge" + (big ? " big-badge" : "") + (isMe(c.id) ? " me-badge" : "");
   b.style.background = c.colour;
   b.textContent = initials(c.name);
   return b;
@@ -33,8 +40,9 @@ export function badge(c, big = false) {
 // A tappable card: picture, name, and an optional line underneath.
 export function card(c, line = c.about) {
   const el = document.createElement("button");
-  el.className = "card";
+  el.className = "card" + (isMe(c.id) ? " me-card" : "");
   el.dataset.id = c.id;
+  if (isMe(c.id)) el.append(Object.assign(document.createElement("span"), { className: "you-ribbon", textContent: "YOU" }));
   el.append(badge(c));
   const name = document.createElement("span");
   name.className = "card-name";

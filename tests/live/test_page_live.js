@@ -60,3 +60,16 @@ test("a phone held upright is asked to turn sideways", async () => {
   await until(() => page.document.getElementById("version").textContent !== "v0.0.0", "page script ran");
   assert.notOk(page.document.getElementById("turn").hidden);
 });
+
+test("character cards: rows centred, and no words spill out of a card", async () => {
+  const page = await openPage("../index.html?fast=1");
+  const doc = page.document;
+  await until(() => doc.querySelectorAll(".card").length === 22, "cards built");
+  doc.getElementById("start").click();
+  const cards = [...doc.querySelectorAll("#cards .card")];
+  for (const c of cards) assert.ok(c.scrollHeight <= c.clientHeight + 1, `${c.dataset.id}'s words fit`);
+  const box = doc.getElementById("cards").getBoundingClientRect();
+  const last = cards[cards.length - 1].getBoundingClientRect();
+  const rowStart = cards.filter((c) => Math.abs(c.getBoundingClientRect().top - last.top) < 2)[0].getBoundingClientRect();
+  assert.near(rowStart.left - box.left, box.right - last.right, 12, "the last row is centred");
+});

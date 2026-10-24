@@ -63,7 +63,7 @@ function cutout(id, extraClass = "") {
   const c = character(id);
   if (!c.picture) return badge(c, true);
   const img = document.createElement("img");
-  img.className = "cutout " + extraClass;
+  img.className = "cutout " + extraClass + (id === game.playerId ? " me-cutout" : "");
   img.src = `assets/puppets/${id}.png`;
   img.alt = c.name;
   return img;
@@ -430,9 +430,10 @@ async function castVote() {
     const who = document.createElement("span");
     who.className = "board-voter";
     who.textContent = voter === game.playerId ? "You" : character(voter).name;
+    if (voter === game.playerId) b.classList.add("me-board");
     const chalk = document.createElement("span");
     chalk.className = "chalk";
-    chalk.textContent = character(target).name;
+    chalk.textContent = character(target).name + (target === game.playerId ? " (you!)" : "");
     b.append(who, chalk);
     boards.append(b);
     play("chalk");
