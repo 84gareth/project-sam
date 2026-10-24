@@ -53,13 +53,13 @@ test("the door shows the next room and starts Sam walking through it", async () 
   assert.ok(page.world.me.walking, "walking");
 });
 
-test("chat: tap someone, ask all four questions, they answer", async () => {
+test("chat: tap someone, ask all six questions, they answer", async () => {
   const { page, doc } = await toCastle(seedFor("pepper", FAITHFUL));
   await until(() => doc.querySelector(".puppet:not(.me)"), "someone to chat to");
   doc.querySelector(".puppet:not(.me)").click();
   assert.ok(visible(doc, "screen-chat"));
   const buttons = doc.querySelectorAll("#questions .question");
-  assert.eq(buttons.length, 4);
+  assert.eq(buttons.length, 6);
   for (const b of buttons) {
     b.click();
     assert.ok(visible(doc, "bubble"), b.textContent);
@@ -248,12 +248,12 @@ test("every chat answer is spoken, in that character's own voice every time", as
   cardEl.click();
   for (const b of doc.querySelectorAll("#questions .question")) b.click();
   const lines = said.filter((s) => !s.text.startsWith("Day "));
-  assert.eq(lines.length, 4, "four answers, four spoken lines");
+  assert.eq(lines.length, 6, "six answers, six spoken lines");
   for (const l of lines) {
     assert.near(l.pitch, voiceFor(id).pitch, 1e-6, "same voice every line");
     assert.near(l.rate, voiceFor(id).rate, 1e-6);
   }
-  assert.eq(lines[3].text, doc.getElementById("bubble-text").textContent, "it says what the bubble says");
+  assert.eq(lines[5].text, doc.getElementById("bubble-text").textContent, "it says what the bubble says");
 });
 
 test("at the secret meeting, each Traitor says their idea out loud", async () => {

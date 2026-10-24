@@ -5,12 +5,15 @@
 
 import { CHARACTERS } from "./characters.js";
 import { makeRandom, FAITHFUL, TRAITOR } from "./game.js";
+import { inCharacter, pickOne } from "./dialogue.js";
 
 export const QUESTIONS = [
   { id: "list", text: "Show me your list" },
   { id: "suspect", text: "Who do you suspect?" },
   { id: "traitor", text: "Are you a Traitor?" },
   { id: "vote", text: "Who will you vote for?" },
+  { id: "me", text: "What do you think of me?" },
+  { id: "gossip", text: "Any gossip?" },
 ];
 export const LIST_LENGTH = 5;
 
@@ -96,35 +99,122 @@ export function answer(game, id, question) {
           : `I'll vote ${nameOf(vote)}, so nobody sees us voting the same. Sneaky!`, [vote]);
     }
   }
+  // Everything below is said in the character's own way (dialogue.js).
+  const said = (text, names = []) => say(inCharacter(id, text, r), names);
   switch (question) {
     case "list": {
       const names = list.slice(0, LIST_LENGTH);
-      return say("Here's my list of who might be a Traitor:", names);
+      return said(pickOne([
+        "Here's my list of who might be a Traitor:",
+        "I've been keeping a list. Here it is:",
+        "My top suspects, in order:",
+        "Don't tell anyone, but here's my list:",
+        "These are the ones I'm watching:",
+      ], r), names);
     }
     case "suspect": {
       // A Traitor sometimes names someone who isn't top of their own list:
       // a little fib you can catch by asking for their list too.
       const pick = sneaky && r() < 0.4 ? list[1 + Math.floor(r() * (LIST_LENGTH - 1))] : list[0];
-      return say(`I think it's ${nameOf(pick)}.`, [pick]);
+      const n = nameOf(pick);
+      return said(pickOne([
+        `I think it's ${n}.`,
+        `${n}. Definitely ${n}.`,
+        `Have you noticed ${n}? Very suspicious.`,
+        `My money's on ${n}.`,
+        `${n} keeps going quiet when the Traitors come up.`,
+        `I don't trust ${n} one bit.`,
+        `If I had to pick... ${n}.`,
+      ], r), [pick]);
     }
     case "traitor": {
       // Everyone says no. Traitors are much quicker to blame someone else.
       if (r() < (sneaky ? 0.7 : 0.25)) {
         const blamed = sneaky ? traitorTarget(game) : list[0];
-        return say(`No! But keep an eye on ${nameOf(blamed)}...`, [blamed]);
+        const n = nameOf(blamed);
+        return said(pickOne([
+          `No! But keep an eye on ${n}...`,
+          `Me? Never! You should be asking ${n} that.`,
+          `How dare you! No! Go and ask ${n}.`,
+          `No! I'm Faithful. ${n}, on the other hand...`,
+        ], r), [blamed]);
       }
-      return say(r() < 0.5 ? "No way! I'm a Faithful." : "Me? No! I'm Faithful, I promise.");
+      return said(pickOne([
+        "No way! I'm a Faithful.",
+        "Me? No! I'm Faithful, I promise.",
+        "Absolutely not! Faithful through and through.",
+        "A Traitor? Me? Don't be silly!",
+        "Cross my heart, I'm a Faithful.",
+        "No! Why does everyone keep asking me that?",
+      ], r));
     }
     case "vote": {
       const plan = sneaky ? traitorPlan(game, id) : votePlan(game, id);
       const [a, b] = plan.names.map(nameOf);
       const lines = {
-        honest: [`I'll vote for ${a}. I really think it's them.`, `${a}. I'm sure of it!`],
-        crowd: [`Lots of people are going for ${a}, so I will too.`, `Probably ${a}. Everyone's saying it.`],
-        safe: [`${a}. I don't want people looking at ME!`, `I'll go with ${a}. Better them than me...`],
-        unsure: [`I can't decide! ${a}... or maybe ${b}.`, `Hmm. ${a} or ${b}? I'll decide at the table.`],
+        honest: [`I'll vote for ${a}. I really think it's them.`, `${a}. I'm sure of it!`,
+          `${a}'s name is going on my chalkboard.`, `It has to be ${a}.`],
+        crowd: [`Lots of people are going for ${a}, so I will too.`, `Probably ${a}. Everyone's saying it.`,
+          `${a}, I think. No point voting on my own.`, `I'll go with the crowd: ${a}.`],
+        safe: [`${a}. I don't want people looking at ME!`, `I'll go with ${a}. Better them than me...`,
+          `${a}. Please don't vote for me!`],
+        unsure: [`I can't decide! ${a}... or maybe ${b}.`, `Hmm. ${a} or ${b}? I'll decide at the table.`,
+          `It's between ${a} and ${b}. Ask me later!`],
       }[plan.reason];
-      return say(lines[Math.floor(r() * lines.length)], plan.names);
+      return said(pickOne(lines, r), plan.names);
+    }
+    case "me": {
+      // What they think of Sam: where Sam is on their list.
+      const at = list.indexOf(game.playerId);
+      if (at >= 0 && at < 3) {
+        return said(pickOne([
+          "Honestly? I'm watching you.",
+          "Hmm. You've been acting a bit sneaky, you know.",
+          "You're on my list. Near the top, actually.",
+          "I'm not sure I trust you. Sorry!",
+        ], r), [game.playerId]);
+      }
+      if (at >= 0 && at < list.length / 2) {
+        return said(pickOne([
+          "I haven't made my mind up about you yet.",
+          "You seem all right. Probably.",
+          "Not sure. Prove you're a Faithful!",
+        ], r));
+      }
+      return said(pickOne([
+        "I trust you! You're one of the good ones.",
+        "You? Faithful, for sure.",
+        "I'd never vote for you.",
+        "You're one of the few people here I trust.",
+      ], r));
+    }
+    case "gossip": {
+      // Day 1: idle chit-chat. After that, who voted for someone who turned
+      // out to be Faithful: a real clue.
+      const last = game.history[game.history.length - 1];
+      const wrong = last && last.side === FAITHFUL
+        ? last.votes.filter(([v, t]) => t === last.banished && v !== id && v !== game.playerId && stillIn(game).includes(v))
+        : [];
+      if (wrong.length > 0) {
+        const [v] = wrong[Math.floor(r() * wrong.length)];
+        const n = nameOf(v);
+        const gone = nameOf(last.banished);
+        return said(pickOne([
+          `Did you see ${n} voted for ${gone}? And ${gone} was a Faithful!`,
+          `${n} voted out ${gone} yesterday. Makes you think...`,
+          `Psst. ${n} wanted ${gone} gone. Why, I wonder?`,
+        ], r), [v]);
+      }
+      const others = stillIn(game).filter((o) => o !== id && o !== game.playerId);
+      const x = others[Math.floor(r() * others.length)];
+      const y = others.filter((o) => o !== x)[Math.floor(r() * (others.length - 1))];
+      return said(pickOne([
+        `I saw ${nameOf(x)} and ${nameOf(y)} whispering in the library.`,
+        `${nameOf(x)} ate three of Chef Pepper's pies. Brave!`,
+        `${nameOf(x)} keeps wandering off on their own...`,
+        `Someone left muddy footprints in the great hall. I think it was ${nameOf(x)}.`,
+        `${nameOf(x)} and ${nameOf(y)} have been best friends all day. Hmm.`,
+      ], r), [x]);
     }
   }
   throw new Error(`no question "${question}"`);
@@ -309,8 +399,10 @@ function accuses(game, id) {
   return answer(game, id, "vote").names[0];
 }
 
-// Today's talk before the vote: two people accuse someone, and each accused
-// person defends themselves. Returns [{ speaker, text, names }].
+// Today's talk before the vote: two or three people accuse someone (often
+// with a reason, sometimes a real clue from yesterday's votes), the accused
+// answer back, and others chime in. Everyone talks in their own way.
+// Returns [{ speaker, text, names }]; an accusation names exactly one person.
 export function tableTalk(game) {
   const r = rng(game, "talk", game.day);
   const speakers = brains(game);
@@ -318,26 +410,66 @@ export function tableTalk(game) {
     const j = Math.floor(r() * (i + 1));
     [speakers[i], speakers[j]] = [speakers[j], speakers[i]];
   }
-  const accuseLines = [
+  const last = game.history[game.history.length - 1];
+  const why = (target) => {
+    // A real reason if they voted out a Faithful yesterday.
+    const voted = last && last.side === FAITHFUL && last.votes.some(([v, t]) => v === target && t === last.banished);
+    if (voted && r() < 0.7) return `They voted out ${nameOf(last.banished)}, and ${nameOf(last.banished)} was a Faithful!`;
+    return pickOne([
+      "They went really quiet when the Traitors came up.",
+      "I saw them sneaking about by the stairs last night.",
+      "They keep changing who they suspect.",
+      "They were whispering in the library.",
+      "They looked very nervous at breakfast.",
+      "They said a name, then voted for someone else!",
+      "", "",
+    ], r);
+  };
+  const accuse = [
     (n) => `I've been watching ${n}. I think they're a Traitor!`,
     (n) => `It's ${n}! I just know it.`,
     (n) => `${n} has been acting really sneaky...`,
+    (n) => `I'm sorry, but I don't trust ${n}.`,
+    (n) => `Can we talk about ${n}?`,
+    (n) => `My vote's going to ${n}, and here's why.`,
   ];
-  const defendLines = [
+  const defend = [
     "That's not fair! I'm a Faithful!",
     "Me? No way! You've got it all wrong!",
     "I'm Faithful, I promise! Look somewhere else!",
+    "How can you say that? I've been helping everyone!",
+    "You're only saying that because you're a Traitor!",
+    "Rubbish! Total rubbish!",
+  ];
+  const chime = [
+    (n) => `I agree. Something's odd about ${n}.`,
+    (n) => `Hold on, I don't think it's ${n}.`,
+    (n) => `${n}? Really? I'm not sure...`,
+    (n) => `Yes! I've been thinking that about ${n} too!`,
   ];
   const talk = [];
   const accused = [];
+  const used = new Set();
+  const wanted = 2 + (r() < 0.5 ? 1 : 0);
   for (const s of speakers) {
-    if (accused.length === 2) break;
+    if (accused.length === wanted) break;
     const target = accuses(game, s);
-    if (accused.includes(target) || accused.includes(s) || target === undefined) continue;
+    if (target === undefined || accused.includes(target) || accused.includes(s) || used.has(s)) continue;
     accused.push(target);
-    talk.push({ speaker: s, text: accuseLines[Math.floor(r() * accuseLines.length)](nameOf(target)), names: [target] });
+    used.add(s);
+    const reason = why(target);
+    talk.push({ speaker: s, text: inCharacter(s, `${pickOne(accuse, r)(nameOf(target))} ${reason}`.trim(), r), names: [target] });
     if (target !== game.playerId) {
-      talk.push({ speaker: target, text: defendLines[Math.floor(r() * defendLines.length)], names: [] });
+      used.add(target);
+      talk.push({ speaker: target, text: inCharacter(target, pickOne(defend, r), r), names: [] });
+    }
+    // Sometimes someone else joins in.
+    if (r() < 0.5) {
+      const other = speakers.find((o) => !used.has(o) && o !== target);
+      if (other) {
+        used.add(other);
+        talk.push({ speaker: other, text: inCharacter(other, pickOne(chime, r)(nameOf(target)), r), names: [] });
+      }
     }
   }
   return talk;
@@ -348,13 +480,21 @@ export function tableTalk(game) {
 export function talkOptions(game, talk) {
   const accused = talk.filter((t) => t.names.length > 0).map((t) => t.names[0]);
   const options = [];
-  for (const a of accused) {
-    if (a === game.playerId) options.push({ kind: "defend", target: a, text: "I'm a Faithful! It's not me!" });
-    else options.push({ kind: "accuse", target: a, text: `I agree. It's ${nameOf(a)}!` });
+  const r = rng(game, "options", game.day);
+  for (const a of accused.slice(0, 2)) {
+    if (a === game.playerId) {
+      options.push({ kind: "defend", target: a, text: pickOne(["I'm a Faithful! It's not me!", "Me? I've been trying to catch the Traitors all day!", "Check my votes! I'm Faithful!"], r) });
+    } else {
+      const n = nameOf(a);
+      options.push({ kind: "accuse", target: a, text: pickOne([`I agree. It's ${n}!`, `I've had my eye on ${n} too.`, `${n} is a Traitor. I'm sure of it!`, `Yes! ${n} has been so sneaky.`], r) });
+    }
   }
   const other = accused.find((a) => a !== game.playerId);
-  if (other) options.push({ kind: "defend", target: other, text: `Leave ${nameOf(other)} alone. I trust them.` });
-  options.push({ kind: "quiet", target: null, text: "Stay quiet and watch..." });
+  if (other) {
+    const n = nameOf(other);
+    options.push({ kind: "defend", target: other, text: pickOne([`Leave ${n} alone. I trust them.`, `I don't think it's ${n}.`, `${n} has been helpful all day. It's not them.`], r) });
+  }
+  options.push({ kind: "quiet", target: null, text: pickOne(["Stay quiet and watch...", "Say nothing. Just listen.", "Keep my thoughts to myself."], r) });
   return options.slice(0, 4);
 }
 
@@ -431,16 +571,35 @@ export function joinChat(game, a, b) {
       const target = traitorTarget(game);
       return say(a, `Psst! Get in here. We're all blaming ${nameOf(target)} today.`, [target]);
     }
-    const lines = ["Oh! Erm... nothing! We weren't talking about anything!", "Go away! This is a private chat!", "Shh! Someone's coming!"];
-    return say(a, lines[Math.floor(r() * lines.length)], [], false);
+    return say(a, inCharacter(a, pickOne([
+      "Oh! Erm... nothing! We weren't talking about anything!",
+      "Go away! This is a private chat!",
+      "Shh! Someone's coming!",
+      "We were just... talking about the weather. Yes. The weather.",
+      "Nothing to see here! Off you pop!",
+    ], r), r), [], false);
   }
   if (r() < 0.25) {
-    return say(a, "Sorry, this is a private chat. Come back later!", [], false);
+    return say(a, inCharacter(a, pickOne([
+      "Sorry, this is a private chat. Come back later!",
+      "Not now, please. We're busy.",
+      "Can you give us a minute?",
+    ], r), r), [], false);
   }
   const speaker = r() < 0.5 ? a : b;
-  const pick = answer(game, speaker, "suspect").names[0];
+  const pick = suspectList(game, speaker)[0];
   if (pick === game.playerId) {
-    return say(speaker, "Oh! Erm... we were just talking about you, actually...", [pick]);
+    return say(speaker, inCharacter(speaker, pickOne([
+      "Oh! Erm... we were just talking about you, actually...",
+      "Oh, hello. Funny, we were just saying your name.",
+      "Ah. Awkward. We were talking about you.",
+    ], r), r), [pick]);
   }
-  return say(speaker, `Come and join us! We were saying ${nameOf(pick)} is acting really sneaky.`, [pick]);
+  const n = nameOf(pick);
+  return say(speaker, inCharacter(speaker, pickOne([
+    `Come and join us! We were saying ${n} is acting really sneaky.`,
+    `Hello! We think it's ${n}. What do you think?`,
+    `Pull up a chair! We've been watching ${n}.`,
+    `Just in time! We were talking about ${n}.`,
+  ], r), r), [pick]);
 }

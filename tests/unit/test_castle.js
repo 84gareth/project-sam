@@ -59,7 +59,7 @@ test("everyone says they're not a Traitor", () => {
     const g = castle(seed);
     for (const id of computers(g)) {
       if (g.playerSide === TRAITOR && isTraitor(g, id)) continue;   // whispers instead
-      assert.ok(/^(No|Me\? No)/.test(answer(g, id, "traitor").text), id);
+      assert.ok(/\b(No|Never|not|silly)\b|Faithful/.test(answer(g, id, "traitor").text), id);
     }
   }
 });
@@ -294,16 +294,19 @@ test("Traitors whisper the truth to a Traitor Sam, and fib to a Faithful Sam", (
 // ─── Round Table talk ───────────────────────────────────────────────────────
 import { tableTalk, talkOptions, playerSays, TALK_SWAY } from "../../js/castle.js";
 
-test("Round Table talk: two accusations, and the accused stick up for themselves", () => {
+test("Round Table talk: two or three accusations, and the accused stick up for themselves", () => {
+  const counts = new Set();
   for (let seed = 1; seed <= 30; seed++) {
     const g = castle(seed);
     const talk = tableTalk(g);
     const accusations = talk.filter((t) => t.names.length === 1);
-    assert.eq(accusations.length, 2, `seed ${seed}`);
-    assert.ne(accusations[0].names[0], accusations[1].names[0], "two different people accused");
+    counts.add(accusations.length);
+    assert.ok(accusations.length === 2 || accusations.length === 3, `seed ${seed}: ${accusations.length}`);
+    assert.eq(new Set(accusations.map((a) => a.names[0])).size, accusations.length, "different people accused");
     for (const t of talk) assert.ok(stillIn(g).includes(t.speaker) && t.speaker !== "dot", "only computer players speak");
     assert.eq(tableTalk(g), talk, "the same talk if you look again");
   }
+  assert.eq(counts.size, 2, "sometimes two, sometimes three");
 });
 
 test("Sam's options: agree, stick up for someone, or stay quiet", () => {
@@ -411,4 +414,68 @@ test("Faithfuls mostly welcome Sam, but not always (being sent away isn't proof)
   }
   assert.gt(welcome, away, `${welcome} welcomes, ${away} sent away`);
   assert.gt(away, 0, "sometimes Faithfuls want privacy too");
+});
+
+// Gareth, 2026-10-24: "much more variety ... the characters should somewhat
+// reflect their personalities in what they say".
+test("answers vary a lot, and people talk in their own way", async () => {
+  const { PERSONALITY } = await import("../../js/dialogue.js");
+  for (const q of ["suspect", "traitor", "vote", "me", "gossip"]) {
+    const lines = new Set();
+    for (let seed = 1; seed <= 20; seed++) {
+      const g = castle(seed);
+      for (const id of computers(g).filter((id) => !isTraitor(g, id))) lines.add(answer(g, id, q).text);
+    }
+    assert.gt(lines.size, 60, `${q}: ${lines.size} different lines`);
+  }
+  // Each character's own words turn up in what they say.
+  const g = castle(2);
+  for (const id of computers(g).filter((id) => !isTraitor(g, id))) {
+    const own = [...PERSONALITY[id].openers, ...PERSONALITY[id].extras];
+    let hits = 0;
+    for (let day = 1; day <= 12; day++) {
+      g.day = day;
+      for (const q of ["suspect", "traitor", "vote", "me", "gossip"]) if (own.some((w) => answer(g, id, q).text.includes(w))) hits++;
+    }
+    assert.gt(hits, 10, `${id} sounds like themselves`);
+  }
+});
+
+test("everyone has their own way of talking", async () => {
+  const { PERSONALITY } = await import("../../js/dialogue.js");
+  const { CHARACTERS } = await import("../../js/characters.js");
+  for (const c of CHARACTERS) {
+    assert.gt(PERSONALITY[c.id]?.openers.length ?? 0, 1, c.id);
+    assert.gt(PERSONALITY[c.id].extras.length, 1, c.id);
+  }
+});
+
+test("'What do you think of me?' matches where Sam is on their list", () => {
+  for (let seed = 1; seed <= 20; seed++) {
+    const g = castle(seed);
+    for (const id of computers(g).filter((id) => !isTraitor(g, id))) {
+      const at = suspectList(g, id).indexOf(g.playerId);
+      const text = answer(g, id, "me").text;
+      if (at >= 0 && at < 3) assert.ok(/watching you|sneaky|on my list|not sure I trust/i.test(text), `${id}: ${text}`);
+    }
+  }
+});
+
+test("gossip gives a real clue: who voted out a Faithful yesterday", () => {
+  let clues = 0;
+  for (let seed = 1; seed <= 40; seed++) {
+    const g = castle(seed);
+    roundTable(g, computers(g)[0]);
+    const last = g.history[g.history.length - 1];
+    if (last.side !== FAITHFUL) continue;
+    const voters = last.votes.filter(([, t]) => t === last.banished).map(([v]) => v);
+    for (const id of computers(g).filter((id) => !isTraitor(g, id))) {
+      const said = answer(g, id, "gossip");
+      if (voters.some((v) => v !== id && v !== g.playerId && stillIn(g).includes(v))) {
+        assert.ok(voters.includes(said.names[0]), `${id} names a voter: ${said.text}`);
+        clues++;
+      }
+    }
+  }
+  assert.gt(clues, 20);
 });
