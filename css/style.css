@@ -648,7 +648,9 @@ button.small {
 .slot { width: 100px; height: 100px; padding: 0; border: 1px dashed #fff6; background: #111; }
 .lights-tray { display: grid; grid-template-columns: repeat(3, 100px); gap: 6px; min-height: 312px; }
 .piece { display: block; width: 100px; height: 100px; padding: 0; border: none; background-size: 300px 300px; }
-.lights-tray .piece.picked { outline: 5px solid var(--accent); }
+.lights-tray .piece.picked, .slot.picked { outline: 5px solid var(--accent); outline-offset: -5px; position: relative; z-index: 2; }
+.slot .piece { pointer-events: none; }
+#lights-done { position: relative; z-index: 3; }
 .flicker { position: absolute; inset: -10px; background: #000; pointer-events: none; animation: flicker 3.2s infinite; }
 @keyframes flicker {
   0%, 18%, 22%, 48%, 52%, 55%, 80%, 100% { opacity: 0.88; }

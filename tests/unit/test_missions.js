@@ -472,3 +472,30 @@ test("every mission changes from game to game", () => {
   assert.gt(seen.bells.size, 15);
   assert.eq(seen.keys.size, 20);
 });
+
+// ─── Lights Out: moving placed pieces ──────────────────────────────────────
+import { lightsStart, lightsTap } from "../../js/missions.js";
+
+test("Lights Out: place, swap placed pieces, and put one back in the tray", () => {
+  let s = lightsStart(castle(2));
+  const [a, b] = s.tray;
+  s = lightsTap(s, "tray-piece", a);
+  s = lightsTap(s, "slot", 0);
+  s = lightsTap(s, "tray-piece", b);
+  s = lightsTap(s, "slot", 1);
+  assert.eq(s.placed.slice(0, 2), [a, b]);
+  assert.notOk(s.tray.includes(a) || s.tray.includes(b));
+  s = lightsTap(s, "slot", 0);   // pick up a placed piece
+  s = lightsTap(s, "slot", 1);   // and swap it
+  assert.eq(s.placed.slice(0, 2), [b, a]);
+  s = lightsTap(s, "slot", 1);
+  s = lightsTap(s, "tray");   // back to the tray
+  assert.eq(s.placed[1], null);
+  assert.ok(s.tray.includes(a));
+  // Putting a tray piece on a full slot sends the old one back.
+  s = lightsTap(s, "tray-piece", a);
+  s = lightsTap(s, "slot", 0);
+  assert.eq(s.placed[0], a);
+  assert.ok(s.tray.includes(b));
+  assert.eq(s.tray.length + s.placed.filter((x) => x !== null).length, 9, "no piece lost or doubled");
+});

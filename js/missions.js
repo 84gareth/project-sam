@@ -475,3 +475,42 @@ export function flopResult(game, stillIn, mission = todaysMission(game)) {
   }
   return finishMission(game, 0, stillIn, mission);
 }
+
+// Moving the pieces (Gareth: "you need to be able to swap pieces you've
+// already placed"). State: { placed: [9 slots: piece or null], tray: [pieces],
+// picked: null or { from: "tray" | "slot", at: piece or slot } }. Tap a tray
+// piece or a placed piece to pick it up; tap a slot to put it there (swapping
+// with whatever was there); tap the tray to put a placed piece back.
+export function lightsStart(game) {
+  return { placed: Array(PIECES).fill(null), tray: lightsTray(game), picked: null };
+}
+export function lightsTap(state, where, at) {
+  const s = { placed: [...state.placed], tray: [...state.tray], picked: state.picked };
+  const p = s.picked;
+  if (where === "tray-piece") {
+    s.picked = p && p.from === "tray" && p.at === at ? null : { from: "tray", at };
+    return s;
+  }
+  if (where === "tray") {
+    if (p && p.from === "slot") {
+      s.tray.push(s.placed[p.at]);
+      s.placed[p.at] = null;
+    }
+    s.picked = null;
+    return s;
+  }
+  // A slot.
+  if (!p) {
+    if (s.placed[at] !== null) s.picked = { from: "slot", at };
+    return s;
+  }
+  if (p.from === "slot") {
+    [s.placed[at], s.placed[p.at]] = [s.placed[p.at], s.placed[at]];
+  } else {
+    if (s.placed[at] !== null) s.tray.push(s.placed[at]);
+    s.placed[at] = p.at;
+    s.tray = s.tray.filter((x) => x !== p.at);
+  }
+  s.picked = null;
+  return s;
+}

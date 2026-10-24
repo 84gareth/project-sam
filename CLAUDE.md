@@ -214,7 +214,10 @@ so, kindly.
   running behind the next (now `openPage` closes the last one), and the
   test server queued only 5 requests, so a module was sometimes turned away
   and the page never started (now 128). If a live test fails once and
-  passes on rerun, look for a cause like these; don't just rerun.
+  passes on rerun, look for a cause like these; don't just rerun. Also:
+  after moving puppets in a test, call `page.castleTick()` (redraws at
+  once) instead of waiting for the castle loop; and tap someone who isn't
+  already chatting (`someoneFree`), or "join their chat" opens instead.
 - **Gate a commit on run_tests.sh's own exit code**, never on `| tail`'s:
   v0.6.0 was pushed with a failing test that way.
 - **Test the crash trap when changing the runner.** Without it, a test that

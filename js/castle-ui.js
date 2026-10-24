@@ -91,6 +91,9 @@ function backToCastle() {
 setInterval(() => {
   if (looping && performance.now() - lastTime > 150) tick(performance.now(), true);
 }, 100);
+// Tests (?fast=1) can move the castle on one step and redraw it at once,
+// instead of waiting for the browser to get round to it.
+if (FAST) window.castleTick = () => tick(performance.now(), true);
 
 function tick(now, fromBackup = false) {
   if ($("screen-castle").hidden) {

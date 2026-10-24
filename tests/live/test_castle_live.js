@@ -46,6 +46,18 @@ async function flopMission(page, doc) {
   await until(() => !doc.getElementById("screen-castle").hidden, "on to the castle");
 }
 const visible = (doc, id) => !doc.getElementById(id).hidden;
+// Redraw the castle now (after a test moves people about).
+const redraw = (page) => page.castleTick();
+// Someone in Sam's room who isn't busy chatting (tapping a chatting pair
+// opens "join their chat" instead). Held still so they stay put.
+function someoneFree(page, doc) {
+  const room = page.world.me.room;
+  const id = Object.entries(page.world.people).find(([, p]) => p.room === room && p.mode !== "chat")?.[0]
+    ?? Object.keys(page.world.people).find((x) => x !== "pepper");
+  Object.assign(page.world.people[id], { room, mode: "chat", with: page.game.playerId, timer: 99, x: 0.3, y: 0.85 });
+  redraw(page);
+  return doc.querySelector(`.puppet[data-id="${id}"]`);
+}
 
 test("the train takes you to the castle: everyone else is walking round its rooms", async () => {
   const { page, doc } = await toCastle(seedFor("pepper", FAITHFUL));
@@ -74,8 +86,7 @@ test("the door shows the next room and starts Sam walking through it", async () 
 
 test("chat: tap someone, ask all six questions, they answer", async () => {
   const { page, doc } = await toCastle(seedFor("pepper", FAITHFUL));
-  await until(() => doc.querySelector(".puppet:not(.me)"), "someone to chat to");
-  doc.querySelector(".puppet:not(.me)").click();
+  someoneFree(page, doc).click();
   assert.ok(visible(doc, "screen-chat"));
   const buttons = doc.querySelectorAll("#questions .question");
   assert.eq(buttons.length, 6);
@@ -271,8 +282,7 @@ test("every chat answer is spoken, in that character's own voice every time", as
   const { voiceFor } = await import("../../js/voice.js");
   const { page, doc } = await toCastle(seedFor("pepper", FAITHFUL));
   const said = listen(page);
-  await until(() => doc.querySelector(".puppet:not(.me)"), "someone to chat to");
-  const cardEl = doc.querySelector(".puppet:not(.me)");
+  const cardEl = someoneFree(page, doc);
   const id = cardEl.dataset.id;
   cardEl.click();
   for (const b of doc.querySelectorAll("#questions .question")) b.click();
@@ -319,6 +329,7 @@ test("join two chatting Traitors as a Faithful: they send you away", async () =>
   for (const [id, other] of [[a, b], [b, a]]) {
     Object.assign(page.world.people[id], { room: "hall", mode: "chat", timer: 99, with: other, x: id === a ? 0.4 : 0.5, y: 0.85 });
   }
+  redraw(page);
   await until(() => doc.querySelector(`.puppet[data-id="${a}"]`), "they're in the hall");
   doc.querySelector(`.puppet[data-id="${a}"]`).click();
   assert.ok(visible(doc, "screen-join"), "Sam joins their chat");
@@ -332,6 +343,7 @@ test("talking to someone shows their cut-out puppet", async () => {
   // Held still, already turned to Sam, so nobody else can start a chat with
   // him first (that would rightly open "join their chat" instead).
   Object.assign(page.world.people.puddle, { room: "hall", mode: "chat", with: "pepper", timer: 99, x: 0.3, y: 0.85 });
+  redraw(page);
   await until(() => doc.querySelector('.puppet[data-id="puddle"]'), "Captain Puddle in the hall");
   doc.querySelector('.puppet[data-id="puddle"]').click();
   assert.ok(visible(doc, "screen-chat"));
@@ -350,6 +362,7 @@ test("a welcoming group: Sam can pick anyone in it to talk to", async () => {
   for (const [id, other, x] of [[a, b, 0.4], [b, a, 0.5]]) {
     Object.assign(page.world.people[id], { room: "hall", mode: "chat", timer: 99, with: other, x, y: 0.85 });
   }
+  redraw(page);
   await until(() => doc.querySelector(`.name-tag[data-id="${a}"]`), "their name tags");
   doc.querySelector(`.name-tag[data-id="${b}"]`).click();
   assert.ok(visible(doc, "screen-join"));
@@ -364,6 +377,7 @@ test("name tags never overlap, even in a crowd", async () => {
   const { page, doc } = await toCastle(seedFor("pepper", FAITHFUL));
   const ids = Object.keys(page.world.people).slice(0, 6);
   ids.forEach((id, i) => Object.assign(page.world.people[id], { room: "hall", mode: "chat", with: "pepper", timer: 99, x: 0.45 + i * 0.01, y: 0.85 }));
+  redraw(page);
   await until(() => ids.every((id) => doc.querySelector(`.name-tag[data-id="${id}"]`)), "all six name tags");
   await new Promise((r) => setTimeout(r, 200));
   const rects = ids.map((id) => doc.querySelector(`.name-tag[data-id="${id}"]`).getBoundingClientRect());
@@ -689,10 +703,19 @@ test("Treasure Hunt: wrong room, then warmer, then gold", async () => {
 test("Lights Out: put all nine pieces back", async () => {
   const { doc, box } = await playMission("lights");
   await until(() => box.dataset.ready === "yes", "the pieces", 8000);
-  for (let i = 0; i < 9; i++) {
-    box.querySelector(`.lights-tray [data-piece="${i}"]`).click();
-    box.querySelector(`.slot[data-slot="${i}"]`).click();
-  }
+  // Put pieces 0 and 1 the wrong way round, then the rest right.
+  const put = (piece, slot) => {
+    box.querySelector(`.lights-tray [data-piece="${piece}"]`).click();
+    box.querySelector(`.slot[data-slot="${slot}"]`).click();
+  };
+  put(0, 1);
+  put(1, 0);
+  for (let i = 2; i < 9; i++) put(i, i);
+  assert.notOk(visible(doc, "mission-result"), "nothing ends until you say");
+  // Swap the two placed pieces round.
+  box.querySelector('.slot[data-slot="0"]').click();
+  box.querySelector('.slot[data-slot="1"]').click();
+  box.querySelector("#lights-done").click();
   assert.eq(await result(doc), "You built the whole shield in the dark!");
 });
 

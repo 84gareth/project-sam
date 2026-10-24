@@ -5,7 +5,7 @@ import {
   whereRounds, jumbleWords, noteFrom, secretCode, CODE_TRIES, makeMaze, mazeMove, mazeSquare, MAZE_SPEED, mazeScore,
   MAZE_W, MAZE_H, MAZE_SECONDS, keySpots, KEYS, KEYS_SECONDS, footprintTrail, footprintNote,
   galleryRounds, treasureSpot, treasureTap, treasureScore, TREASURE_TAPS, lightsTray, lightsScore,
-  PIECES, LIGHTS_SECONDS, gone, lightsDesign,
+  PIECES, LIGHTS_SECONDS, gone, lightsDesign, lightsStart, lightsTap,
 } from "./missions.js";
 import { stillIn } from "./castle.js";
 import { ROOMS } from "./puppets.js";
@@ -510,46 +510,43 @@ async function lights(ctx) {
   box.replaceChildren(whole);
   ctx.status("Look at the shield carefully!");
   await wait(3500);
-  const placed = Array(PIECES).fill(null);
-  let picked = null;
+  let state = lightsStart(game);
   const board = el("div", "lights-board");
   const tray = el("div", "lights-tray");
-  for (let i = 0; i < PIECES; i++) {
-    const s = button("slot");
-    s.dataset.slot = i;
-    s.onclick = () => {
-      if (picked === null) return;
-      if (placed[i] !== null) tray.append(pieceEl(placed[i]));   // swap the old one back out
-      placed[i] = picked;
-      s.replaceChildren(pieceEl(picked, "div"));
-      tray.querySelector(`[data-piece="${picked}"].picked`)?.remove();
-      picked = null;
-      wire();
-      if (!placed.includes(null)) done();
-    };
-    board.append(s);
-  }
-  const wire = () => {
-    for (const p of tray.querySelectorAll(".piece")) {
-      p.onclick = () => {
-        picked = Number(p.dataset.piece);
-        for (const o of tray.children) o.classList.toggle("picked", o === p);
-      };
-    }
+  const finished = button("big", "Finished!");
+  finished.id = "lights-done";
+  const tap = (where, at) => { state = lightsTap(state, where, at); draw(); };
+  const draw = () => {
+    const p = state.picked;
+    board.replaceChildren(...state.placed.map((piece, i) => {
+      const slot = button("slot" + (p && p.from === "slot" && p.at === i ? " picked" : ""));
+      slot.dataset.slot = i;
+      if (piece !== null) slot.append(pieceEl(piece, "div"));
+      slot.onclick = () => tap("slot", i);
+      return slot;
+    }));
+    tray.replaceChildren(...state.tray.map((piece) => {
+      const b = pieceEl(piece);
+      if (p && p.from === "tray" && p.at === piece) b.classList.add("picked");
+      b.onclick = (e) => { e.stopPropagation(); tap("tray-piece", piece); };
+      return b;
+    }));
+    finished.disabled = state.placed.includes(null);
   };
-  for (const i of lightsTray(game)) tray.append(pieceEl(i));
-  wire();
+  tray.onclick = () => tap("tray");
+  draw();
   const flicker = el("div", "flicker");
   const area = el("div", "lights-area");
   area.append(board, tray, flicker);
-  box.replaceChildren(area);
+  box.replaceChildren(area, finished);
   box.dataset.ready = "yes";
   const done = () => {
-    const score = lightsScore(placed);
+    const score = lightsScore(state.placed);
     const right = Math.round(score * PIECES);
     ctx.finish(score, right === PIECES ? "You built the whole shield in the dark!" : `You got ${right} out of ${PIECES} pieces in the right place.`);
   };
-  countdown(ctx, LIGHTS_SECONDS, "Tap a piece, then its place.", done);
+  finished.onclick = done;
+  countdown(ctx, LIGHTS_SECONDS, "Tap a piece, then its place. Tap a placed piece to move it.", done);
 }
 
 export const PLAY = { where, jumble, code, maze, keys, footprints, portraits, treasure, lights };
