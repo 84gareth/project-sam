@@ -2,12 +2,12 @@
 // game.js; this file only draws and listens.
 import { GAME_NAME, VERSION } from "./version.js";
 import { CHARACTERS, initials } from "./characters.js";
-import { newGame, FAITHFUL, TRAITOR } from "./game.js";
+import { newGame, TRAITOR } from "./game.js";
 
 const $ = (id) => document.getElementById(id);
 
 let pickedId = null;
-// The game in progress, once a side is chosen. Exposed for the live tests.
+// The game in progress, once a character is chosen. Exposed for the live tests.
 window.game = null;
 
 function show(screenId) {
@@ -45,8 +45,12 @@ function buildCards() {
   }
 }
 
-function chooseSide(side) {
-  window.game = newGame(pickedId, side);
+// Deal the game, then tell you who you are and your secret side.
+function startGame() {
+  // ?seed=123 in the address fixes the deal (the live tests use it).
+  const seed = Number(new URLSearchParams(location.search).get("seed")) || Date.now();
+  window.game = newGame(pickedId, seed);
+  const side = window.game.playerSide;
   const c = CHARACTERS.find((x) => x.id === pickedId);
   $("ready-badge").replaceWith(Object.assign(badge(c, "big-badge"), { id: "ready-badge" }));
   $("ready-who").textContent = `You are ${c.name}.`;
@@ -60,6 +64,4 @@ $("title").textContent = GAME_NAME;
 $("version").textContent = "v" + VERSION;
 buildCards();
 $("start").addEventListener("click", () => show("screen-pick"));
-$("choose").addEventListener("click", () => pickedId && show("screen-side"));
-$("pick-faithful").addEventListener("click", () => chooseSide(FAITHFUL));
-$("pick-traitor").addEventListener("click", () => chooseSide(TRAITOR));
+$("choose").addEventListener("click", () => pickedId && startGame());

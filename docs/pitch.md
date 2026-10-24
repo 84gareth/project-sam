@@ -9,13 +9,15 @@ character.
 ## Sam's decisions
 | Topic | Sam's call |
 |-------|-----------|
-| Your side | **You choose**: Faithful or Traitor, before you play |
+| Your side | **The game tells you**, after you pick your character; a fair deal, so about 1 game in 7 you're a Traitor. (Sam first said "you choose", then changed it, 2026-10-24.) |
 | Traitors | **3** |
 | At night | The Traitors pick someone, who is **sent home on the night train** |
 | Where | Start at **Havenbrook Station**, then travel to **a big castle** |
 | Missions | **Yes**: mini-games in the day that win money for the prize pot |
 | Finding Traitors | **Chat to people** (some act sneaky) and **watch the votes** at the Round Table |
-| Characters | Claude makes up 22; Sam and Gareth approve each one (`docs/characters.md`) |
+| Characters | Claude made up 22; Sam approved them all (`docs/characters.md`) |
+| Pictures | **Sam draws them**; Gareth sends them as they're done |
+| Voices | **The iPad's own voices**: a different voice and pitch for each character |
 | Game length | **Long, with saving**: play over a few days; the game remembers |
 | Winning | Like the TV show, **plus the prize pot**: Faithfuls win if every Traitor is caught; a Traitor still there at the end takes the pot |
 

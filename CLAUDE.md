@@ -184,16 +184,21 @@ so, kindly.
 ## Project landmines (things that have bitten us — check before repeating)
 - **Don't name functions or variables after built-ins** of the language
   (a Godot method called `wrap` took a whole test file down, 2026-09-27).
+- **A test helper that searches (for a seed, say) must give up**, or a
+  broken rule makes it loop forever and freezes the run. The runner has a
+  120 s stopwatch for this since 2026-10-24; keep it.
 - **Test the crash trap when changing the runner.** Without it, a test that
   crashes partway can look like a pass (learned in Project 2126).
 
 ## Current status
-Updated 2026-10-24 (v0.2.0).
+Updated 2026-10-24 (v0.2.1).
 - **Phase 0 (web setup) done.** Tests in headless Chrome; GitHub Pages;
   Turbo Town archived.
 - **Phase 1 done.** The game: like The Traitors, starting at Havenbrook
   Station (`docs/pitch.md`). 22 characters, all approved by Sam
   (`js/characters.js`, `docs/characters.md`).
-- **Phase 2 (choose who you are) built, waiting for Sam (v0.2.0).**
-  Station, character picker, Faithful or Traitor. Rules in `js/game.js`.
-- **The roadmap (Phases 3-7) is PROPOSED, waiting for Gareth's OK.**
+- **Phase 2 (choose who you are) built, waiting for Sam (v0.2.1).**
+  Station, character picker, then the game TELLS you your side (fair deal,
+  Sam's change). Rules in `js/game.js`.
+- **Roadmap OK'd by Gareth.** Sam draws the 22 pictures as we go; voices
+  are the iPad's own (Web Speech), arriving with Phase 3.

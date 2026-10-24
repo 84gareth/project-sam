@@ -45,14 +45,23 @@ for _ in range(100):
 EOF
 
 # --virtual-time-budget lets the async tests finish before the page is read.
-"$CHROME" --headless=new --disable-gpu --no-first-run --no-default-browser-check \
-  --user-data-dir="$PROFILE" --virtual-time-budget=30000 \
-  --dump-dom "http://127.0.0.1:$PORT/tests/index.html?only=$ONLY" 2>/dev/null \
-  | python3 -c '
-import html, re, sys
-m = re.search(r"<pre id=\"out\">(.*?)</pre>", sys.stdin.read(), re.S)
+# A 120 s stopwatch (macOS has no `timeout` command, so Python keeps it): a
+# test stuck in an endless loop fails the run instead of freezing it.
+python3 - "$CHROME" "$PROFILE" "http://127.0.0.1:$PORT/tests/index.html?only=$ONLY" <<'EOF' | tee "$OUTFILE"
+import html, re, subprocess, sys
+chrome, profile, url = sys.argv[1:4]
+try:
+    page = subprocess.run(
+        [chrome, "--headless=new", "--disable-gpu", "--no-first-run",
+         "--no-default-browser-check", "--user-data-dir=" + profile,
+         "--virtual-time-budget=30000", "--dump-dom", url],
+        capture_output=True, text=True, timeout=120).stdout
+except subprocess.TimeoutExpired:
+    print("TIMED OUT after 120 s: a test is probably stuck in an endless loop.")
+    sys.exit(0)
+m = re.search(r"<pre id=\"out\">(.*?)</pre>", page, re.S)
 print(html.unescape(m.group(1)) if m else "NO RESULTS: the test page did not render.")
-' | tee "$OUTFILE"
+EOF
 
 RESULT="$(grep '^Total: ' "$OUTFILE" || true)"
 echo ""

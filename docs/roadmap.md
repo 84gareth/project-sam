@@ -19,20 +19,22 @@ started).
 - ✅ Interview: `docs/pitch.md`
 - ✅ 22 characters, all approved by Sam: `docs/characters.md`
 
-The phases below are PROPOSED (2026-10-24), waiting for Gareth's OK. Phase 2
-was started straight away because Sam asked for the characters in the game,
-and choosing a character is the first thing the pitch describes.
+Gareth OK'd the plan (2026-10-24: "We'll keep working on the game while sam
+draws some pictures"). Sam's drawings go in as they arrive, whatever the
+phase. Voices (the iPad's own) arrive with Phase 3, when people start
+talking.
 
-## Phase 2: Choose who you are — built, waiting for Sam (v0.2.0)
+## Phase 2: Choose who you are — built, waiting for Sam (v0.2.1)
 Spec: `docs/start-spec.md`.
 - ✅ The station screen with Sam's picture and a Start button
 - ✅ All 22 characters to pick from
-- ✅ Faithful or Traitor; the game secretly picks the other Traitors
+- ✅ The game tells you if you're a Faithful or a Traitor (fair deal)
 - Gate: Sam plays it on the iPad
 
 ## Phase 3: A day at the castle
 The Round Table: chat to people (some act sneaky), everyone votes, the one
 banished shows if they were a Traitor. The core of the game: fun first.
+Characters speak with the iPad's own voices.
 
 ## Phase 4: The night train
 The Traitors send someone home on the train each night. If Sam is a
@@ -46,4 +48,7 @@ Days and nights until the end; who wins the pot; the game remembers where
 you got to.
 
 ## Phase 7: Look and sound
-Character pictures and anything else, once the game is fun.
+Anything else for the look and sound, once the game is fun.
+
+## Ongoing: Sam's character drawings
+Added as they come in. Done: 1 of 22 (Captain Puddle).

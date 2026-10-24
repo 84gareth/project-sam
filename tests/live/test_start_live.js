@@ -1,17 +1,23 @@
 // Start at the station, pick a character, pick a side: on the real page.
 import { test, assert, openPage, until } from "../framework.js";
-import { TRAITOR } from "../../js/game.js";
+import { newGame, TRAITOR, FAITHFUL } from "../../js/game.js";
 
 const visible = (doc, id) => !doc.getElementById(id).hidden;
 
-async function tapThrough(characterIndex, sideButton) {
-  const page = await openPage();
+// The first seed that makes `id` the given side. Gives up (a clean FAIL,
+// not a frozen run) if the deal never produces it.
+function seedFor(id, side) {
+  for (let seed = 1; seed <= 10000; seed++) if (newGame(id, seed).playerSide === side) return seed;
+  throw new Error(`no seed in 10000 makes ${id} a ${side}`);
+}
+
+async function tapThrough(characterIndex, seed) {
+  const page = await openPage(`../index.html?seed=${seed}`);
   const doc = page.document;
   await until(() => doc.querySelectorAll(".card").length === 22, "22 cards built");
   doc.getElementById("start").click();
   doc.querySelectorAll(".card")[characterIndex].click();
   doc.getElementById("choose").click();
-  doc.getElementById(sideButton).click();
   return { page, doc };
 }
 
@@ -45,18 +51,22 @@ test("you can't choose until you've picked someone", async () => {
   assert.ok(doc.querySelectorAll(".card")[4].classList.contains("picked"), "the card lights up");
 });
 
-test("pick Chef Pepper as a Faithful", async () => {
-  const { page, doc } = await tapThrough(4, "pick-faithful");
-  assert.ok(visible(doc, "screen-ready"));
+test("pick Chef Pepper: the game says you're a Faithful", async () => {
+  const { page, doc } = await tapThrough(4, seedFor("pepper", FAITHFUL));
+  assert.ok(visible(doc, "screen-ready"), "straight to who you are: no choosing a side");
   assert.eq(doc.getElementById("ready-who").textContent, "You are Chef Pepper.");
   assert.eq(doc.getElementById("ready-side").textContent, "You are a Faithful.");
   assert.eq(page.game.playerId, "pepper");
 });
 
-test("pick Barry Banjo as a Traitor", async () => {
-  const { page, doc } = await tapThrough(21, "pick-traitor");
+test("pick Barry Banjo: the game says you're a Traitor", async () => {
+  const { page, doc } = await tapThrough(21, seedFor("barry", TRAITOR));
   assert.eq(doc.getElementById("ready-who").textContent, "You are Barry Banjo.");
   assert.eq(doc.getElementById("ready-side").textContent, "You are a Traitor. Shh!");
-  const me = page.game.players.find((p) => p.id === "barry");
-  assert.eq(me.side, TRAITOR);
+  assert.eq(page.game.playerSide, TRAITOR);
+});
+
+test("there's no Faithful-or-Traitor button to pick", async () => {
+  const page = await openPage();
+  assert.eq(page.document.querySelectorAll("#pick-faithful, #pick-traitor").length, 0);
 });
