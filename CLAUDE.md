@@ -198,7 +198,7 @@ so, kindly.
   crashes partway can look like a pass (learned in Project 2126).
 
 ## Current status
-Updated 2026-10-24 (v0.4.1).
+Updated 2026-10-24 (v0.4.2).
 - **Phase 0 (web setup) done.** Tests in headless Chrome; GitHub Pages;
   Turbo Town archived.
 - **Phase 1 done.** The game: like The Traitors, starting at Havenbrook
@@ -212,6 +212,6 @@ Updated 2026-10-24 (v0.4.1).
   voices `js/voice.js`; drum roll `js/sound.js`. `?fast=1` skips pauses.
 - **Phase 4 (the night) built, waiting for Sam (v0.4.0).** Traitors'
   meeting, the letter, breakfast; tactical voting (`docs/night-spec.md`).
-- **Roadmap OK'd by Gareth.** Sam draws the 22 pictures as we go (8 of 22
+- **Roadmap OK'd by Gareth.** Sam draws the 22 pictures as we go (9 of 22
   in: how to add one is in `docs/characters.md`); voices
   are the iPad's own (Web Speech), arriving with Phase 3.
