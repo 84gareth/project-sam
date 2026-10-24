@@ -537,3 +537,40 @@ button.small {
 .walk-line .cutout:nth-child(odd) { animation-delay: -0.7s; }
 @keyframes walk-across { from { transform: translateX(70vw); } to { transform: translateX(calc(-100% + 100vw)); } }
 @keyframes slow-waddle { 0%, 100% { transform: rotate(-3deg) translateY(0); } 50% { transform: rotate(3deg) translateY(-8px); } }
+
+.mission.garden-mission {
+  background: linear-gradient(rgba(10, 8, 6, 0.35), rgba(10, 8, 6, 0.35)),
+              url("../assets/rooms/garden.jpg") center / cover no-repeat;
+}
+/* Catapults */
+.catapult { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.wall {
+  position: relative; width: 880px; max-width: 92vw; height: 170px; overflow: hidden;
+  background: repeating-linear-gradient(0deg, #7a7468 0 40px, #6a645a 40px 44px); border: 6px solid #3d3830; border-radius: 12px;
+}
+.belt { position: absolute; top: 20px; left: 0; display: flex; }
+.target { width: 110px; flex: none; display: flex; flex-direction: column; align-items: center; font-size: 12px; font-weight: 700; color: #fff; text-shadow: 0 1px 3px #000; }
+.target .portrait, .target .badge { width: 90px; height: 90px; }
+.target.hit { opacity: 0.35; }
+.shield-target {
+  width: 80px; height: 92px; background: linear-gradient(#f2c14e, #c48a1c); border: 5px solid #7a5412;
+  border-radius: 10px 10px 50% 50%;
+}
+.crosshair { position: absolute; left: 50%; top: 8px; bottom: 8px; width: 4px; margin-left: -2px; background: #ff3b30; box-shadow: 0 0 8px #ff3b30; }
+.stones { margin: 0; font-size: 22px; font-weight: 700; text-shadow: 0 2px 6px #000; }
+.wall.thud { animation: thud 0.25s; }
+@keyframes thud { 50% { transform: translateY(4px); } }
+/* Cooking Challenge */
+.cooking { display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-start; gap: 12px; max-width: 980px; }
+.diner { width: 200px; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.diner .cutout { height: 150px; width: auto; }
+.diner-clue { margin: 0; background: #fff; color: #1c1f29; padding: 8px 10px; border-radius: 14px; font-size: 17px; font-weight: 700; text-align: center; }
+.trucks { display: flex; gap: 10px; }
+.truck { width: 220px; display: flex; flex-direction: column; gap: 6px; background: rgba(20, 22, 30, 0.8); padding: 10px; border-radius: 16px; }
+.truck h3 { margin: 0; font-size: 20px; text-align: center; }
+.food, .box { min-height: 48px; border: none; border-radius: 12px; background: #3b5998; color: #fff; font: 700 18px -apple-system, system-ui, sans-serif; }
+.food.picked { background: var(--accent); color: #1c1f29; }
+.box { background: #6b4a22; border: 3px dashed #e6c58a; }
+.box.picked { background: var(--accent); color: #1c1f29; }
+.box.has-shield { background: #2e8b57; }
+#serve { width: 100%; max-width: 420px; }

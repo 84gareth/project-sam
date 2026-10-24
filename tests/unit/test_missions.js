@@ -5,7 +5,9 @@ import { arriveAtCastle, stillIn, isTraitor, murderIdeas, night, roundTable, com
 import {
   MISSIONS, SKILLS, missionOrder, todaysMission, computerScore, finishMission,
   bellTune, BELL_ROUNDS, bellScore, pieRound, pieAfter, PIE_ROUNDS, pieScore,
+  computerThrows, finishCatapults, TRUCKS, HATES, cookingDiner, shieldTruck, cookScore, finishCooking,
 } from "../../js/missions.js";
+import { nightKind, suspectList, recruit } from "../../js/castle.js";
 import { CHARACTERS } from "../../js/characters.js";
 
 const castle = (seed, me = "dot") => arriveAtCastle(newGame(me, seed));
@@ -115,4 +117,85 @@ test("Chilli Pie Shuffle: the answer follows the chilli pie through every swap",
   }
   assert.gt(PIE_ROUNDS[2].swaps, PIE_ROUNDS[0].swaps, "more swaps later");
   assert.eq(pieScore(3), 1);
+});
+
+// ─── Catapults ──────────────────────────────────────────────────────────────
+
+test("Catapults: good throwers hit who they suspect; everyone hit is up for murder", () => {
+  const g = castle(6);
+  const throws = computerThrows(g, stillIn(g));
+  assert.eq(throws.length, 21);
+  for (const t of throws) if (t.target && t.target !== "shield") assert.eq(t.target, suspectList(g, t.thrower)[0]);
+  const r = finishCatapults(g, ["puddle", null, "gumdrop"], stillIn(g));
+  assert.ok(r.hit.includes("puddle") && r.hit.includes("gumdrop"));
+  for (const t of throws) if (t.target && t.target !== "shield") assert.ok(r.hit.includes(t.target));
+  assert.eq(g.upForMurder, { day: 1, ids: r.hit });
+  assert.eq(r.scores.find(([id]) => id === "dot")[1], 2 / 3, "Sam's score: hits out of 3");
+});
+
+test("Catapults: hit the shield and nobody gets it", () => {
+  const g = castle(6);
+  const r = finishCatapults(g, ["shield", null, null], stillIn(g));
+  assert.eq(r.shield, null);
+  assert.eq(g.shield, null);
+  assert.ok(r.broken);
+});
+
+test("Catapults: computer stones sometimes break the shield, but not usually", () => {
+  let broken = 0;
+  for (let seed = 1; seed <= 300; seed++) {
+    const g = castle(seed);
+    if (computerThrows(g, stillIn(g)).some((t) => t.target === "shield")) broken++;
+  }
+  assert.gt(broken, 10, `${broken}/300`);
+  assert.lt(broken, 150, `${broken}/300`);
+});
+
+test("Catapults day: always a murder that night, and only someone who was hit", () => {
+  let checked = 0;
+  for (let seed = 1; seed <= 200 && checked < 20; seed++) {
+    const g = castle(seed);
+    roundTable(g, stillIn(g).find((id) => id !== "dot"));
+    recruit(g);
+    g.history.push({ quiet: true });   // night 2 has been and gone
+    g.day = 3;
+    const r = finishCatapults(g, [null, null, null], stillIn(g));
+    g.history.push({});   // day 3's Round Table: tonight is night 3, normally quiet
+    const faithfulHit = r.hit.filter((id) => !isTraitor(g, id) && id !== g.shield && stillIn(g).includes(id));
+    if (stillIn(g).filter((id) => isTraitor(g, id)).length <= 2) continue;   // a recruiting night instead
+    assert.eq(nightKind(g), "murder", "catapult day: a murder");
+    if (faithfulHit.length === 0) continue;
+    for (const id of murderIdeas(g)) assert.ok(faithfulHit.includes(id), `${id} wasn't hit`);
+    assert.ok(faithfulHit.includes(night(g)));
+    checked++;
+  }
+  assert.gt(checked, 5);
+});
+
+// ─── Cooking Challenge ──────────────────────────────────────────────────────
+
+test("Cooking: everyone hates a food from the trucks, with a clue", () => {
+  const foods = TRUCKS.flatMap((t) => t.foods);
+  assert.eq(TRUCKS.length, 3);
+  for (const c of CHARACTERS) {
+    assert.ok(foods.includes(HATES[c.id][0]), c.id);
+    assert.gt(HATES[c.id][1].length, 5);
+  }
+});
+
+test("Cooking: the hated food scores; the right box wins the shield", () => {
+  const g = castle(7);
+  const diner = cookingDiner(g, stillIn(g));
+  assert.ne(diner, "dot", "Sam doesn't cook for himself");
+  const hated = HATES[diner][0];
+  const meal = TRUCKS.map((t) => (t.foods.includes(hated) ? hated : t.foods.find((f) => f !== hated)));
+  assert.eq(cookScore(diner, meal), 1);
+  assert.eq(cookScore(diner, TRUCKS.map((t) => t.foods.find((f) => f !== hated))), 0.3);
+  const r = finishCooking(g, diner, meal, shieldTruck(g), stillIn(g));
+  assert.ok(r.found);
+  assert.eq(g.shield, "dot");
+  g.day = 2;
+  const r2 = finishCooking(g, cookingDiner(g, stillIn(g)), meal, (shieldTruck(g) + 1) % 3, stillIn(g));
+  assert.notOk(r2.found);
+  assert.eq(r2.shield, r2.scores[0][0], "otherwise the best player");
 });

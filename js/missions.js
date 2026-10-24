@@ -3,7 +3,8 @@
 // The team's scores fill the prize pot, and the best player wins the shield,
 // so the Traitors can't murder them that night.
 
-import { makeRandom, DAYS } from "./game.js";
+import { makeRandom, DAYS, TRAITOR } from "./game.js";
+import { suspectList } from "./castle.js";
 
 // All 13 of Sam's missions. `built` ones can be played so far.
 export const MISSIONS = [
@@ -19,8 +20,10 @@ export const MISSIONS = [
   { id: "footprints", name: "Muddy Footprints", type: "hunting", built: false },
   { id: "portraits", name: "Portrait Gallery", type: "hunting", built: false },
   { id: "treasure", name: "Treasure Hunt", type: "hunting", built: false },
-  { id: "cooking", name: "Cooking Challenge", type: "puzzle", built: false },
-  { id: "catapults", name: "Catapults", type: "hunting", built: false },
+  { id: "cooking", name: "Cooking Challenge", type: "puzzle", built: true,
+    how: "Someone is coming to dinner. Cook them the food they hate! Then find the shield." },
+  { id: "catapults", name: "Catapults", type: "hunting", built: true,
+    how: "Fire stones at the pictures. Whoever gets hit is up for murder tonight! Don't hit the shield." },
   { id: "lights", name: "Lights Out", type: "puzzle", built: false },
 ];
 
@@ -87,13 +90,14 @@ export function computerScore(game, id, mission) {
 // a score; the pot grows; the best player wins the shield.
 // Returns { mission, scores: [[id, score]] best first, won, shield }.
 // `mission` defaults to today's (the debug menu passes its own).
-export function finishMission(game, samScore, stillIn, mission = todaysMission(game)) {
+// `shield`: "broken" (nobody gets it) or who found it; else the best player.
+export function finishMission(game, samScore, stillIn, mission = todaysMission(game), shield = undefined) {
   const scores = stillIn.map((id) => [id, id === game.playerId ? samScore : computerScore(game, id, mission)]);
   scores.sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1));
   const average = scores.reduce((sum, [, s]) => sum + s, 0) / scores.length;
   const won = Math.round((average * POT_PER_MISSION) / 500) * 500;
   game.pot = (game.pot ?? 0) + won;
-  game.shield = scores[0][0];
+  game.shield = shield === "broken" ? null : shield ?? scores[0][0];
   return { mission, scores, won, shield: game.shield };
 }
 
@@ -133,3 +137,73 @@ export function pieAfter(start, swaps) {
   return at;
 }
 export const pieScore = (right) => right / PIE_ROUNDS.length;
+
+// ─── Catapults (Sam's idea) ─────────────────────────────────────────────────
+// Everyone else throws one stone; Sam throws three. Whoever is hit is up
+// for murder tonight (and that night always has a murder). Hit the shield
+// and it breaks: nobody gets it tonight.
+export const STONES = 3;
+const SHIELD_SLIP = 0.03;   // a miss that hits the shield instead
+export function computerThrows(game, stillIn) {
+  const mission = MISSIONS.find((m) => m.id === "catapults");
+  return stillIn.filter((id) => id !== game.playerId).map((id) => {
+    const r = rng(game, "throw", game.day, id);
+    if (computerScore(game, id, mission) > 0.5) return { thrower: id, target: suspectList(game, id)[0] };
+    return { thrower: id, target: r() < SHIELD_SLIP ? "shield" : null };
+  });
+}
+// `samHits`: what Sam's stones hit (ids, "shield", or null for a miss).
+export function finishCatapults(game, samHits, stillIn, mission = MISSIONS.find((m) => m.id === "catapults")) {
+  const throws = [...computerThrows(game, stillIn), ...samHits.map((target) => ({ thrower: game.playerId, target }))];
+  const broken = throws.some((t) => t.target === "shield");
+  const hit = [...new Set(throws.map((t) => t.target).filter((t) => t && t !== "shield"))];
+  const samScore = samHits.filter((t) => t && t !== "shield").length / STONES;
+  const result = finishMission(game, samScore, stillIn, mission, broken ? "broken" : undefined);
+  game.upForMurder = { day: game.day, ids: hit };
+  return { ...result, hit, broken, throws };
+}
+
+// ─── Cooking Challenge (Sam's idea) ─────────────────────────────────────────
+// Three trucks of food. Someone comes to dinner with a clue about the food
+// they hate: cook it and win money. One truck's secret box has the shield.
+export const TRUCKS = [
+  { id: "healthy", name: "Healthy truck", foods: ["Carrots", "Broccoli", "Soup", "Salad"] },
+  { id: "meat", name: "Meat truck", foods: ["Sausages", "Fish", "Chicken", "Burger"] },
+  { id: "dessert", name: "Dessert truck", foods: ["Strawberries", "Jelly", "Ice cream", "Pancakes"] },
+];
+// Everyone's least favourite food, and the clue they give.
+export const HATES = {
+  puddle: ["Soup", "I hate anything wet!"],
+  gumdrop: ["Broccoli", "Little green trees? No thank you, dearie."],
+  fizz: ["Jelly", "Wobbly food is scientifically suspicious!"],
+  ruby: ["Sausages", "Anything shaped like a train carriage. I just can't!"],
+  pepper: ["Strawberries", "Anything red and sweet that ISN'T a chilli!"],
+  waffle: ["Pancakes", "Flat and round, but not a waffle. My sworn enemy!"],
+  plaster: ["Burger", "Too greasy! Doctor's orders."],
+  lola: ["Ice cream", "Cold food freezes my singing voice!"],
+  fern: ["Chicken", "I'd never eat my farmyard friends with feathers."],
+  dot: ["Carrots", "Orange and crunchy. Very suspicious."],
+  benny: ["Salad", "Leaves? Where's the crunch?"],
+  mystic: ["Fish", "I saw it in my crystal ball... and it was swimming!"],
+  tom: ["Carrots", "Long and thin, just like me. Too weird!"],
+  zara: ["Soup", "You have to eat it slowly. I don't do slow!"],
+  grumble: ["Jelly", "Wobbly, cheerful food. Bah!"],
+  penny: ["Soup", "It leaks out of my pockets!"],
+  kick: ["Salad", "Rabbit food! I need proper energy!"],
+  stan: ["Fish", "It smells like platform two at lunchtime."],
+  ivy: ["Strawberries", "Red juice drips all over my books!"],
+  max: ["Burger", "I got lost inside a burger once. Long story."],
+  olive: ["Broccoli", "It's green and doesn't match my socks."],
+  barry: ["Pancakes", "As flat as my banjo playing!"],
+};
+export function cookingDiner(game, stillIn) {
+  const others = stillIn.filter((id) => id !== game.playerId);
+  return others[Math.floor(rng(game, "diner", game.day)() * others.length)];
+}
+export const shieldTruck = (game) => Math.floor(rng(game, "shield-box", game.day)() * TRUCKS.length);
+export const cookScore = (diner, meal) => (meal.includes(HATES[diner][0]) ? 1 : 0.3);
+export function finishCooking(game, diner, meal, box, stillIn, mission = MISSIONS.find((m) => m.id === "cooking")) {
+  const found = box === shieldTruck(game);
+  const score = cookScore(diner, meal);
+  return { ...finishMission(game, score, stillIn, mission, found ? game.playerId : undefined), found, score };
+}

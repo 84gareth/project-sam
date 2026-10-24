@@ -5,7 +5,23 @@ import {
   arriveAtCastle, roundTable, night, winner, stillIn, recruit, tableTalk, talkOptions, playerSays,
   nightKind, isTraitor,
 } from "../../js/castle.js";
-import { finishMission, todaysMission, bellTune, pieRound } from "../../js/missions.js";
+import {
+  finishMission, todaysMission, bellTune, pieRound, finishCatapults, finishCooking, cookingDiner, shieldTruck,
+  TRUCKS, HATES,
+} from "../../js/missions.js";
+
+// What flopMission does, as rules (for rehearsing a game to find a seed).
+function rehearseFlop(g) {
+  const m = todaysMission(g);
+  if (m.id === "catapults") return finishCatapults(g, [null, null, null], stillIn(g));
+  if (m.id === "cooking") {
+    const diner = cookingDiner(g, stillIn(g));
+    return finishCooking(g, diner, flopMeal(diner), (shieldTruck(g) + 1) % 3, stillIn(g));
+  }
+  return finishMission(g, 0, stillIn(g));
+}
+// A meal without the diner's hated food.
+const flopMeal = (diner) => TRUCKS.map((t) => t.foods.find((f) => f !== HATES[diner][0]));
 
 // Sam's words at the Round Table sway the others, so rehearsals must say them too.
 const sayFirst = (g) => playerSays(g, talkOptions(g, tableTalk(g))[0]);
@@ -51,8 +67,17 @@ async function flopMission(page, doc) {
       const pies = [...doc.querySelectorAll(".pie")].sort((a, b) => parseFloat(a.style.left) - parseFloat(b.style.left));
       pies[(answer + 1) % 3].click();
     }
+    // Catapults: fire only when the red line is on a gap (a miss).
+    if (m.id === "catapults" && !doc.getElementById("catapult").hidden && doc.getElementById("wall").dataset.aim === ""
+        && !doc.getElementById("fire").disabled) doc.getElementById("fire").click();
+    if (m.id === "cooking" && !doc.getElementById("cooking").hidden && doc.getElementById("serve").onclick) {
+      const diner = cookingDiner(page.game, stillIn(page.game));
+      for (const f of flopMeal(diner)) doc.querySelector(`.food[data-food="${f}"]`).click();
+      doc.querySelector(`.box[data-box="${(shieldTruck(page.game) + 1) % 3}"]`).click();
+      doc.getElementById("serve").click();
+    }
     return false;
-  }, "the mission ends", 15000);
+  }, "the mission ends", 30000);
   doc.getElementById("mission-done").click();
   await until(() => !doc.getElementById("screen-castle").hidden, "on to the castle");
 }
@@ -200,7 +225,7 @@ test("a Faithful who is murdered (night 2) gets the letter", async () => {
     sayFirst(g);
     roundTable(g, "puddle");
     if (winner(g) || !stillIn(g).includes("pepper") || recruit(g) === "pepper") continue;
-    finishMission(g, 0, stillIn(g));
+    rehearseFlop(g);
     sayQuiet(g);
     roundTable(g, stillIn(g).find((id) => id !== "pepper"));
     if (winner(g) || !stillIn(g).includes("pepper")) continue;
@@ -470,12 +495,12 @@ test("debug menu (?debug): play any mission on its own, then back to the list", 
   await until(() => visible(doc, "debug"), "the Test a mission button");
   doc.getElementById("debug").click();
   const ids = [...doc.querySelectorAll("#debug-missions .question")].map((b) => b.dataset.mission);
-  assert.eq([...ids].sort(), ["bells", "pies"]);
+  assert.eq([...ids].sort(), ["bells", "catapults", "cooking", "pies"]);
   for (const id of ids) {
     doc.querySelector(`#debug-missions [data-mission="${id}"]`).click();
     assert.ok(visible(doc, "screen-mission"));
     const name = doc.getElementById("mission-name").textContent;
-    assert.ok(name.includes(id === "bells" ? "Castle Bells" : "Chilli Pie"), name);
+    assert.ok(name.includes({ bells: "Castle Bells", pies: "Chilli Pie", catapults: "Catapults", cooking: "Cooking" }[id]), name);
     // Do it badly, then back to the list.
     doc.getElementById("mission-go").click();
     let round = 0;
@@ -491,8 +516,14 @@ test("debug menu (?debug): play any mission on its own, then back to the list", 
         const pies = [...doc.querySelectorAll(".pie")].sort((a, b) => parseFloat(a.style.left) - parseFloat(b.style.left));
         pies[(answer + 1) % 3].click();
       }
+      if (id === "catapults" && doc.getElementById("fire").onclick) doc.getElementById("fire").click();
+      if (id === "cooking" && doc.getElementById("serve").onclick) {
+        for (const t of doc.querySelectorAll(".truck")) t.querySelector(".food").click();
+        doc.querySelector(".box").click();
+        doc.getElementById("serve").click();
+      }
       return false;
-    }, `${id} ends`, 15000);
+    }, `${id} ends`, 30000);
     assert.eq(doc.getElementById("mission-done").textContent, "Back to the missions");
     doc.getElementById("mission-done").click();
     assert.ok(visible(doc, "screen-debug"), "back to the list");
@@ -540,4 +571,50 @@ test("everyone walks to the Round Table in slow motion, to drums", async () => {
   const walkers = [...doc.querySelectorAll("#walk-line [data-id]")].map((e) => e.dataset.id).sort();
   assert.eq(walkers, stillIn(page.game).sort(), "everyone still in, Sam too");
   await until(() => visible(doc, "screen-talk"), "then the talk", 8000);
+});
+
+test("Catapults: whoever is under the red line when you fire gets hit, and is up for murder", async () => {
+  const { page, doc } = await toMission(missionSeed("catapults"));
+  doc.getElementById("mission-go").click();
+  const wall = doc.getElementById("wall");
+  const hit = [];
+  for (let k = 0; k < 3; k++) {
+    await until(() => wall.dataset.aim && wall.dataset.aim !== "shield" && !hit.includes(wall.dataset.aim), "someone lined up", 15000);
+    hit.push(wall.dataset.aim);
+    doc.getElementById("fire").click();
+  }
+  await until(() => visible(doc, "mission-result"), "the result", 8000);
+  assert.ok(doc.getElementById("mission-score").textContent.includes("3 out of 3"));
+  for (const id of hit) assert.ok(page.game.upForMurder.ids.includes(id), `${id} is up for murder`);
+  assert.ok(doc.getElementById("mission-extra").textContent.startsWith("Up for murder tonight"));
+});
+
+test("Catapults: hit the shield and it breaks", async () => {
+  const { page, doc } = await toMission(missionSeed("catapults"));
+  doc.getElementById("mission-go").click();
+  const wall = doc.getElementById("wall");
+  await until(() => wall.dataset.aim === "shield", "the shield lined up", 20000);
+  doc.getElementById("fire").click();
+  doc.getElementById("fire").click();
+  doc.getElementById("fire").click();
+  await until(() => visible(doc, "mission-result"), "the result", 8000);
+  assert.eq(page.game.shield, null);
+  assert.ok(doc.getElementById("mission-shield").textContent.includes("broken"));
+});
+
+test("Cooking: cook their hated food and find the shield", async () => {
+  const { page, doc } = await toMission(missionSeed("cooking"));
+  doc.getElementById("mission-go").click();
+  const diner = cookingDiner(page.game, stillIn(page.game));
+  assert.ok(doc.getElementById("diner-clue").textContent.includes(HATES[diner][1]), "the clue shows");
+  assert.ok(doc.getElementById("serve").disabled, "can't serve an empty plate");
+  const hated = HATES[diner][0];
+  for (const t of TRUCKS) doc.querySelector(`.food[data-food="${t.foods.includes(hated) ? hated : t.foods[0]}"]`).click();
+  doc.querySelector(`.box[data-box="${shieldTruck(page.game)}"]`).click();
+  assert.notOk(doc.getElementById("serve").disabled);
+  doc.getElementById("serve").click();
+  await until(() => visible(doc, "mission-result"), "the result", 8000);
+  assert.ok(doc.getElementById("mission-score").textContent.includes("least favourite"));
+  assert.ok(doc.getElementById("mission-shield").textContent.includes("You found the shield"));
+  assert.eq(page.game.shield, "pepper");
 });

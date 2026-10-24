@@ -41,6 +41,28 @@ In Sam's words, then his answers:
   to build a picture of a shield from pieces without seeing it properly."
   Everyone builds, Faithfuls too; the best builder wins the shield.
 
+## Sam's answers for Catapults and Cooking (2026-10-24)
+
+- Catapults: hit the shield and it breaks: nobody gets a shield tonight.
+  If nobody hits it, the best player wins it. Catapult day always has a
+  murder that night, and only someone who was hit can be murdered.
+- Cooking: you cook for someone; you guess the food they hate from a
+  clue. One truck's secret box has the shield; the others are empty; you
+  open one box.
+
+### How they play (spec, v0.10.0)
+- **Catapults**: the pictures of everyone else, plus a shield, slide
+  along the castle wall. A target in the middle; tap Fire. Sam has 3
+  stones. Everyone else throws one stone: a good thrower hits who they
+  suspect most (a Traitor aims at a Faithful), and now and then a stone
+  hits the shield. Score = hits / 3. Everyone hit is up for murder.
+  On a recruiting night the Traitors still recruit instead.
+- **Cooking Challenge**: someone comes to dinner and gives a clue about
+  the food they hate. Three trucks (healthy, meat, dessert), four foods
+  each; pick one from each. Then open one truck's secret box. The hated
+  food in the meal scores 1 (a nice meal without it scores 0.3). Find the
+  shield and you win it; otherwise the best player does.
+
 ## How many
 
 13 missions for 12 days: each game picks 12 at random, so one is left out

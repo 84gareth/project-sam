@@ -356,9 +356,12 @@ function threat(game, id) {
 
 // Who the Traitors would murder tonight, most wanted first. Not whoever
 // won today's mission shield: everyone knows who has it.
+// After Catapults, only someone who was hit can be murdered (Sam).
 export function murderIdeas(game) {
-  return stillIn(game)
-    .filter((id) => !isTraitor(game, id) && id !== game.shield)
+  const up = game.upForMurder && game.upForMurder.day === game.history.length ? game.upForMurder.ids : null;
+  const ok = (id) => !isTraitor(game, id) && id !== game.shield;
+  const pool = stillIn(game).filter((id) => ok(id) && (!up || up.includes(id)));
+  return (pool.length ? pool : stillIn(game).filter(ok))
     .sort((a, b) => threat(game, b) - threat(game, a) || (a < b ? -1 : 1));
 }
 
@@ -540,6 +543,7 @@ export function nightKind(game) {
   const n = game.history.length;
   const traitors = stillIn(game).filter((id) => isTraitor(game, id)).length;
   if (n === 1 || (traitors <= 2 && n <= RECRUIT_UNTIL)) return "recruit";
+  if (game.upForMurder && game.upForMurder.day === n) return "murder";   // Catapults day (Sam)
   return n % 2 === 0 ? "murder" : "quiet";
 }
 export const isRecruitNight = (game) => nightKind(game) === "recruit";
