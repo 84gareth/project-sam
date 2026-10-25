@@ -865,3 +865,7 @@ button.small:active, .door:active { transform: translateY(3px); box-shadow: 0 1p
 .wearing .necklace { display: block; height: 26%; }
 .shield-target { width: 90%; height: auto; margin: 0 auto; background: none; border: none; border-radius: 0; display: block; filter: drop-shadow(0 3px 3px rgba(0,0,0,0.5)); }
 .puppet.flip .puppet-body .necklace { transform: translateX(-50%); }
+/* Worn round the neck (Sam): the top of the chain, which would be behind
+   their neck, is hidden, so the chain seems to go round it. The hidden
+   part starts at the neck. */
+.necklace { clip-path: inset(34% 0 0 0); top: 15%; }
