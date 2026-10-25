@@ -913,3 +913,9 @@ button.small:active, .door:active { transform: translateY(3px); box-shadow: 0 1p
 .traitor-ribbon { background: #e2453c; color: #fff; }
 .fellow-cutout, .puppet.fellow .puppet-body img { filter: drop-shadow(0 0 6px #e2453c) drop-shadow(0 0 3px #e2453c) drop-shadow(0 6px 6px rgba(0, 0, 0, 0.6)); }
 .name-tag.fellow { background: #c62828 !important; color: #fff; }
+
+/* A no-murder night: announced at breakfast, reminded in the castle. */
+.quiet-news { color: #9be38a; max-width: 760px; text-align: center; }
+.no-murder { position: absolute; top: 108px; right: 16px; margin: 0; padding: 4px 14px; border-radius: 14px; background: #2f9e4b; color: #fff; font-weight: 700; border: 3px solid var(--ink); box-shadow: 0 3px 0 var(--ink); }
+.choose-option { min-height: 70px; font-size: 22px; }
+#victim-cards .choose-option { flex: 0 0 300px; }

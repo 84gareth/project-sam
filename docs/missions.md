@@ -190,3 +190,19 @@ Traitor, `daggerIdeas`). The holder carries it all the next day (on their
 puppet, in the walk) and their vote counts twice at that day's Round
 Table (an "x2" on their chalkboard). Breakfast says who has it. Once a
 game.
+
+## Nights, version 3 (Sam and Gareth, 2026-10-25; v0.19.0)
+
+Replaces "murders every other night" and "recruit at 2 up to night 5".
+- Night 1: the Traitors recruit.
+- Most nights: a murder. A few nights have no murder: a couple at random,
+  plus any night where another murder would leave too few for a final of
+  about 5 at the end of day 12 (`quietTonight`). A no-murder night is
+  announced at breakfast and shown in the castle all day.
+- Whenever only 2 Traitors (or fewer) are left, they may recruit instead,
+  any night (a Traitor Sam chooses; the computer Traitors recruit if down
+  to one or if they can't murder, otherwise 35% of the time).
+- Balance (Gareth: "they should get more suspicious of the newer
+  traitors"): honest players grow more suspicious of every recruit each
+  day (`RECRUIT_TELL` 0.25). 300 computer games: Faithfuls win ~57%; every
+  game reaches day 12.

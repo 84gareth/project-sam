@@ -269,35 +269,54 @@ function wholeGame(seed) {
     if (winner(g)) break;
     if (isDaggerNight(g)) giveDagger(g);
     const kind = nightKind(g);
-    if (kind === "recruit") recruit(g);
+    if (kind === "recruit" || (kind === "choose" && computerChoice(g) === "recruit")) recruit(g);
+    else if (kind === "choose") night(g);
     else if (kind === "murder") night(g);
     else quietNight(g);
   }
   return g;
 }
 
-test("nights: recruit on night 1; murder every other night; recruit at 2 Traitors only up to night 5", () => {
-  for (let seed = 1; seed <= 100; seed++) {
-    const g = wholeGame(seed);
-    for (const [i, h] of g.history.entries()) {
-      const n = i + 1;
-      if (n === 1) assert.ok(h.recruited, "night 1 recruits");
-      if (h.recruited && n > 1) assert.ok(n <= 5, `recruit on night ${n}`);
-      if (h.murdered) assert.eq(n % 2, 0, `murders on even nights only (night ${n})`);
-      if (n % 2 === 1 && n > 1) assert.notOk(h.murdered);
+test("nights: murder most nights; no-murder nights are announced that morning and always come true", () => {
+  for (let seed = 1; seed <= 80; seed++) {
+    const g = arriveAtCastle(newGame("dot", seed), { everyone: true });
+    let quiet = 0;
+    while (!winner(g) && g.day <= DAYS) {
+      const announced = noMurderToday(g);   // at breakfast
+      roundTable(g, null);
+      if (winner(g)) break;
+      if (isDaggerNight(g)) giveDagger(g);
+      const kind = nightKind(g);
+      if (g.history.length === 1) assert.eq(kind, "recruit", "night 1 recruits");
+      else if (kind === "choose") assert.eq(canMurderTonight(g), !announced, "a choose night can murder unless announced quiet");
+      else assert.eq(kind === "quiet", announced, `seed ${seed} night ${g.history.length}: as announced`);
+      if (kind === "quiet") quiet++;
+      if (kind === "recruit" || (kind === "choose" && computerChoice(g) === "recruit")) recruit(g);
+      else if (kind === "choose" || kind === "murder") night(g);
+      else quietNight(g);
     }
-    assert.ok(g.history.slice(12).every((h) => !h.murdered && !h.recruited && !h.quiet), "no nights in the final");
+    assert.ok(quiet <= 8, `${quiet} quiet nights: murders most nights`);
+    if (!winner(g)) assert.ok(stillIn(g).length >= FINAL_SIZE - 1, `seed ${seed}: ${stillIn(g).length} left for the final`);
   }
 });
 
-test("only 2 Traitors left by night 5: they recruit again", () => {
+test("with only 2 Traitors left they may recruit, any night", () => {
   let seen = 0;
-  for (let seed = 1; seed <= 200; seed++) {
-    const g = wholeGame(seed);
-    seen += g.history.filter((h, i) => i > 0 && h.recruited).length;
+  for (let seed = 1; seed <= 200 && seen < 5; seed++) {
+    const g = castle(seed);
+    roundTable(g, stillIn(g).find((id) => id !== "dot"));
+    recruit(g);
+    g.day = 8;
+    const traitors = traitorsOf(g).filter((id) => stillIn(g).includes(id) && id !== "dot");
+    for (const t of traitors.slice(2)) g.players.find((p) => p.id === t).inGame = false;
+    if (stillIn(g).filter((id) => isTraitor(g, id)).length !== 2) continue;
+    g.history.push({}, {}, {}, {}, {}, {});   // night 7 (history entries 2-7)
+    assert.eq(nightKind(g), "choose", "two left, late in the game: still a choice");
+    seen++;
   }
-  assert.gt(seen, 10, "recruiting again happens");
+  assert.gt(seen, 0);
 });
+
 
 test("balance over 12 days: both sides win sometimes; most games go the distance", () => {
   const N = 300;
@@ -316,8 +335,9 @@ test("balance over 12 days: both sides win sometimes; most games go the distance
   }
   left.sort((a, b) => a - b);
   const tag = `final banishings ${(finals / N).toFixed(2)}, Faithfuls win ${(faithfulWins / N * 100).toFixed(0)}%, ${(fullLength / N * 100).toFixed(0)}% reach day 12, median ${left[N >> 1]} people left, Traitors left ${(tl.reduce((a, b) => a + b, 0) / N).toFixed(2)}, recruits ${(rec / N).toFixed(2)}, caught ${(caught / N).toFixed(2)} (averages)`;
-  // Recruiting up to night 5 (Gareth): Faithfuls win ~55% (measured
-  // 2026-10-24; night 8 gave ~15%, which was too hard).
+  // Murder most nights, recruit whenever 2 are left, recruits grow
+  // suspicious (RECRUIT_TELL 0.25): Faithfuls win ~57%, every game reaches
+  // day 12 (measured 2026-10-25; 0.15 gave ~15%).
   assert.gt(faithfulWins / N, 0.4, tag);
   assert.lt(faithfulWins / N, 0.75, tag);
   assert.gt(fullLength / N, 0.4, tag);
@@ -408,7 +428,7 @@ test("accusing someone makes honest players more suspicious of them", () => {
 });
 
 // ─── Recruiting on the first night ──────────────────────────────────────────
-import { isRecruitNight, recruit, recruitIdeas, nightKind, quietNight } from "../../js/castle.js";
+import { isRecruitNight, recruit, recruitIdeas, nightKind, quietNight, computerChoice, noMurderToday, canMurderTonight, FINAL_SIZE } from "../../js/castle.js";
 
 test("the first night recruits a fourth Traitor instead of a murder", () => {
   for (let seed = 1; seed <= 60; seed++) {

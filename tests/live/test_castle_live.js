@@ -507,8 +507,15 @@ test("a quiet night: the Traitors only plot, and everyone comes to breakfast", a
     assert.gt(seed, 0, "found a game");
     const { page, doc } = await toCastle(seed);
     await voteAndReveal(doc);
-    // Pretend nights 1 and 2 have happened: tonight is night 3, a quiet one.
-    page.game.history.unshift({ quiet: true }, { quiet: true });
+    // Pretend it's night 5 with only 12 left: another murder would leave too
+    // few for day 12, so tonight is a no-murder night.
+    page.game.history.unshift({ quiet: true }, { quiet: true }, { quiet: true }, { quiet: true });
+    const g = page.game;
+    for (const p of g.players.filter((x) => x.inGame && x.side !== TRAITOR && x.id !== "pepper")) {
+      if (stillIn(g).length <= 12) break;
+      p.inGame = false;
+    }
+    assert.eq(nightKind(g), "quiet", "a no-murder night");
     doc.getElementById("next-day").click();
     await until(() => visible(doc, "to-breakfast"), "the quiet night", 8000);
     assert.notOk(visible(doc, "letter"), "no letter");
@@ -995,4 +1002,38 @@ test("a Traitor sees fellow Traitors marked in red; a Faithful sees nothing", as
   const faithful = await toCastle(seedFor("pepper", FAITHFUL));
   faithful.doc.getElementById("pause").click();
   assert.eq(faithful.doc.querySelectorAll(".fellow-badge").length, 0, "a Faithful can't tell");
+});
+
+
+test("a no-murder night is announced at breakfast and shown in the castle", async () => {
+  const { page, doc } = await toCastle(seedFor("pepper", FAITHFUL));
+  const g = page.game;
+  // Day 5 with 12 left: tonight can't have a murder.
+  g.day = 5;
+  for (const p of g.players.filter((x) => x.inGame && x.side !== TRAITOR && x.id !== "pepper")) {
+    if (stillIn(g).length <= 12) break;
+    p.inGame = false;
+  }
+  page.castleJump.showRoster();
+  assert.ok(visible(doc, "quiet-news"), "announced at breakfast");
+  page.castleJump.enterCastle();
+  assert.ok(visible(doc, "no-murder"), "reminder in the castle");
+});
+
+test("only 2 Traitors left: a Traitor Sam chooses recruit or murder", async () => {
+  const { page, doc } = await toCastle(nightSeed(TRAITOR));
+  await voteAndReveal(doc);
+  if (!visible(doc, "after-reveal")) return;
+  const g = page.game;
+  g.history.unshift({ quiet: true });   // not night 1
+  const others = g.players.filter((p) => p.inGame && p.side === TRAITOR && p.id !== "pepper");
+  for (const p of others.slice(1)) p.inGame = false;   // Sam and one more
+  doc.getElementById("next-day").click();
+  await until(() => visible(doc, "screen-traitors") && doc.querySelector(".choose-option"), "the choice", 8000);
+  const choices = [...doc.querySelectorAll(".choose-option")].map((b) => b.textContent);
+  assert.ok(choices.includes("Recruit someone new"));
+  assert.ok(choices.includes("Murder someone") || choices.includes("Do nothing tonight"));
+  doc.querySelector(".choose-option").click();
+  assert.ok(doc.getElementById("murder").textContent.includes("Recruit"), "on to recruiting");
+  assert.ok(doc.querySelectorAll("#victim-cards .card").length > 0);
 });

@@ -7,6 +7,7 @@ import {
   isRecruitNight, recruit, recruitIdeas, joinChat, nightKind, quietNight, whosWho,
   finalRound, finalChoices, prizeShare, allTraitors, hasShield,
   isDaggerNight, giveDagger, daggerIdeas, daggerHolder, hasDagger,
+  computerChoice, canMurderTonight, noMurderToday,
 } from "./castle.js";
 import { DAYS } from "./game.js";
 import { $, show, badge, card, character, wait, FAST, setTeam, isFellow } from "./ui.js";
@@ -54,6 +55,7 @@ function startDay() {
 
 function enterCastle() {
   $("castle-day").textContent = `Day ${game.day} of ${DAYS}`;
+  $("no-murder").hidden = !noMurderToday(game);
   narrate(game.day === DAYS ? "The last day at the castle!" : `Day ${game.day} at the castle.`);
   const me = game.playerId;
   if (game.playerSide === TRAITOR) {
@@ -752,7 +754,7 @@ function party() {
 }
 
 // Tests (?fast=1) can jump straight to the final or the end.
-if (FAST) window.castleJump = { finalScreen, ending };
+if (FAST) window.castleJump = { finalScreen, ending, showRoster: () => showRoster(), enterCastle: () => enterCastle() };
 
 function gameOver(text) {
   clearSave();
@@ -769,8 +771,12 @@ async function goNight() {
   setRoomSound(null);
   setMusic(null);
   const me = game.playerId;
-  if (nightKind(game) === "quiet") return quietNightScreen();
-  if (game.playerSide === TRAITOR) return traitorsMeeting();
+  const kind = nightKind(game);
+  if (kind === "quiet") return quietNightScreen();
+  if (game.playerSide === TRAITOR) {
+    if (kind === "choose") return chooseScreen();
+    return traitorsMeeting(kind === "recruit" ? "recruit" : "murder");
+  }
   // A Faithful waits in their room... is there a letter?
   $("night-title").textContent = "Night falls...";
   $("night-text").textContent = "The Traitors are meeting in secret.";
@@ -781,7 +787,7 @@ async function goNight() {
   play("night");
   $("envelope").hidden = true;
   narrate("Night falls. The Traitors are meeting in secret.");
-  if (isRecruitNight(game)) return recruitNightFaithful();
+  if (kind === "recruit" || (kind === "choose" && computerChoice(game) === "recruit")) return recruitNightFaithful();
   const victim = night(game);
   await wait(1800);
   if (victim === me) {
@@ -857,10 +863,37 @@ async function recruitNightFaithful() {
 // Sam is a Traitor: the other Traitors give ideas, Sam picks. On night 1
 // they pick someone to recruit instead of someone to murder.
 let recruiting = false;
-function traitorsMeeting() {
+// With only 2 Traitors left, a Traitor Sam chooses: recruit someone new,
+// or murder (or, on a no-murder night, do nothing).
+function chooseScreen() {
+  play("night");
+  const murder = canMurderTonight(game);
+  $("meeting-hint").textContent = murder
+    ? "Only 2 Traitors are left! Recruit someone new tonight, or murder someone?"
+    : "Only 2 Traitors are left! There's no murder tonight, but you can still recruit someone new.";
+  narrate($("meeting-hint").textContent);
+  $("traitor-ideas").replaceChildren();
+  $("murder").hidden = true;
+  const box = $("victim-cards");
+  const option = (text, go) => {
+    const b = document.createElement("button");
+    b.className = "question choose-option";
+    b.textContent = text;
+    b.addEventListener("click", () => { $("murder").hidden = false; go(); });
+    return b;
+  };
+  box.replaceChildren(
+    option("Recruit someone new", () => traitorsMeeting("recruit")),
+    murder ? option("Murder someone", () => traitorsMeeting("murder")) : option("Do nothing tonight", () => quietNightScreen()),
+  );
+  show("screen-traitors");
+}
+
+function traitorsMeeting(mode = "murder") {
   play("night");
   victimPick = null;
-  recruiting = isRecruitNight(game);
+  $("murder").hidden = false;
+  recruiting = mode === "recruit";
   $("murder").disabled = true;
   $("murder").textContent = recruiting ? "Recruit them" : "Send the letter";
   const fewLeft = recruiting && game.history.length > 1;
@@ -1031,6 +1064,9 @@ function showRoster() {
     gone.append(who);
   }
   $("gone-box").hidden = false;
+  // A no-murder night is announced at breakfast, so everyone knows (Sam).
+  $("quiet-news").hidden = !noMurderToday(game);
+  if (noMurderToday(game)) narrate($("quiet-news").textContent, { queue: true });
   const holder = daggerHolder(game);
   $("dagger-news").hidden = !holder;
   if (holder) {

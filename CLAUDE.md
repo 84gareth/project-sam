@@ -258,8 +258,10 @@ Updated 2026-10-25 (v0.14.0).
   are in `js/mission-more.js`). Sam's 13
   missions and answers: `docs/missions.md`. Test one mission on its own:
   add `?debug` to the address (or `tools/playtest.sh missions`).
-- **12 days (v0.9.0)**: always 12 days; murders every other night;
-  recruit on night 1 and at 2 Traitors up to night 5 (`nightKind`).
+- **12 days (v0.9.0; nights v3 in v0.19.0)**: always 12 days; murders
+  most nights, announced no-murder nights keep enough people for the
+  final; recruit on night 1 and whenever 2 Traitors are left (`nightKind`,
+  `quietTonight`; docs/missions.md "Nights, version 3").
 - **Phase 6 (a whole game) built (v0.14.0)**: saving each morning
   (`js/save.js`, "Carry on" at the station); the final and the big ending
   (`finalRound`, `prizeShare`, `allTraitors` in `js/castle.js`). Tests can

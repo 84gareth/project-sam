@@ -346,6 +346,7 @@ export function roundTable(game, playerVote) {
 // Traitors keep their fake lists, with a little shuffle so they look alive.
 export const LEARN_WRONG_VOTE = 0.12;
 export const LEARN_NOISE = 0.15;
+export const RECRUIT_TELL = 0.25;
 function learn(game, { votes, banished, side }) {
   for (const me of brains(game)) {
     const r = rng(game, "learn", game.day, me);
@@ -355,6 +356,11 @@ function learn(game, { votes, banished, side }) {
       if (isTraitor(game, me)) continue;
       if (target === banished) s[voter] += side === TRAITOR ? -0.2 : LEARN_WRONG_VOTE;
       if (target === me) s[voter] += 0.08;
+    }
+    // New Traitors act a bit oddly: honest players grow more suspicious of
+    // anyone recruited, day by day (Gareth: to balance late recruiting).
+    if (!isTraitor(game, me)) {
+      for (const h of game.history) if (h.recruited && h.recruited !== me && s[h.recruited] !== undefined) s[h.recruited] += RECRUIT_TELL;
     }
     for (const o of Object.keys(s)) s[o] = Math.min(2, Math.max(0, s[o] + (r() - 0.5) * LEARN_NOISE));
   }
@@ -704,24 +710,57 @@ export function playerSays(game, option) {
 // not, the computer Traitors pick, and they might pick Sam, who then just
 // becomes a Traitor (Sam: "Yes, no choice"). Whoever is picked says yes.
 
-// What happens tonight (after the day just finished):
-// - "recruit": night 1, and any night up to night 5 when only 2 Traitors
-//   are left (Sam; Gareth chose night 5, so they can still all be caught:
-//   up to night 8, Faithfuls won only ~15% of games);
-// - "murder": every other night (nights 2, 4, 6...), so 12 days fit;
-// - "quiet": the Traitors only plot;
-// - "done": tonight has already happened.
-export const RECRUIT_UNTIL = 5;
+// What happens tonight (after the day just finished). Sam and Gareth,
+// 2026-10-25: the Traitors murder most nights; a few nights have no
+// murder, and that's announced at breakfast so everyone knows. Still 12
+// days: a night goes quiet whenever another murder would leave too few
+// people for the final (about FINAL_SIZE), plus a couple at random.
+// Whenever only 2 Traitors (or fewer) are left, they may recruit instead,
+// any night.
+//   "recruit": night 1 (always recruits);
+//   "choose": 2 or fewer Traitors: recruit, or murder (unless it's quiet);
+//   "murder" / "quiet"; "done": tonight has already happened.
+export const FINAL_SIZE = 5;
+export const RANDOM_QUIET_NIGHTS = 2;
+function randomQuiet(game) {
+  const r = rng(game, "quiet-nights");
+  const nights = [];
+  while (nights.length < RANDOM_QUIET_NIGHTS) {
+    const n = 2 + Math.floor(r() * (DAYS - 2));
+    if (!nights.includes(n)) nights.push(n);
+  }
+  return nights;
+}
+// Is night `n` a no-murder night, with `left` people in after that day's
+// banishing? (At breakfast, Sam's told with left = everyone - 1.)
+export function quietTonight(game, n, left) {
+  if (n < 2 || n >= DAYS) return false;
+  if (game.upForMurder && game.upForMurder.day === n) return false;   // Catapults day (Sam)
+  const tooFew = left - 1 - (DAYS - n) < FINAL_SIZE;
+  return tooFew || randomQuiet(game).includes(n);
+}
+// For breakfast: will tonight (after today's banishing) be murder-free?
+export const noMurderToday = (game) => quietTonight(game, game.day, stillIn(game).length - 1);
 export function nightKind(game) {
   const last = game.history[game.history.length - 1];
   if (last.recruited || last.murdered || last.quiet) return "done";
   const n = game.history.length;
+  if (n === 1) return "recruit";
   const traitors = stillIn(game).filter((id) => isTraitor(game, id)).length;
-  if (n === 1 || (traitors <= 2 && n <= RECRUIT_UNTIL)) return "recruit";
-  if (game.upForMurder && game.upForMurder.day === n) return "murder";   // Catapults day (Sam)
-  return n % 2 === 0 ? "murder" : "quiet";
+  if (traitors <= 2) return "choose";
+  return quietTonight(game, n, stillIn(game).length) ? "quiet" : "murder";
 }
-export const isRecruitNight = (game) => nightKind(game) === "recruit";
+// On a "choose" night: can they murder (not on a quiet night)?
+export const canMurderTonight = (game) => !quietTonight(game, game.history.length, stillIn(game).length);
+// What the computer Traitors choose on a "choose" night: recruit if they're
+// down to one, or if they can't murder anyway; with two, now and then.
+export const RECRUIT_WITH_TWO = 0.35;
+export function computerChoice(game) {
+  const traitors = stillIn(game).filter((id) => isTraitor(game, id)).length;
+  if (traitors <= 1 || !canMurderTonight(game)) return "recruit";
+  return rng(game, "choose", game.day)() < RECRUIT_WITH_TWO ? "recruit" : "murder";
+}
+export const isRecruitNight = (game) => nightKind(game) === "recruit" || nightKind(game) === "choose";
 
 // A quiet night: nobody is murdered, and the shield wears off.
 export function quietNight(game) {
