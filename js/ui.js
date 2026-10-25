@@ -15,6 +15,11 @@ export const character = (id) => CHARACTERS.find((c) => c.id === id);
 let meId = null;
 export const setMe = (id) => { meId = id; };
 export const isMe = (id) => id === meId;
+// A Traitor Sam sees his fellow Traitors marked in red everywhere (Gareth).
+// The castle sets who they are (it changes when someone is recruited).
+let teamCheck = () => false;
+export const setTeam = (fn) => { teamCheck = fn; };
+export const isFellow = (id) => teamCheck(id);
 
 // Screens with no pause button: before the game, and during missions.
 const NO_PAUSE = ["screen-station", "screen-pick", "screen-ready", "screen-train", "screen-mission", "screen-debug"];
@@ -30,13 +35,13 @@ export function show(screenId) {
 export function badge(c, big = false) {
   if (c.picture) {
     const img = document.createElement("img");
-    img.className = "portrait" + (big ? " big-portrait" : "") + (isMe(c.id) ? " me-badge" : "");
+    img.className = "portrait" + (big ? " big-portrait" : "") + (isMe(c.id) ? " me-badge" : "") + (isFellow(c.id) ? " fellow-badge" : "");
     img.src = c.picture;
     img.alt = c.name;
     return img;
   }
   const b = document.createElement("div");
-  b.className = "badge" + (big ? " big-badge" : "") + (isMe(c.id) ? " me-badge" : "");
+  b.className = "badge" + (big ? " big-badge" : "") + (isMe(c.id) ? " me-badge" : "") + (isFellow(c.id) ? " fellow-badge" : "");
   b.style.background = c.colour;
   b.textContent = initials(c.name);
   return b;
@@ -48,6 +53,10 @@ export function card(c, line = c.about) {
   el.className = "card" + (isMe(c.id) ? " me-card" : "");
   el.dataset.id = c.id;
   if (isMe(c.id)) el.append(Object.assign(document.createElement("span"), { className: "you-ribbon", textContent: "YOU" }));
+  if (isFellow(c.id)) {
+    el.classList.add("fellow-card");
+    el.append(Object.assign(document.createElement("span"), { className: "you-ribbon traitor-ribbon", textContent: "TRAITOR" }));
+  }
   el.append(badge(c));
   const name = document.createElement("span");
   name.className = "card-name";

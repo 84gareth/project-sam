@@ -906,3 +906,10 @@ button.small:active, .door:active { transform: translateY(3px); box-shadow: 0 1p
 #screen-talk > * { flex-shrink: 0; }
 #screen-talk .talk-lines { flex: 1 1 0; min-height: 0; flex-shrink: 1; }
 .talk-line { flex-shrink: 0; }
+
+/* A Traitor Sam's fellow Traitors: red, everywhere (Gareth). */
+.fellow-badge { outline: 5px solid #e2453c; outline-offset: 2px; box-shadow: 0 0 16px 5px rgba(226, 69, 60, 0.75); }
+.card.fellow-card { position: relative; background: linear-gradient(#7a2330, #4a1420); }
+.traitor-ribbon { background: #e2453c; color: #fff; }
+.fellow-cutout, .puppet.fellow .puppet-body img { filter: drop-shadow(0 0 6px #e2453c) drop-shadow(0 0 3px #e2453c) drop-shadow(0 6px 6px rgba(0, 0, 0, 0.6)); }
+.name-tag.fellow { background: #c62828 !important; color: #fff; }

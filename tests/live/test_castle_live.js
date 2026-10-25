@@ -981,3 +981,18 @@ test("Round Table talk: lots of lines, and the buttons stay on the screen", asyn
   await until(() => visible(doc, "to-vote"), "Time to vote");
   assert.ok(doc.getElementById("to-vote").getBoundingClientRect().bottom <= screenBottom + 1, "the vote button is on the screen");
 });
+
+
+test("a Traitor sees fellow Traitors marked in red; a Faithful sees nothing", async () => {
+  const { page, doc } = await toCastle(seedFor("pepper", TRAITOR));
+  const fellows = page.game.players.filter((p) => p.side === TRAITOR && p.id !== "pepper").map((p) => p.id);
+  page.castleTick();
+  doc.getElementById("pause").click();
+  for (const id of fellows) assert.ok(doc.querySelector(`.who[data-id="${id}"] .fellow-badge`), `${id} is marked`);
+  assert.eq(doc.querySelectorAll("#overview-people .fellow-badge").length, fellows.length, "only them");
+  doc.getElementById("overview-close").click();
+  for (const tag of doc.querySelectorAll(".name-tag")) assert.eq(tag.classList.contains("fellow"), fellows.includes(tag.dataset.id), tag.dataset.id);
+  const faithful = await toCastle(seedFor("pepper", FAITHFUL));
+  faithful.doc.getElementById("pause").click();
+  assert.eq(faithful.doc.querySelectorAll(".fellow-badge").length, 0, "a Faithful can't tell");
+});

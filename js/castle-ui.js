@@ -9,7 +9,7 @@ import {
   isDaggerNight, giveDagger, daggerIdeas, daggerHolder, hasDagger,
 } from "./castle.js";
 import { DAYS } from "./game.js";
-import { $, show, badge, card, character, wait, FAST } from "./ui.js";
+import { $, show, badge, card, character, wait, FAST, setTeam, isFellow } from "./ui.js";
 import {
   ROOMS, FLOOR, createWorld, step, tapTo, walkUpTo, nextTo, neighbour, peopleIn,
 } from "./puppets.js";
@@ -32,6 +32,8 @@ let joinTarget = null;
 // `resume`: carry on a saved game from the start of its day.
 export function goToCastle(g, { resume = false } = {}) {
   game = resume ? g : arriveAtCastle(g);
+  // Fellow Traitors, marked in red, but only if Sam is a Traitor himself.
+  setTeam((id) => game.playerSide === TRAITOR && id !== game.playerId && isTraitor(game, id));
   window.game = game;
   world = createWorld(game, Math.random);
   window.world = world;
@@ -113,7 +115,7 @@ function cutout(id, extraClass = "") {
   const c = character(id);
   if (!c.picture) return badge(c, true);
   const img = document.createElement("img");
-  img.className = "cutout " + extraClass + (id === game.playerId ? " me-cutout" : "");
+  img.className = "cutout " + extraClass + (id === game.playerId ? " me-cutout" : "") + (isFellow(id) ? " fellow-cutout" : "");
   img.src = `assets/puppets/${id}.png`;
   img.alt = c.name;
   return img;
@@ -231,6 +233,7 @@ function placeNames(ids) {
       if (id !== game.playerId) tag.addEventListener("click", (e) => { e.stopPropagation(); tapPerson(id); });
       layer.append(tag);
     }
+    tag.classList.toggle("fellow", isFellow(id));
     const p = pos(id);
     const w = tag.offsetWidth || 90;
     const h = tag.offsetHeight || 26;
@@ -289,6 +292,7 @@ function render() {
     el.classList.toggle("walking", moving);
     el.classList.toggle("has-shield", hasShield(game, id));
     el.classList.toggle("has-dagger", hasDagger(game, id));
+    el.classList.toggle("fellow", isFellow(id));
     el.classList.toggle("flip", p.facing === "left");
     el.classList.toggle("chatting", p.mode === "chat" && id !== chatTarget);
   }
