@@ -331,16 +331,57 @@ function learn(game, { votes, banished, side }) {
   }
 }
 
-// Who has won, if anyone. The game always lasts 12 days (Sam): it ends
-// early only if every Traitor is caught. After day 12's Round Table, any
-// Traitor still in wins; if none, the Faithfuls do. Null while it goes on.
+// Who has won, if anyone. The game lasts 12 days (Sam): it ends early only
+// if every Traitor is caught. After day 12 comes the final (Sam: "like the
+// TV show"): it ends when everyone votes to end it; then any Traitor still
+// in wins, and if none, the Faithfuls do. Null while it goes on.
 export function winner(game) {
   const left = stillIn(game);
   const traitors = left.filter((id) => isTraitor(game, id)).length;
   if (traitors === 0) return FAITHFUL;
   if (traitors === left.length) return TRAITOR;   // no Faithfuls left (a safety net)
-  if (game.day > DAYS) return TRAITOR;
+  if (game.day > DAYS && game.ended) return TRAITOR;
   return null;
+}
+
+// ─── The final ──────────────────────────────────────────────────────────────
+// Everyone left votes "end" (finish the game now) or "banish" (one more
+// Round Table). Traitors always want to end it. A Faithful wants another
+// banishing if one person stands out on their list.
+export const FINAL_MARGIN = 0.3;
+export const inFinal = (game) => game.day > DAYS && !game.ended;
+export function finalVote(game, id) {
+  if (isTraitor(game, id)) return "end";
+  const list = suspectList(game, id);
+  if (list.length < 2) return "end";
+  const s = game.scores[id];
+  const rest = list.slice(1).reduce((sum, o) => sum + s[o], 0) / (list.length - 1);
+  return s[list[0]] - rest >= FINAL_MARGIN ? "banish" : "end";
+}
+// One vote in the final. `samVote` is Sam's ("end" or "banish"); computer
+// players decide for themselves. With only two left, it ends.
+export function finalRound(game, samVote = null) {
+  const votes = stillIn(game).map((id) => [id, game.scores[id] ? finalVote(game, id) : samVote ?? "end"]);
+  const allEnd = stillIn(game).length <= 2 || votes.every(([, v]) => v === "end");
+  if (allEnd) game.ended = true;
+  return { votes, allEnd };
+}
+
+// The pot, shared by the winners still in the game.
+export function prizeShare(game) {
+  const side = winner(game);
+  const winners = stillIn(game).filter((id) => (side === TRAITOR) === isTraitor(game, id));
+  const each = winners.length ? Math.floor((game.pot ?? 0) / winners.length / 10) * 10 : 0;
+  return { side, winners, each };
+}
+
+// Every Traitor of the whole game, and how they got on: "recruited" if
+// they were recruited, and whether they were banished.
+export function allTraitors(game) {
+  const recruited = new Set(game.history.map((h) => h.recruited).filter(Boolean));
+  const banished = new Set(game.history.map((h) => h.banished).filter(Boolean));
+  return game.players.filter((p) => p.side === TRAITOR)
+    .map((p) => ({ id: p.id, recruited: recruited.has(p.id), banished: banished.has(p.id) }));
 }
 
 // ─── The night (docs/night-spec.md) ─────────────────────────────────────────

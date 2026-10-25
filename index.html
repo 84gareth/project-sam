@@ -15,25 +15,25 @@
   <!-- STAMP (tools/stamp.py writes this; don't edit by hand) -->
   <script type="importmap">{
   "imports": {
-    "./js/castle-ui.js": "./js/castle-ui.js?v=0.13.0",
-    "./js/castle.js": "./js/castle.js?v=0.13.0",
-    "./js/characters.js": "./js/characters.js?v=0.13.0",
-    "./js/dialogue.js": "./js/dialogue.js?v=0.13.0",
-    "./js/fit.js": "./js/fit.js?v=0.13.0",
-    "./js/game.js": "./js/game.js?v=0.13.0",
-    "./js/main.js": "./js/main.js?v=0.13.0",
-    "./js/mission-more.js": "./js/mission-more.js?v=0.13.0",
-    "./js/mission-ui.js": "./js/mission-ui.js?v=0.13.0",
-    "./js/missions.js": "./js/missions.js?v=0.13.0",
-    "./js/puppets.js": "./js/puppets.js?v=0.13.0",
-    "./js/save.js": "./js/save.js?v=0.13.0",
-    "./js/sound.js": "./js/sound.js?v=0.13.0",
-    "./js/ui.js": "./js/ui.js?v=0.13.0",
-    "./js/version.js": "./js/version.js?v=0.13.0",
-    "./js/voice.js": "./js/voice.js?v=0.13.0"
+    "./js/castle-ui.js": "./js/castle-ui.js?v=0.14.0",
+    "./js/castle.js": "./js/castle.js?v=0.14.0",
+    "./js/characters.js": "./js/characters.js?v=0.14.0",
+    "./js/dialogue.js": "./js/dialogue.js?v=0.14.0",
+    "./js/fit.js": "./js/fit.js?v=0.14.0",
+    "./js/game.js": "./js/game.js?v=0.14.0",
+    "./js/main.js": "./js/main.js?v=0.14.0",
+    "./js/mission-more.js": "./js/mission-more.js?v=0.14.0",
+    "./js/mission-ui.js": "./js/mission-ui.js?v=0.14.0",
+    "./js/missions.js": "./js/missions.js?v=0.14.0",
+    "./js/puppets.js": "./js/puppets.js?v=0.14.0",
+    "./js/save.js": "./js/save.js?v=0.14.0",
+    "./js/sound.js": "./js/sound.js?v=0.14.0",
+    "./js/ui.js": "./js/ui.js?v=0.14.0",
+    "./js/version.js": "./js/version.js?v=0.14.0",
+    "./js/voice.js": "./js/voice.js?v=0.14.0"
   }
 }</script>
-  <link rel="stylesheet" href="css/style.css?v=0.13.0">
+  <link rel="stylesheet" href="css/style.css?v=0.14.0">
   <!-- /STAMP -->
 </head>
 <body>
@@ -161,6 +161,33 @@
       </div>
     </section>
 
+    <!-- The final after day 12: end it, or banish again? (Sam) -->
+    <section id="screen-final" class="screen table" hidden>
+      <h2>The final!</h2>
+      <p id="final-text" class="most-votes final-text"></p>
+      <div id="final-choice" class="questions">
+        <button id="final-end" class="question">End the game</button>
+        <button id="final-banish" class="question">Banish someone else</button>
+      </div>
+      <div id="final-votes" class="final-votes"></div>
+      <p id="final-result" class="most-votes" hidden></p>
+      <button id="final-next" class="big" hidden></button>
+    </section>
+
+    <!-- The end: the big reveal, the money, a party, every Traitor (Sam). -->
+    <section id="screen-ending" class="screen table ending" hidden>
+      <h2 id="ending-title">The big reveal!</h2>
+      <div id="ending-reveal" class="final-votes"></div>
+      <div id="ending-result" class="ending-result" hidden>
+        <p id="ending-winner" class="reveal"></p>
+        <p id="ending-money" class="most-votes"></p>
+        <p class="gone-title">All the Traitors this game</p>
+        <div id="ending-traitors" class="final-votes"></div>
+        <button id="ending-play-again" class="big">Play again</button>
+      </div>
+      <div id="confetti" class="confetti" hidden></div>
+    </section>
+
     <!-- 9. Night, for a Faithful: wait... is there a letter? -->
     <section id="screen-night" class="screen night" hidden>
       <h2 id="night-title">Night falls...</h2>
@@ -262,6 +289,6 @@
     <p>Turn your phone sideways to play!</p>
   </div>
 
-  <script type="module" src="js/main.js?v=0.13.0"></script>
+  <script type="module" src="js/main.js?v=0.14.0"></script>
 </body>
 </html>

@@ -149,3 +149,14 @@ First two missions:
   in `js/castle.js`).
 - Balance, measured over 300 computer games: Faithfuls win about 55%.
   (Night 8 gave about 15%; night 6, 41%; night 4, 61%.)
+
+## The final and the end (Sam, 2026-10-25; v0.14.0)
+
+After day 12's Round Table comes the final, "like the TV show": everyone
+left votes "End the game" or "Banish someone else". Traitors always vote to
+end; a Faithful wants another vote if one person stands out on their list
+(`FINAL_MARGIN`). Any banish vote means another Round Table; it ends when
+everyone says end (or two are left). Then the big reveal (everyone left,
+one by one), who wins the money (the pot shared by the winners still in),
+a party if Sam's side wins (confetti, cheering; crying if not), and every
+Traitor of the whole game, recruits and the banished marked.

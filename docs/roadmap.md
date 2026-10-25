@@ -93,7 +93,11 @@ Cooking Challenge. v0.11.0: all 13 missions built. Next: Sam plays them.
 
 ## Phase 6: A whole game, with saving
 Days and nights until the end; who wins the pot; the game remembers where
-you got to.
+you got to. Built (2026-10-25): saving at the start of each day with "Carry on"
+(v0.13.0); the final after day 12, like the TV show (everyone votes to end
+it or banish again), then the big reveal, the pot shared by the winners, a
+party, and every Traitor of the game (v0.14.0). Next: Sam plays a whole
+game.
 
 ## Phase 7: Look and sound
 Anything else for the look and sound, once the game is fun.

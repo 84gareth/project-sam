@@ -5,6 +5,7 @@ import {
   arriveAtCastle, answer, roundTable, winner, stillIn, isTraitor, QUESTIONS,
   night, murderIdeas, breakfastGroups, tableTalk, talkOptions, playerSays,
   isRecruitNight, recruit, recruitIdeas, joinChat, nightKind, quietNight, whosWho,
+  finalRound, prizeShare, allTraitors,
 } from "./castle.js";
 import { DAYS } from "./game.js";
 import { $, show, badge, card, character, wait, FAST } from "./ui.js";
@@ -492,14 +493,161 @@ async function reveal(result) {
 
   const won = winner(game);
   if (result.banished === game.playerId) {
-    gameOver("You've been banished!");
-  } else if (won) {
     const traitors = game.players.filter((p) => p.side === TRAITOR).map((p) => character(p.id).name);
-    gameOver(`${game.day > DAYS ? "Day 12 is over! " : ""}${won === FAITHFUL ? "The Faithfuls win" : "The Traitors win"} the £${(game.pot ?? 0).toLocaleString("en-GB")} pot! The Traitors were ${traitors.join(", ")}.`);
+    gameOver(`You've been banished! The Traitors were ${traitors.join(", ")}.`);
+    return;
+  }
+  // What comes next: the night, the final (after day 12), or the end.
+  afterReveal = won ? "ending" : game.day > DAYS ? "final" : "night";
+  $("next-day").textContent = { ending: "The big reveal", final: "On to the final!", night: "Night falls..." }[afterReveal];
+  $("after-reveal").hidden = false;
+}
+let afterReveal = "night";
+function nextAfterReveal() {
+  if (afterReveal === "ending") ending();
+  else if (afterReveal === "final") finalScreen();
+  else goNight();
+}
+
+// ─── The final (Sam: "like the TV show") ────────────────────────────────────
+// Everyone left votes: end the game now, or banish someone else first.
+
+function finalScreen() {
+  const n = stillIn(game).length;
+  $("final-text").textContent = `Day 12 is over! ${n} people are left. Do you want to end the game now, or banish someone else first? It only ends if everyone says end.`;
+  $("final-choice").hidden = false;
+  $("final-votes").replaceChildren();
+  $("final-result").hidden = true;
+  $("final-next").hidden = true;
+  show("screen-final");
+  setRoomSound("table");
+  narrate("The final! " + $("final-text").textContent);
+}
+
+async function finalChoice(samVote) {
+  $("final-choice").hidden = true;
+  const { votes, allEnd } = finalRound(game, samVote);
+  const box = $("final-votes");
+  for (const [id, v] of votes) {
+    const tile = document.createElement("div");
+    tile.className = "who final-vote";
+    tile.dataset.id = id;
+    tile.append(badge(character(id)));
+    const name = document.createElement("span");
+    name.className = "who-name";
+    name.textContent = id === game.playerId ? "You" : character(id).name;
+    const tag = document.createElement("span");
+    tag.className = "who-tag " + (v === "end" ? "faithful" : "traitor");
+    tag.textContent = v === "end" ? "End it" : "Banish again";
+    tile.append(name, tag);
+    box.append(tile);
+    play("chalk");
+    await wait(500);
+  }
+  const banishers = votes.filter(([, v]) => v === "banish").length;
+  $("final-result").textContent = allEnd
+    ? "Everyone wants to end the game! Time for the big reveal..."
+    : `${banishers === 1 ? "One person wants" : `${banishers} people want`} to banish again. Back to the Round Table!`;
+  $("final-result").hidden = false;
+  narrate($("final-result").textContent);
+  $("final-next").textContent = allEnd ? "The big reveal" : "Back to the Round Table";
+  $("final-next").onclick = allEnd ? ending : goToTable;
+  $("final-next").hidden = false;
+}
+
+// ─── The end: the big reveal, the money, a party, every Traitor ─────────────
+
+async function ending() {
+  clearSave();
+  const left = stillIn(game);
+  const share = prizeShare(game);
+  $("ending-title").textContent = "The big reveal!";
+  const row = $("ending-reveal");
+  row.replaceChildren();
+  $("ending-result").hidden = true;
+  $("confetti").hidden = true;
+  show("screen-ending");
+  setRoomSound("table");
+  narrate("The big reveal! Who is a Faithful, and who is a Traitor?");
+  await drumRoll();
+  // Everyone left turns round, one by one.
+  for (const id of left) {
+    const side = game.players.find((p) => p.id === id).side;
+    const tile = document.createElement("div");
+    tile.className = "who ending-tile";
+    tile.dataset.id = id;
+    tile.append(badge(character(id)));
+    const name = document.createElement("span");
+    name.className = "who-name";
+    name.textContent = id === game.playerId ? `You (${character(id).name})` : character(id).name;
+    const tag = document.createElement("span");
+    tag.className = "who-tag " + side;
+    tag.textContent = side === TRAITOR ? "TRAITOR!" : "FAITHFUL!";
+    tile.append(name, tag);
+    row.append(tile);
+    play("chalk");
+    say(side === TRAITOR ? "I'm a Traitor!" : "I'm a Faithful!", id);
+    await wait(1300);
+  }
+  // Who wins the money.
+  const money = `£${share.each.toLocaleString("en-GB")}`;
+  const samWins = share.winners.includes(game.playerId);
+  $("ending-winner").textContent = share.side === TRAITOR ? "The Traitors win!" : "The Faithfuls win!";
+  $("ending-winner").className = "reveal " + share.side;
+  $("ending-money").textContent = samWins
+    ? `You win ${money}! Each winner gets ${money} from the £${(game.pot ?? 0).toLocaleString("en-GB")} pot.`
+    : `Oh no! Each of them gets ${money}. Better luck next time!`;
+  // Every Traitor of the whole game.
+  const traitors = $("ending-traitors");
+  traitors.replaceChildren();
+  for (const t of allTraitors(game)) {
+    const tile = document.createElement("div");
+    tile.className = "who";
+    tile.dataset.id = t.id;
+    tile.append(badge(character(t.id)));
+    const name = document.createElement("span");
+    name.className = "who-name";
+    name.textContent = t.id === game.playerId ? "You" : character(t.id).name;
+    tile.append(name);
+    const notes = [];
+    if (t.recruited) notes.push("Recruited");
+    notes.push(t.banished ? "Banished" : stillIn(game).includes(t.id) ? "Still here" : "Gone");
+    for (const n of notes) {
+      const tag = document.createElement("span");
+      tag.className = "who-tag traitor";
+      tag.textContent = n;
+      tile.append(tag);
+    }
+    traitors.append(tile);
+  }
+  $("ending-result").hidden = false;
+  narrate(`${$("ending-winner").textContent} ${$("ending-money").textContent}`, { queue: true });
+  // A party if Sam wins; sad sounds if not.
+  if (samWins) {
+    party();
+    play("cheering");
   } else {
-    $("after-reveal").hidden = false;
+    play("crying");
   }
 }
+
+function party() {
+  const box = $("confetti");
+  box.replaceChildren();
+  const colours = ["#f2c14e", "#e2453c", "#3b7dd8", "#3fa34d", "#ffffff", "#c56bd6"];
+  for (let i = 0; i < 80; i++) {
+    const bit = document.createElement("span");
+    bit.style.left = `${Math.random() * 100}%`;
+    bit.style.background = colours[i % colours.length];
+    bit.style.animationDelay = `${Math.random() * 2}s`;
+    bit.style.animationDuration = `${2.5 + Math.random() * 2}s`;
+    box.append(bit);
+  }
+  box.hidden = false;
+}
+
+// Tests (?fast=1) can jump straight to the final or the end.
+if (FAST) window.castleJump = { finalScreen, ending };
 
 function gameOver(text) {
   clearSave();
@@ -794,7 +942,9 @@ $("door-right").addEventListener("click", (e) => { e.stopPropagation(); tapTo(wo
 $("to-table").addEventListener("click", walkToTable);
 $("to-vote").addEventListener("click", goToTable);
 $("cast-vote").addEventListener("click", castVote);
-$("next-day").addEventListener("click", goNight);
+$("next-day").addEventListener("click", nextAfterReveal);
+$("final-end").addEventListener("click", () => finalChoice("end"));
+$("final-banish").addEventListener("click", () => finalChoice("banish"));
 $("murder").addEventListener("click", () => {
   if (!victimPick) return;
   if (recruiting) {
@@ -806,6 +956,6 @@ $("murder").addEventListener("click", () => {
 });
 $("to-breakfast").addEventListener("click", () => breakfast(game.history[game.history.length - 1].murdered ?? null));
 $("start-day").addEventListener("click", startDay);
-for (const id of ["play-again", "night-play-again", "breakfast-play-again"]) {
+for (const id of ["play-again", "night-play-again", "breakfast-play-again", "ending-play-again"]) {
   $(id).addEventListener("click", () => location.reload());
 }

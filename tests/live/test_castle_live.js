@@ -824,3 +824,70 @@ test("saving: reload the page and carry on from the day you got to", async () =>
   assert.eq(again.game.playerId, "pepper");
   assert.ok(doc.querySelector(".puppet.me"));
 });
+
+// ─── The final and the end ──────────────────────────────────────────────────
+import { allTraitors as everyTraitor } from "../../js/castle.js";
+
+// Sam (Chef Pepper, Faithful) plus one Traitor and four Faithfuls, at the
+// final. Nobody stands out on anyone's list, so they all want to end it.
+function setUpFinal(page) {
+  const g = page.game;
+  const traitor = g.players.find((p) => p.side === TRAITOR && p.id !== "pepper").id;
+  const faithful = g.players.filter((p) => p.side === FAITHFUL && p.id !== "pepper").slice(0, 4).map((p) => p.id);
+  const keep = ["pepper", traitor, ...faithful];
+  for (const p of g.players) p.inGame = keep.includes(p.id);
+  for (const id of Object.keys(g.scores)) for (const o of Object.keys(g.scores[id])) g.scores[id][o] = 0.3;
+  g.day = 13;
+  g.pot = 12000;
+  return keep;
+}
+
+test("after day 12's vote comes the final", async () => {
+  const { page, doc } = await toCastle(seedFor("pepper", FAITHFUL));
+  page.game.day = 12;
+  await voteAndReveal(doc);
+  if (!visible(doc, "after-reveal")) return;   // Sam was banished: that's the end
+  assert.eq(doc.getElementById("next-day").textContent, "On to the final!");
+  doc.getElementById("next-day").click();
+  assert.ok(visible(doc, "screen-final"));
+});
+
+test("the final: everyone ends it, then the big reveal, the money, and every Traitor", async () => {
+  const { page, doc } = await toCastle(seedFor("pepper", FAITHFUL));
+  const keep = setUpFinal(page);
+  page.castleJump.finalScreen();
+  assert.ok(visible(doc, "screen-final"));
+  doc.getElementById("final-end").click();
+  await until(() => visible(doc, "final-next"), "everyone's votes");
+  assert.eq(doc.querySelectorAll("#final-votes .final-vote").length, keep.length);
+  assert.ok(doc.getElementById("final-result").textContent.startsWith("Everyone wants to end"));
+  doc.getElementById("final-next").click();
+  await until(() => visible(doc, "ending-result"), "the big reveal", 15000);
+  assert.eq(doc.querySelectorAll("#ending-reveal .ending-tile").length, keep.length, "everyone left turns round");
+  assert.eq(doc.getElementById("ending-winner").textContent, "The Traitors win!");
+  assert.ok(doc.getElementById("ending-money").textContent.startsWith("Oh no!"), "Sam's a Faithful: no money");
+  assert.eq(doc.querySelectorAll("#ending-traitors .who").length, everyTraitor(page.game).length, "every Traitor of the game");
+  assert.ok(visible(doc, "ending-play-again"));
+});
+
+test("the final: if anyone wants to banish again, back to the Round Table", async () => {
+  const { page, doc } = await toCastle(seedFor("pepper", FAITHFUL));
+  setUpFinal(page);
+  page.castleJump.finalScreen();
+  doc.getElementById("final-banish").click();
+  await until(() => visible(doc, "final-next"), "everyone's votes");
+  assert.ok(doc.getElementById("final-result").textContent.includes("Back to the Round Table"));
+  doc.getElementById("final-next").click();
+  assert.ok(visible(doc, "screen-table"));
+});
+
+test("when your side wins: your share of the pot, and a party", async () => {
+  const { page, doc } = await toCastle(seedFor("pepper", FAITHFUL));
+  setUpFinal(page);
+  for (const p of page.game.players) if (p.side === TRAITOR) p.inGame = false;   // all caught
+  page.castleJump.ending();
+  await until(() => visible(doc, "ending-result"), "the big reveal", 15000);
+  assert.eq(doc.getElementById("ending-winner").textContent, "The Faithfuls win!");
+  assert.ok(doc.getElementById("ending-money").textContent.startsWith("You win £2,400!"), doc.getElementById("ending-money").textContent);
+  assert.ok(visible(doc, "confetti"));
+});

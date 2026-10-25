@@ -1,11 +1,11 @@
 // The castle rules: suspect lists, what people say, the Round Table, and
 // whether the Traitors are hard enough to catch (balance, measured).
 import { test, assert } from "../framework.js";
-import { newGame, TRAITOR, FAITHFUL } from "../../js/game.js";
+import { newGame, TRAITOR, FAITHFUL, DAYS } from "../../js/game.js";
 import {
   arriveAtCastle, suspectList, votePlan, answer, promisedVote, computerVote,
   traitorTarget, roundTable, winner, stillIn, isTraitor, QUESTIONS, LIST_LENGTH,
-  night, murderIdeas, breakfastGroups,
+  night, murderIdeas, breakfastGroups, finalRound, finalVote, prizeShare, allTraitors,
 } from "../../js/castle.js";
 
 const castle = (seed, me = "dot") => arriveAtCastle(newGame(me, seed));
@@ -248,7 +248,9 @@ test("the game lasts 12 days: no early Traitor win; after day 12 any Traitor lef
   g.day = 12;
   assert.eq(winner(g), null, "as many Traitors as Faithfuls, but it's only day 12");
   g.day = 13;
-  assert.eq(winner(g), TRAITOR, "day 12 is over and Traitors are still in");
+  assert.eq(winner(g), null, "day 12 is over: the final, until everyone votes to end it");
+  g.ended = true;
+  assert.eq(winner(g), TRAITOR, "the final is over and Traitors are still in");
   for (const t of traitorsOf(g)) g.players.find((p) => p.id === t).inGame = false;
   assert.eq(winner(g), FAITHFUL, "none left: the Faithfuls win");
 });
@@ -257,6 +259,12 @@ test("the game lasts 12 days: no early Traitor win; after day 12 any Traitor lef
 function wholeGame(seed) {
   const g = arriveAtCastle(newGame("dot", seed), { everyone: true });
   while (!winner(g)) {
+    // The final: vote to end, or banish again (no nights).
+    if (g.day > DAYS) {
+      if (finalRound(g).allEnd) break;
+      roundTable(g, null);
+      continue;
+    }
     roundTable(g, null);
     if (winner(g)) break;
     const kind = nightKind(g);
@@ -277,7 +285,7 @@ test("nights: recruit on night 1; murder every other night; recruit at 2 Traitor
       if (h.murdered) assert.eq(n % 2, 0, `murders on even nights only (night ${n})`);
       if (n % 2 === 1 && n > 1) assert.notOk(h.murdered);
     }
-    assert.ok(g.day <= 13, "never more than 12 days");
+    assert.ok(g.history.slice(12).every((h) => !h.murdered && !h.recruited && !h.quiet), "no nights in the final");
   }
 });
 
@@ -292,7 +300,7 @@ test("only 2 Traitors left by night 5: they recruit again", () => {
 
 test("balance over 12 days: both sides win sometimes; most games go the distance", () => {
   const N = 300;
-  let faithfulWins = 0, fullLength = 0, rec = 0, caught = 0;
+  let faithfulWins = 0, fullLength = 0, rec = 0, caught = 0, finals = 0;
   const tl = [];
   const left = [];
   for (let seed = 1; seed <= N; seed++) {
@@ -303,15 +311,18 @@ test("balance over 12 days: both sides win sometimes; most games go the distance
     tl.push(stillIn(g).filter((id) => isTraitor(g, id)).length);
     rec += g.history.filter((h) => h.recruited).length;
     caught += g.history.filter((h) => h.side === TRAITOR).length;
+    finals += Math.max(0, g.history.length - 12);
   }
   left.sort((a, b) => a - b);
-  const tag = `Faithfuls win ${(faithfulWins / N * 100).toFixed(0)}%, ${(fullLength / N * 100).toFixed(0)}% reach day 12, median ${left[N >> 1]} people left, Traitors left ${(tl.reduce((a, b) => a + b, 0) / N).toFixed(2)}, recruits ${(rec / N).toFixed(2)}, caught ${(caught / N).toFixed(2)} (averages)`;
+  const tag = `final banishings ${(finals / N).toFixed(2)}, Faithfuls win ${(faithfulWins / N * 100).toFixed(0)}%, ${(fullLength / N * 100).toFixed(0)}% reach day 12, median ${left[N >> 1]} people left, Traitors left ${(tl.reduce((a, b) => a + b, 0) / N).toFixed(2)}, recruits ${(rec / N).toFixed(2)}, caught ${(caught / N).toFixed(2)} (averages)`;
   // Recruiting up to night 5 (Gareth): Faithfuls win ~55% (measured
   // 2026-10-24; night 8 gave ~15%, which was too hard).
   assert.gt(faithfulWins / N, 0.4, tag);
   assert.lt(faithfulWins / N, 0.75, tag);
   assert.gt(fullLength / N, 0.4, tag);
-  assert.gt(left[0], 2, "always a few people at the end: " + tag);
+  assert.ok(left[0] >= 2, "always at least two at the end: " + tag);
+  assert.gt(finals / N, 0.2, "the final sometimes banishes again: " + tag);
+  assert.lt(finals / N, 3, "but not on and on: " + tag);
 });
 
 test("Traitors whisper the truth to a Traitor Sam, and fib to a Faithful Sam", () => {
