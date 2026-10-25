@@ -360,10 +360,47 @@ export function finalVote(game, id) {
   const rest = list.slice(1).reduce((sum, o) => sum + s[o], 0) / (list.length - 1);
   return s[list[0]] - rest >= FINAL_MARGIN ? "banish" : "end";
 }
+// What they say as they make their choice at the fire pit (Sam: "they also
+// say a line about why they voted the way they did"), in their own way.
+export function finalLine(game, id, vote) {
+  const r = rng(game, "final-line", game.day, id);
+  if (vote === "end") {
+    return inCharacter(id, pickOne([
+      "I trust everyone at this table. End the game!",
+      "We've caught them all. I'm sure of it!",
+      "I'm happy. Let's end it and share the money!",
+      "No more banishing. I believe in all of you.",
+      "End it! The Traitors are gone.",
+    ], r), r);
+  }
+  const n = game.scores[id] ? nameOf(suspectList(game, id)[0]) : "someone";
+  return inCharacter(id, pickOne([
+    `I still don't trust ${n}. Banish again!`,
+    `There's a Traitor at this table. I can feel it.`,
+    `${n} has been far too quiet. One more vote!`,
+    `Not yet! I think ${n} is a Traitor.`,
+  ], r), r);
+}
+// Sam's choices at the fire pit: two ways to say end, two to say banish.
+export function finalChoices(game) {
+  const r = rng(game, "final-choices", game.day);
+  const pick = (list) => { const i = Math.floor(r() * list.length); return list.splice(i, 1)[0]; };
+  const ends = ["I trust everyone here. End the game!", "We got them all. Let's end it!", "I'm sure. End it and share the money!"];
+  const banishes = ["There's still a Traitor here. Banish again!", "I don't trust someone at this table!", "Not yet! One more vote!"];
+  return [
+    { vote: "end", text: pick(ends) }, { vote: "end", text: pick(ends) },
+    { vote: "banish", text: pick(banishes) }, { vote: "banish", text: pick(banishes) },
+  ];
+}
+
 // One vote in the final. `samVote` is Sam's ("end" or "banish"); computer
-// players decide for themselves. With only two left, it ends.
-export function finalRound(game, samVote = null) {
-  const votes = stillIn(game).map((id) => [id, game.scores[id] ? finalVote(game, id) : samVote ?? "end"]);
+// players decide for themselves. With only two left, it ends. Each vote is
+// [who, "end" | "banish", what they say].
+export function finalRound(game, samVote = null, samLine = null) {
+  const votes = stillIn(game).map((id) => {
+    const v = game.scores[id] ? finalVote(game, id) : samVote ?? "end";
+    return [id, v, id === game.playerId && samLine ? samLine : finalLine(game, id, v)];
+  });
   const allEnd = stillIn(game).length <= 2 || votes.every(([, v]) => v === "end");
   if (allEnd) game.ended = true;
   return { votes, allEnd };

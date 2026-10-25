@@ -5,7 +5,7 @@ import {
   arriveAtCastle, answer, roundTable, winner, stillIn, isTraitor, QUESTIONS,
   night, murderIdeas, breakfastGroups, tableTalk, talkOptions, playerSays,
   isRecruitNight, recruit, recruitIdeas, joinChat, nightKind, quietNight, whosWho,
-  finalRound, prizeShare, allTraitors, hasShield,
+  finalRound, finalChoices, prizeShare, allTraitors, hasShield,
 } from "./castle.js";
 import { DAYS } from "./game.js";
 import { $, show, badge, card, character, wait, FAST } from "./ui.js";
@@ -561,41 +561,73 @@ function nextAfterReveal() {
 
 function finalScreen() {
   const n = stillIn(game).length;
-  $("final-text").textContent = `Day 12 is over! ${n} people are left. Do you want to end the game now, or banish someone else first? It only ends if everyone says end.`;
-  $("final-choice").hidden = false;
+  $("final-text").textContent = `Day 12 is over! ${n} people are left. One by one, everyone throws a flame on the fire. Green to end the game. Red to banish someone else. It only ends if every flame is green.`;
+  const choice = $("final-choice");
+  choice.replaceChildren(...finalChoices(game).map((o) => {
+    const b = document.createElement("button");
+    b.className = "question final-option " + o.vote;
+    b.dataset.vote = o.vote;
+    b.textContent = o.text;
+    b.addEventListener("click", () => finalChoice(o));
+    return b;
+  }));
+  choice.hidden = false;
+  $("final-stage").hidden = true;
   $("final-votes").replaceChildren();
   $("final-result").hidden = true;
   $("final-next").hidden = true;
   show("screen-final");
   setRoomSound("table");
   setMusic("table");
-  narrate("The final! " + $("final-text").textContent);
+  narrate("The final! " + $("final-text").textContent + " What will you say?");
 }
 
-async function finalChoice(samVote) {
+// Everyone throws their flame, one by one, and says why (Sam: "just like
+// the TV show").
+async function finalChoice(option) {
   $("final-choice").hidden = true;
-  const { votes, allEnd } = finalRound(game, samVote);
+  $("final-text").textContent = "Everyone gathers round the fire pit...";
+  const { votes, allEnd } = finalRound(game, option.vote, option.text);
+  $("final-stage").hidden = false;
+  const speaker = $("final-speaker");
+  const flame = $("final-flame");
   const box = $("final-votes");
-  for (const [id, v] of votes) {
+  for (const [id, v, line] of votes) {
+    // Who's speaking, and what they say.
+    const bubble = document.createElement("p");
+    bubble.className = "talk-bubble";
+    const who = document.createElement("b");
+    who.textContent = label(id) + ": ";
+    bubble.append(who, line);
+    speaker.replaceChildren(badge(character(id), true), bubble);
+    speaker.dataset.id = id;
+    flame.hidden = true;
+    await say(line, id);
+    // Their flame on the fire.
+    flame.src = `assets/final/flame-${v === "end" ? "green" : "red"}.png`;
+    flame.className = "flame burn";
+    flame.hidden = false;
+    play("chalk");
     const tile = document.createElement("div");
     tile.className = "who final-vote";
     tile.dataset.id = id;
+    tile.dataset.vote = v;
     tile.append(badge(character(id)));
+    const mini = document.createElement("img");
+    mini.className = "mini-flame";
+    mini.src = flame.src;
+    mini.alt = v === "end" ? "End" : "Banish";
     const name = document.createElement("span");
     name.className = "who-name";
     name.textContent = label(id);
-    const tag = document.createElement("span");
-    tag.className = "who-tag " + (v === "end" ? "faithful" : "traitor");
-    tag.textContent = v === "end" ? "End it" : "Banish again";
-    tile.append(name, tag);
+    tile.append(mini, name);
     box.append(tile);
-    play("chalk");
-    await wait(500);
+    await wait(1400);
   }
   const banishers = votes.filter(([, v]) => v === "banish").length;
   $("final-result").textContent = allEnd
-    ? "Everyone wants to end the game! Time for the big reveal..."
-    : `${banishers === 1 ? "One person wants" : `${banishers} people want`} to banish again. Back to the Round Table!`;
+    ? "Every flame is green! The game is over. Time for the big reveal..."
+    : `${banishers === 1 ? "One red flame" : `${banishers} red flames`}! Back to the Round Table to banish someone else.`;
   $("final-result").hidden = false;
   narrate($("final-result").textContent);
   $("final-next").textContent = allEnd ? "The big reveal" : "Back to the Round Table";
@@ -992,8 +1024,6 @@ $("to-table").addEventListener("click", walkToTable);
 $("to-vote").addEventListener("click", goToTable);
 $("cast-vote").addEventListener("click", castVote);
 $("next-day").addEventListener("click", nextAfterReveal);
-$("final-end").addEventListener("click", () => finalChoice("end"));
-$("final-banish").addEventListener("click", () => finalChoice("banish"));
 $("murder").addEventListener("click", () => {
   if (!victimPick) return;
   if (recruiting) {

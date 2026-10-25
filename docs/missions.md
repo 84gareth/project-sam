@@ -170,3 +170,13 @@ neck (on their puppet, in the walk, when you chat to them) until the next
 day, and can't be murdered that night. Most missions give one shield;
 some (30%, `TWO_SHIELDS`) give two, to the top two players. Sam's drawing
 is also the shield in Catapults.
+
+## The fire pit (Sam, 2026-10-25; v0.17.0)
+
+Sam drew the final's fire pit and its two flames (`assets/final/`). After
+day 12, everyone left takes a turn at the fire pit: they say why, in
+their own way (`finalLine`; a banish line often names their top suspect),
+and throw a green flame (end the game) or a red one (banish again). Sam
+picks one of four lines (`finalChoices`: two green, two red). Any red
+flame means another Round Table, until everyone throws green or two are
+left.

@@ -3,8 +3,9 @@ import { test, assert } from "../framework.js";
 import { newGame, TRAITOR, FAITHFUL, DAYS } from "../../js/game.js";
 import {
   arriveAtCastle, roundTable, recruit, winner, stillIn, isTraitor, finalVote, finalRound, prizeShare,
-  allTraitors, inFinal,
+  allTraitors, inFinal, suspectList,
 } from "../../js/castle.js";
+import { CHARACTERS } from "../../js/characters.js";
 
 const castle = (seed, me = "dot") => arriveAtCastle(newGame(me, seed));
 // A game at the final: day 12 done, a few people left.
@@ -82,4 +83,28 @@ test("every Traitor of the game is listed, recruits and the banished marked", ()
     if (out.side === TRAITOR) assert.ok(list.find((t) => t.id === out.banished).banished);
     return;
   }
+});
+
+// ─── The fire pit: what everyone says ───────────────────────────────────────
+import { finalLine, finalChoices } from "../../js/castle.js";
+
+test("everyone says why they chose; a banish names who they suspect", () => {
+  const g = atFinal(8, 2);
+  const r = finalRound(g, "banish", "My own words!");
+  assert.eq(r.votes.find(([id]) => id === "dot")[2], "My own words!", "Sam says what he picked");
+  for (const [id, v, line] of r.votes) assert.gt(line.length, 10, `${id} says something`);
+  const f = stillIn(g).find((id) => id !== "dot" && !isTraitor(g, id));
+  const top = suspectList(g, f)[0];
+  let named = 0;
+  for (let day = 13; day < 30; day++) {
+    g.day = day;
+    if (finalLine(g, f, "banish").includes(CHARACTERS.find((c) => c.id === top).name)) named++;
+  }
+  assert.gt(named, 3, "banish lines often name their top suspect");
+});
+
+test("Sam gets two end lines and two banish lines, all different", () => {
+  const c = finalChoices(atFinal(3));
+  assert.eq(c.map((o) => o.vote), ["end", "end", "banish", "banish"]);
+  assert.eq(new Set(c.map((o) => o.text)).size, 4);
 });

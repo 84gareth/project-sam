@@ -859,10 +859,11 @@ test("the final: everyone ends it, then the big reveal, the money, and every Tra
   const keep = setUpFinal(page);
   page.castleJump.finalScreen();
   assert.ok(visible(doc, "screen-final"));
-  doc.getElementById("final-end").click();
-  await until(() => visible(doc, "final-next"), "everyone's votes");
+  doc.querySelector('#final-choice [data-vote="end"]').click();
+  await until(() => visible(doc, "final-next"), "everyone's flames", 15000);
+  assert.ok([...doc.querySelectorAll("#final-votes .final-vote")].every((t) => t.dataset.vote === "end"), "all green");
   assert.eq(doc.querySelectorAll("#final-votes .final-vote").length, keep.length);
-  assert.ok(doc.getElementById("final-result").textContent.startsWith("Everyone wants to end"));
+  assert.ok(doc.getElementById("final-result").textContent.startsWith("Every flame is green"));
   doc.getElementById("final-next").click();
   await until(() => visible(doc, "ending-result"), "the big reveal", 15000);
   assert.eq(doc.querySelectorAll("#ending-reveal .ending-tile").length, keep.length, "everyone left turns round");
@@ -876,8 +877,11 @@ test("the final: if anyone wants to banish again, back to the Round Table", asyn
   const { page, doc } = await toCastle(seedFor("pepper", FAITHFUL));
   setUpFinal(page);
   page.castleJump.finalScreen();
-  doc.getElementById("final-banish").click();
-  await until(() => visible(doc, "final-next"), "everyone's votes");
+  assert.eq(doc.querySelectorAll('#final-choice [data-vote="end"]').length, 2, "two ways to say end");
+  assert.eq(doc.querySelectorAll('#final-choice [data-vote="banish"]').length, 2, "two ways to say banish");
+  doc.querySelector('#final-choice [data-vote="banish"]').click();
+  await until(() => visible(doc, "final-next"), "everyone's flames", 15000);
+  assert.eq(doc.querySelector('#final-votes .final-vote[data-id="pepper"]').dataset.vote, "banish", "your red flame");
   assert.ok(doc.getElementById("final-result").textContent.includes("Back to the Round Table"));
   doc.getElementById("final-next").click();
   assert.ok(visible(doc, "screen-table"));

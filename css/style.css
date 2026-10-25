@@ -873,3 +873,19 @@ button.small:active, .door:active { transform: translateY(3px); box-shadow: 0 1p
    picture), so line the medallion up with the chin, not the picture's
    middle (Gareth: "these all need it further to the left"). */
 .necklace, .puppet.flip .puppet-body .necklace { transform: translateX(-62%); }
+
+/* The fire pit final (Sam's drawings) */
+.final { justify-content: flex-start; }
+.final-choice { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; max-width: 720px; width: 100%; }
+.final-option.end { background: linear-gradient(#7be08f, #2f9e4b 60%, #23803b); }
+.final-option.banish { background: linear-gradient(#ff8a7a, #d23a2c 60%, #a8261b); }
+.final-stage { display: flex; align-items: flex-end; justify-content: center; gap: 30px; min-height: 260px; }
+.final-speaker { display: flex; align-items: center; gap: 12px; max-width: 520px; }
+.final-speaker .big-portrait { height: 150px; }
+.pit { position: relative; width: 200px; height: 250px; flex: none; }
+.fire-pit { position: absolute; bottom: 0; left: 0; width: 200px; }
+.flame { position: absolute; left: 50%; bottom: 92px; height: 150px; transform: translateX(-50%); transform-origin: 50% 100%; filter: drop-shadow(0 0 14px rgba(255, 220, 120, 0.7)); }
+.flame.burn { animation: burn 0.6s ease-out, flicker-flame 0.9s ease-in-out 0.6s infinite alternate; }
+@keyframes burn { from { transform: translateX(-50%) scaleY(0.1); opacity: 0; } to { transform: translateX(-50%) scaleY(1); opacity: 1; } }
+@keyframes flicker-flame { from { transform: translateX(-50%) scaleY(1) rotate(-2deg); } to { transform: translateX(-50%) scaleY(1.06) rotate(2deg); } }
+.mini-flame { height: 34px; width: auto; }

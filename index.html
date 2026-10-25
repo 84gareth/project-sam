@@ -15,25 +15,25 @@
   <!-- STAMP (tools/stamp.py writes this; don't edit by hand) -->
   <script type="importmap">{
   "imports": {
-    "./js/castle-ui.js": "./js/castle-ui.js?v=0.16.3",
-    "./js/castle.js": "./js/castle.js?v=0.16.3",
-    "./js/characters.js": "./js/characters.js?v=0.16.3",
-    "./js/dialogue.js": "./js/dialogue.js?v=0.16.3",
-    "./js/fit.js": "./js/fit.js?v=0.16.3",
-    "./js/game.js": "./js/game.js?v=0.16.3",
-    "./js/main.js": "./js/main.js?v=0.16.3",
-    "./js/mission-more.js": "./js/mission-more.js?v=0.16.3",
-    "./js/mission-ui.js": "./js/mission-ui.js?v=0.16.3",
-    "./js/missions.js": "./js/missions.js?v=0.16.3",
-    "./js/puppets.js": "./js/puppets.js?v=0.16.3",
-    "./js/save.js": "./js/save.js?v=0.16.3",
-    "./js/sound.js": "./js/sound.js?v=0.16.3",
-    "./js/ui.js": "./js/ui.js?v=0.16.3",
-    "./js/version.js": "./js/version.js?v=0.16.3",
-    "./js/voice.js": "./js/voice.js?v=0.16.3"
+    "./js/castle-ui.js": "./js/castle-ui.js?v=0.17.0",
+    "./js/castle.js": "./js/castle.js?v=0.17.0",
+    "./js/characters.js": "./js/characters.js?v=0.17.0",
+    "./js/dialogue.js": "./js/dialogue.js?v=0.17.0",
+    "./js/fit.js": "./js/fit.js?v=0.17.0",
+    "./js/game.js": "./js/game.js?v=0.17.0",
+    "./js/main.js": "./js/main.js?v=0.17.0",
+    "./js/mission-more.js": "./js/mission-more.js?v=0.17.0",
+    "./js/mission-ui.js": "./js/mission-ui.js?v=0.17.0",
+    "./js/missions.js": "./js/missions.js?v=0.17.0",
+    "./js/puppets.js": "./js/puppets.js?v=0.17.0",
+    "./js/save.js": "./js/save.js?v=0.17.0",
+    "./js/sound.js": "./js/sound.js?v=0.17.0",
+    "./js/ui.js": "./js/ui.js?v=0.17.0",
+    "./js/version.js": "./js/version.js?v=0.17.0",
+    "./js/voice.js": "./js/voice.js?v=0.17.0"
   }
 }</script>
-  <link rel="stylesheet" href="css/style.css?v=0.16.3">
+  <link rel="stylesheet" href="css/style.css?v=0.17.0">
   <!-- /STAMP -->
 </head>
 <body>
@@ -162,12 +162,18 @@
     </section>
 
     <!-- The final after day 12: end it, or banish again? (Sam) -->
-    <section id="screen-final" class="screen table" hidden>
+    <!-- The final at the fire pit (Sam's drawings): green flame to end the
+         game, red flame to banish again. -->
+    <section id="screen-final" class="screen table final" hidden>
       <h2>The final!</h2>
       <p id="final-text" class="most-votes final-text"></p>
-      <div id="final-choice" class="questions">
-        <button id="final-end" class="question">End the game</button>
-        <button id="final-banish" class="question">Banish someone else</button>
+      <div id="final-choice" class="final-choice"></div>
+      <div id="final-stage" class="final-stage" hidden>
+        <div id="final-speaker" class="final-speaker"></div>
+        <div class="pit">
+          <img id="final-flame" class="flame" alt="" hidden>
+          <img class="fire-pit" src="assets/final/fire-pit.png" alt="The fire pit">
+        </div>
       </div>
       <div id="final-votes" class="final-votes"></div>
       <p id="final-result" class="most-votes" hidden></p>
@@ -289,6 +295,6 @@
     <p>Turn your phone sideways to play!</p>
   </div>
 
-  <script type="module" src="js/main.js?v=0.16.3"></script>
+  <script type="module" src="js/main.js?v=0.17.0"></script>
 </body>
 </html>
