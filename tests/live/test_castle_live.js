@@ -155,7 +155,7 @@ test("Round Table: vote, everyone shows a chalkboard, drum roll, reveal, next da
   await until(() => visible(doc, "to-reveal"), "all the chalkboards are up");
   assert.eq(doc.querySelectorAll("#boards .chalkboard").length, 22, "22 chalkboards");
   assert.eq(doc.getElementById("boards").dataset.pauses, "3", "stopped 3 times to count the votes");
-  assert.ok([...doc.querySelectorAll(".board-voter")].some((b) => b.textContent === "You"), "yours is there");
+  assert.ok([...doc.querySelectorAll(".board-voter")].some((b) => b.textContent === "Chef Pepper (you)"), "yours is there");
   doc.getElementById("to-reveal").click();
   await until(() => doc.getElementById("reveal").textContent.includes("!"), "the reveal", 8000);
   const out = page.game.history[0];
@@ -318,7 +318,7 @@ test("Round Table talk: people accuse and defend, then Sam joins in", async () =
   assert.ok(opts.length >= 3, "options to join in");
   opts[0].click();
   await until(() => visible(doc, "to-vote"), "then the vote");
-  assert.ok([...doc.querySelectorAll("#talk-lines .talk-line b")].some((b) => b.textContent === "You: "), "Sam's line appears");
+  assert.ok([...doc.querySelectorAll("#talk-lines .talk-line b")].some((b) => b.textContent === "Chef Pepper (you): "), "Sam's line appears");
   doc.getElementById("to-vote").click();
   assert.ok(visible(doc, "screen-table"));
 });
@@ -799,7 +799,7 @@ test("your own character is marked: the walk, your chalkboard, the reveal list",
   doc.querySelector("#table-cards .card").click();
   doc.getElementById("cast-vote").click();
   await until(() => doc.querySelector(".chalkboard.me-board"), "your chalkboard", 20000);
-  assert.ok(doc.querySelector(".chalkboard.me-board").textContent.includes("You"));
+  assert.ok(doc.querySelector(".chalkboard.me-board").textContent.includes("Chef Pepper (you)"));
 });
 
 test("pause: shows everyone, and closes again", async () => {
@@ -892,4 +892,13 @@ test("when your side wins: your share of the pot, and a party", async () => {
   assert.eq(doc.getElementById("ending-winner").textContent, "The Faithfuls win!");
   assert.ok(doc.getElementById("ending-money").textContent.startsWith("You win £2,400!"), doc.getElementById("ending-money").textContent);
   assert.ok(visible(doc, "confetti"));
+});
+
+test("your character's name shows (with 'you'), not just 'You'", async () => {
+  const { page, doc } = await toCastle(seedFor("pepper", FAITHFUL));
+  page.castleTick();
+  assert.eq(doc.querySelector('.name-tag[data-id="pepper"]').textContent, "Chef Pepper (you)");
+  doc.getElementById("pause").click();
+  assert.ok(doc.querySelector('.who-you').textContent.includes("Chef Pepper (you)"));
+  assert.notOk([...doc.querySelectorAll("button, span, b, p")].some((e) => e.childElementCount === 0 && e.textContent.trim() === "You"), "no bare 'You' anywhere");
 });

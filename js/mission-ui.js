@@ -378,7 +378,7 @@ async function playCatapults() {
   const result = finishCatapults(game, hits, stillIn(game), mission);
   const mine = hits.filter((h) => h && h !== "shield");
   const line = mine.length ? `You hit ${mine.length} out of ${STONES}!` : "You didn't hit anyone!";
-  const names = result.hit.map((id) => id === game.playerId ? "you" : character(id).name);
+  const names = result.hit.map((id) => id === game.playerId ? `${character(id).name} (you)` : character(id).name);
   const extra = names.length
     ? `Up for murder tonight: ${names.join(", ")}.`
     : "Nobody was hit, so nobody is up for murder!";

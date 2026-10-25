@@ -20,6 +20,10 @@ import { saveGame, clearSave } from "./save.js";
 let game = null;
 let tableVote = null;
 
+// Everyone's name as shown on screen; Sam's own character says "(you)" too
+// (Gareth: show your character's name, not just "You").
+const label = (id) => (id === game.playerId ? `${character(id).name} (you)` : character(id).name);
+
 let world = null;
 let chatTarget = null;
 let joinTarget = null;
@@ -179,7 +183,7 @@ function placeNames(ids) {
       tag = document.createElement("button");
       tag.className = "name-tag" + (id === game.playerId ? " me" : "");
       tag.dataset.id = id;
-      tag.textContent = id === game.playerId ? "You" : character(id).name;
+      tag.textContent = label(id);
       if (id !== game.playerId) tag.addEventListener("click", (e) => { e.stopPropagation(); tapPerson(id); });
       layer.append(tag);
     }
@@ -374,7 +378,7 @@ async function roundTableTalk() {
       const reply = playerSays(game, o);
       opts.hidden = true;
       if (o.kind !== "quiet") {
-        lines.append(talkLine(game.playerId, o.text, "You"));
+        lines.append(talkLine(game.playerId, o.text, label(game.playerId)));
         await say(o.text, game.playerId);
       }
       if (reply) {
@@ -438,7 +442,7 @@ async function castVote() {
     b.className = "chalkboard";
     const who = document.createElement("span");
     who.className = "board-voter";
-    who.textContent = voter === game.playerId ? "You" : character(voter).name;
+    who.textContent = label(voter);
     if (voter === game.playerId) b.classList.add("me-board");
     const chalk = document.createElement("span");
     chalk.className = "chalk";
@@ -538,7 +542,7 @@ async function finalChoice(samVote) {
     tile.append(badge(character(id)));
     const name = document.createElement("span");
     name.className = "who-name";
-    name.textContent = id === game.playerId ? "You" : character(id).name;
+    name.textContent = label(id);
     const tag = document.createElement("span");
     tag.className = "who-tag " + (v === "end" ? "faithful" : "traitor");
     tag.textContent = v === "end" ? "End it" : "Banish again";
@@ -582,7 +586,7 @@ async function ending() {
     tile.append(badge(character(id)));
     const name = document.createElement("span");
     name.className = "who-name";
-    name.textContent = id === game.playerId ? `You (${character(id).name})` : character(id).name;
+    name.textContent = label(id);
     const tag = document.createElement("span");
     tag.className = "who-tag " + side;
     tag.textContent = side === TRAITOR ? "TRAITOR!" : "FAITHFUL!";
@@ -610,7 +614,7 @@ async function ending() {
     tile.append(badge(character(t.id)));
     const name = document.createElement("span");
     name.className = "who-name";
-    name.textContent = t.id === game.playerId ? "You" : character(t.id).name;
+    name.textContent = label(t.id);
     tile.append(name);
     const notes = [];
     if (t.recruited) notes.push("Recruited");
@@ -820,7 +824,7 @@ async function breakfast(victim) {
       who.className = "arrival-person";
       who.append(badge(character(id)));
       const name = document.createElement("span");
-      name.textContent = id === game.playerId ? "You" : character(id).name;
+      name.textContent = label(id);
       who.append(name);
       row.append(who);
     }
@@ -867,9 +871,9 @@ function showRoster() {
     who.className = "arrival-person" + (p.inGame ? "" : " gone-person");
     who.dataset.id = p.id;
     who.append(badge(character(p.id)));
-    const label = document.createElement("span");
-    label.textContent = p.id === game.playerId ? "You" : character(p.id).name;
-    who.append(label);
+    const name = document.createElement("span");
+    name.textContent = label(p.id);
+    who.append(name);
     gone.append(who);
   }
   $("gone-box").hidden = false;
@@ -898,7 +902,7 @@ function openOverview() {
     tile.append(badge(character(p.id)));
     const name = document.createElement("span");
     name.className = "who-name";
-    name.textContent = p.you ? `You (${character(p.id).name})` : character(p.id).name;
+    name.textContent = label(p.id);
     tile.append(name);
     const lines = [];
     if (p.gone === "banished") lines.push(["Banished", ""]);
