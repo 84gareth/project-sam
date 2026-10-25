@@ -68,8 +68,28 @@ function enterCastle() {
 // Sam's cut-out of a character (the puppet), or their badge if there's no
 // drawing yet. Used when you talk to someone (Gareth: show the cut-out, not
 // the portrait).
-function necklace() {
+// Where each drawing's chin is, as a fraction of its height from the top
+// (Gareth: Benny Biscuit's was over his face; tall hats push chins down).
+// Measured by eye from the cut-outs, 2026-10-25.
+const NECK = {
+  puddle: 0.33, gumdrop: 0.22, fizz: 0.19, ruby: 0.28, pepper: 0.33, waffle: 0.29,
+  plaster: 0.25, lola: 0.23, fern: 0.32, dot: 0.30, benny: 0.45, mystic: 0.41,
+  tom: 0.19, zara: 0.25, grumble: 0.20, penny: 0.29, kick: 0.22, stan: 0.32,
+  ivy: 0.27, max: 0.33, olive: 0.18, barry: 0.28,
+};
+// ...and across, where the head isn't in the middle of the picture (a goat
+// on a lead, a pie held out). Anyone not listed is in the middle (0.5).
+const NECK_X = {
+  gumdrop: 0.43, fizz: 0.42, pepper: 0.36, waffle: 0.45, plaster: 0.55, lola: 0.58,
+  fern: 0.30, dot: 0.45, mystic: 0.60, tom: 0.55, penny: 0.42, kick: 0.45,
+  ivy: 0.36, barry: 0.38,
+};
+// The chain shows from 8.8% below the necklace's top (its hidden part).
+const NECK_HIDDEN = 0.088;
+function necklace(id) {
   const n = document.createElement("img");
+  n.style.top = `${((NECK[id] ?? 0.24) - NECK_HIDDEN) * 100}%`;
+  n.style.left = `${(NECK_X[id] ?? 0.5) * 100}%`;
   n.className = "necklace";
   n.src = "assets/shield.png";
   n.alt = "";
@@ -81,7 +101,7 @@ function wearing(id, picture) {
   if (!hasShield(game, id)) return picture;
   const box = document.createElement("span");
   box.className = "wearing has-shield";
-  box.append(picture, necklace());
+  box.append(picture, necklace(id));
   return box;
 }
 
@@ -167,7 +187,7 @@ function puppetEl(id) {
   }
   // Sam's shield necklace, worn by whoever won a shield today (Sam: "seen
   // wearing this around their necks until the next day").
-  body.append(necklace());
+  body.append(necklace(id));
   // A big speech bubble with bouncing dots when they're chatting.
   const dots = document.createElement("span");
   dots.className = "puppet-chat";
