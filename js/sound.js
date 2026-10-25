@@ -75,7 +75,10 @@ const ROOM_SOUNDS = {
   garden: ["room-garden.mp3", 0.35],   // birds singing
   kitchen: ["room-kitchen.mp3", 0.25], // cooking sizzling
   library: ["room-library.mp3", 0.3],  // a quiet ticking clock
-  table: ["room-table.mp3", 1.3],      // the Round Table's crackling fire (Gareth: "I can't hear the fireplace at all")
+  // The Round Table's crackling fire. The recording is very quiet (loudest
+  // point 0.08, measured 2026-10-25), so it needs a big boost to be heard
+  // (Gareth, twice: "I can't hear the fireplace").
+  table: ["room-table.mp3", 11],
 };
 const roomBuffers = {};
 let roomNow = null;   // { room, src, gain }
