@@ -72,7 +72,7 @@ function enterCastle() {
 // (Gareth: Benny Biscuit's was over his face; tall hats push chins down).
 // Measured by eye from the cut-outs, 2026-10-25.
 const NECK = {
-  puddle: 0.33, gumdrop: 0.22, fizz: 0.19, ruby: 0.28, pepper: 0.33, waffle: 0.29,
+  puddle: 0.33, gumdrop: 0.22, fizz: 0.19, ruby: 0.28, pepper: 0.33, waffle: 0.34,
   plaster: 0.25, lola: 0.23, fern: 0.32, dot: 0.30, benny: 0.45, mystic: 0.41,
   tom: 0.19, zara: 0.25, grumble: 0.20, penny: 0.29, kick: 0.22, stan: 0.32,
   ivy: 0.27, max: 0.33, olive: 0.18, barry: 0.28,

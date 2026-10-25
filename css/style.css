@@ -869,3 +869,7 @@ button.small:active, .door:active { transform: translateY(3px); box-shadow: 0 1p
    their neck, is hidden, so the chain seems to go round it. The hidden
    part starts at the neck. */
 .necklace { clip-path: inset(34% 0 0 0); top: 15%; }
+/* Sam's medallion hangs right of the chain's middle (about 62% across the
+   picture), so line the medallion up with the chin, not the picture's
+   middle (Gareth: "these all need it further to the left"). */
+.necklace, .puppet.flip .puppet-body .necklace { transform: translateX(-62%); }
