@@ -160,3 +160,13 @@ everyone says end (or two are left). Then the big reveal (everyone left,
 one by one), who wins the money (the pot shared by the winners still in),
 a party if Sam's side wins (confetti, cheering; crying if not), and every
 Traitor of the whole game, recruits and the banished marked.
+
+## Shields (Sam, 2026-10-25; v0.16.0)
+
+Sam drew the shield: a gold necklace with a medallion
+(`assets/shield-drawing.jpg`, cut out to `assets/shield.png` with
+`tools/image-fix/ink_only.gd`). Whoever wins a shield wears it round their
+neck (on their puppet, in the walk, when you chat to them) until the next
+day, and can't be murdered that night. Most missions give one shield;
+some (30%, `TWO_SHIELDS`) give two, to the top two players. Sam's drawing
+is also the shield in Catapults.

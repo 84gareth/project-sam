@@ -5,7 +5,7 @@ import {
   arriveAtCastle, answer, roundTable, winner, stillIn, isTraitor, QUESTIONS,
   night, murderIdeas, breakfastGroups, tableTalk, talkOptions, playerSays,
   isRecruitNight, recruit, recruitIdeas, joinChat, nightKind, quietNight, whosWho,
-  finalRound, prizeShare, allTraitors,
+  finalRound, prizeShare, allTraitors, hasShield,
 } from "./castle.js";
 import { DAYS } from "./game.js";
 import { $, show, badge, card, character, wait, FAST } from "./ui.js";
@@ -68,6 +68,23 @@ function enterCastle() {
 // Sam's cut-out of a character (the puppet), or their badge if there's no
 // drawing yet. Used when you talk to someone (Gareth: show the cut-out, not
 // the portrait).
+function necklace() {
+  const n = document.createElement("img");
+  n.className = "necklace";
+  n.src = "assets/shield.png";
+  n.alt = "";
+  n.draggable = false;
+  return n;
+}
+// A cut-out, wearing the shield necklace if they have one today.
+function wearing(id, picture) {
+  if (!hasShield(game, id)) return picture;
+  const box = document.createElement("span");
+  box.className = "wearing has-shield";
+  box.append(picture, necklace());
+  return box;
+}
+
 function cutout(id, extraClass = "") {
   const c = character(id);
   if (!c.picture) return badge(c, true);
@@ -148,6 +165,9 @@ function puppetEl(id) {
     paper.classList.add("puppet-badge");
     body.append(paper);
   }
+  // Sam's shield necklace, worn by whoever won a shield today (Sam: "seen
+  // wearing this around their necks until the next day").
+  body.append(necklace());
   // A big speech bubble with bouncing dots when they're chatting.
   const dots = document.createElement("span");
   dots.className = "puppet-chat";
@@ -243,6 +263,7 @@ function render() {
     el.style.zIndex = String(Math.round(p.y * 1000));
     const moving = id === game.playerId ? p.walking : p.mode === "walk";
     el.classList.toggle("walking", moving);
+    el.classList.toggle("has-shield", hasShield(game, id));
     el.classList.toggle("flip", p.facing === "left");
     el.classList.toggle("chatting", p.mode === "chat" && id !== chatTarget);
   }
@@ -254,7 +275,7 @@ function openChat(id) {
   // They stop to talk while you chat.
   const them = world && world.people[id];
   if (them) { them.mode = "chat"; them.timer = 3; them.with = game.playerId; }
-  $("chat-picture").replaceChildren(cutout(id));
+  $("chat-picture").replaceChildren(wearing(id, cutout(id)));
   $("chat-name").textContent = c.name;
   $("bubble").hidden = true;
   const qs = $("questions");
@@ -279,7 +300,7 @@ function openJoin(a, b) {
     const p = world.people[id];
     if (p) { p.mode = "chat"; p.timer = 3; }
   }
-  $("join-pictures").replaceChildren(cutout(a, "join-cutout"), cutout(b, "join-cutout"));
+  $("join-pictures").replaceChildren(wearing(a, cutout(a, "join-cutout")), wearing(b, cutout(b, "join-cutout")));
   $("join-names").textContent = `${character(a).name} and ${character(b).name}`;
   $("join-who").textContent = character(j.speaker).name + ":";
   $("join-text").textContent = j.text;
@@ -340,7 +361,7 @@ async function walkToTable() {
   line.replaceChildren(...stillIn(game).map((id) => {
     const el = cutout(id);
     el.dataset.id = id;
-    return el;
+    return wearing(id, el);
   }));
   // Restart the walk animation from the right-hand edge.
   line.style.animation = "none";
@@ -908,7 +929,7 @@ function openOverview() {
     if (p.gone === "banished") lines.push(["Banished", ""]);
     if (p.gone === "murdered") lines.push(["Murdered", ""]);
     if (p.side) lines.push([p.side === TRAITOR ? "Traitor" : "Faithful", p.side]);
-    if (p.shield) lines.push(["Has the shield", "shield"]);
+    if (p.shield) lines.push(["Has a shield", "shield"]);
     for (const [text, kind] of lines) {
       const tag = document.createElement("span");
       tag.className = "who-tag " + kind;

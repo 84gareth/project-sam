@@ -86,6 +86,20 @@ function stopTimers() {
 // The tests' way to finish a mission at once, as badly as possible.
 if (FAST) window.missionGiveUp = () => finish(null, "You gave up.", flopResult(game, stillIn(game), mission));
 
+// Who won a shield today, in words.
+function shieldLine(r) {
+  const shields = r.shields;
+  const me = game.playerId;
+  if (shields.length === 0) return "The shield is broken! Nobody has a shield tonight.";
+  const two = shields.length === 2 ? "Two shields today! " : "";
+  const others = shields.filter((id) => id !== me).map((id) => character(id).name);
+  if (shields.includes(me)) {
+    const how = r.found ? "You found a shield!" : "You win a shield!";
+    return `${two}${how} Nobody can murder you tonight!${others.length ? ` ${others[0]} wins one too.` : ""}`;
+  }
+  return `${two}${others.join(" and ")} ${others.length === 2 ? "win shields" : "wins the shield"}!`;
+}
+
 // `done`: a result already worked out (Catapults, Cooking); `extra`: one
 // more line to show. Only the first finish counts.
 async function finish(score, line, done = null, extra = "") {
@@ -97,13 +111,7 @@ async function finish(score, line, done = null, extra = "") {
   $("mission-pot").textContent = `The team won ${money(r.won)}! The pot is now ${money(game.pot)}.`;
   $("mission-extra").textContent = extra;
   $("mission-extra").hidden = !extra;
-  $("mission-shield").textContent = r.shield === null
-    ? "The shield is broken! Nobody has a shield tonight."
-    : r.found
-      ? "You found the shield! Nobody can murder you tonight!"
-      : r.shield === game.playerId
-        ? "You were the best! You win the shield. Nobody can murder you tonight!"
-        : `${character(r.shield).name} was the best, and wins the shield!`;
+  $("mission-shield").textContent = shieldLine(r);
   for (const id of CONTAINERS) $(id).hidden = true;
   $("mission-status").textContent = "";
   $("mission-result").hidden = false;
@@ -249,8 +257,10 @@ async function playCatapults() {
     e.className = "flyer";
     e.dataset.id = t.id;
     if (t.id === "shield") {
-      const s = document.createElement("div");
+      const s = document.createElement("img");
       s.className = "shield-target";
+      s.src = "assets/shield.png";   // Sam's drawing
+      s.alt = "Shield";
       e.append(s);
     } else {
       e.append(badge(character(t.id)));

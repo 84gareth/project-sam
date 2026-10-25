@@ -15,6 +15,9 @@ export function unpackGame(text) {
     const data = JSON.parse(text);
     const g = data && data.v === SAVE_VERSION ? data.game : null;
     if (!g || !Array.isArray(g.players) || !Array.isArray(g.history) || !g.scores || !g.playerId || !(g.day >= 1)) return null;
+    // Saves from before two shields had one `shield` (v0.15).
+    if (!g.shields) g.shields = g.shield ? [g.shield] : [];
+    delete g.shield;
     return g;
   } catch {
     return null;

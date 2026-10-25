@@ -15,7 +15,7 @@ test("a game a few days in comes back exactly the same", () => {
   roundTable(g, stillIn(g).find((id) => id !== "dot"));
   recruit(g);
   g.pot = 4500;
-  g.shield = "puddle";
+  g.shields = ["puddle"];
   const back = unpackGame(packGame(g));
   assert.eq(back, JSON.parse(JSON.stringify(g)));
   // And it still plays on.
@@ -41,4 +41,14 @@ test("a broken or old save is ignored", () => {
   const broken = { getItem: () => { throw new Error("no storage"); }, setItem: () => { throw new Error("full"); }, removeItem: () => {} };
   assert.eq(loadGame(broken), null, "storage that throws");
   saveGame(arriveAtCastle(newGame("dot", 1)), broken);   // doesn't crash
+});
+
+test("an old save with one shield still loads", () => {
+  const g = arriveAtCastle(newGame("dot", 2));
+  const old = JSON.parse(packGame(g));
+  old.game.shield = "fizz";
+  delete old.game.shields;
+  const back = unpackGame(JSON.stringify(old));
+  assert.eq(back.shields, ["fizz"]);
+  assert.eq(back.shield, undefined);
 });

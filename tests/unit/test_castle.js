@@ -589,10 +589,10 @@ test("who's who: a Traitor Sam sees his fellow Traitors; the shield is shown", (
   for (let seed = 1; seed <= 300; seed++) {
     const g = castle(seed);
     if (g.playerSide !== TRAITOR) continue;
-    g.shield = stillIn(g).find((id) => !isTraitor(g, id));
+    g.shields = [stillIn(g).find((id) => !isTraitor(g, id))];
     const w = whosWho(g);
     for (const p of w) if (isTraitor(g, p.id)) assert.eq(p.side, TRAITOR);
-    assert.eq(w.filter((p) => p.shield).map((p) => p.id), [g.shield]);
+    assert.eq(w.filter((p) => p.shield).map((p) => p.id), g.shields);
     return;
   }
   assert.ok(false, "no game found");

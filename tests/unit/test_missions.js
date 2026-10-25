@@ -58,20 +58,20 @@ test("the pot grows, and the best player wins the shield", () => {
   g.day = 2;
   const r = finishMission(g, 1, stillIn(g));
   assert.eq(r.scores.length, 22, "everyone still in plays");
-  assert.eq(r.shield, r.scores[0][0], "best score wins it");
+  assert.eq(r.shields, r.scores.slice(0, r.count).map(([id]) => id), "the best score(s) win them");
   assert.gt(r.won, 0);
   assert.eq(r.won % 500, 0, "rounded to £500");
   assert.eq(g.pot, r.won);
   g.day = 3;
   const r2 = finishMission(g, 0, stillIn(g));
   assert.eq(g.pot, r.won + r2.won, "the pot adds up");
-  assert.ne(r2.shield, "dot", "a score of 0 doesn't win");
+  assert.notOk(r2.shields.includes("dot"), "a score of 0 doesn't win");
 });
 
 test("a perfect Sam wins the shield", () => {
   const g = castle(8);
   g.day = 2;
-  assert.eq(finishMission(g, 1.01, stillIn(g)).shield, "dot");
+  assert.eq(finishMission(g, 1.01, stillIn(g)).shields[0], "dot");
 });
 
 test("the Traitors can't murder whoever has the shield, and it lasts one night", () => {
@@ -81,22 +81,23 @@ test("the Traitors can't murder whoever has the shield, and it lasts one night",
     g.history[0].quiet = true;   // skip night 1: straight on to a murder night
     roundTable(g, stillIn(g).find((id) => id !== "dot"));
     const top = murderIdeas(g)[0];
-    g.shield = top;
+    g.shields = [top];
     assert.notOk(murderIdeas(g).includes(top), "not on their list");
     const victim = night(g);
     assert.ne(victim, top, "the shield saved them");
     assert.ok(stillIn(g).includes(top));
-    assert.eq(g.shield, null, "gone after the night");
+    assert.eq(g.shields, [], "gone after the night");
   }
 });
 
 test("a Traitor Sam can't pick the shield holder either", () => {
   const g = castle(1);
-  g.shield = stillIn(g).find((id) => !isTraitor(g, id));
+  const holder = stillIn(g).find((id) => !isTraitor(g, id));
+  g.shields = [holder];
   let threw = false;
-  try { night(g, g.shield); } catch { threw = true; }
+  try { night(g, holder); } catch { threw = true; }
   // Only throws when Sam is the one picking; otherwise the computer avoids it.
-  assert.ok(threw || g.players.find((p) => p.id === g.shield).inGame);
+  assert.ok(threw || g.players.find((p) => p.id === holder).inGame);
 });
 
 test("Castle Bells: rounds of 3 to 7 bells from one tune; score is rounds done", () => {
@@ -142,8 +143,8 @@ test("Catapults: good throwers hit who they suspect; everyone hit is up for murd
 test("Catapults: hit the shield and nobody gets it", () => {
   const g = castle(6);
   const r = finishCatapults(g, ["shield", null, null], stillIn(g));
-  assert.eq(r.shield, null);
-  assert.eq(g.shield, null);
+  assert.eq(r.shields, []);
+  assert.eq(g.shields, []);
   assert.ok(r.broken);
 });
 
@@ -167,7 +168,7 @@ test("Catapults day: always a murder that night, and only someone who was hit", 
     g.day = 3;
     const r = finishCatapults(g, [null, null, null], stillIn(g));
     g.history.push({});   // day 3's Round Table: tonight is night 3, normally quiet
-    const faithfulHit = r.hit.filter((id) => !isTraitor(g, id) && id !== g.shield && stillIn(g).includes(id));
+    const faithfulHit = r.hit.filter((id) => !isTraitor(g, id) && !g.shields.includes(id) && stillIn(g).includes(id));
     if (stillIn(g).filter((id) => isTraitor(g, id)).length <= 2) continue;   // a recruiting night instead
     assert.eq(nightKind(g), "murder", "catapult day: a murder");
     if (faithfulHit.length === 0) continue;
@@ -199,11 +200,11 @@ test("Cooking: the hated food scores; the right box wins the shield", () => {
   assert.eq(cookScore(diner, TRUCKS.map((t) => t.foods.find((f) => f !== hated))), 0.3);
   const r = finishCooking(g, diner, meal, shieldTruck(g), stillIn(g));
   assert.ok(r.found);
-  assert.eq(g.shield, "dot");
+  assert.eq(g.shields[0], "dot");
   g.day = 2;
   const r2 = finishCooking(g, cookingDiner(g, stillIn(g)), meal, (shieldTruck(g) + 1) % 3, stillIn(g));
   assert.notOk(r2.found);
-  assert.eq(r2.shield, r2.scores[0][0], "otherwise the best player");
+  assert.eq(r2.shields[0], r2.scores[0][0], "otherwise the best player");
 });
 
 // ─── The other nine ─────────────────────────────────────────────────────────
@@ -391,7 +392,7 @@ test("giving up scores nothing (and hits nobody, and finds no shield)", () => {
   for (const m of MISSIONS) {
     const g = castle(3);
     const r = flopResult(g, stillIn(g), m);
-    assert.ne(r.shield, "dot", m.id);
+    assert.notOk(r.shields.includes("dot"), m.id);
     if (m.id === "catapults") assert.eq(g.upForMurder.ids.includes("dot"), r.hit.includes("dot"));
   }
 });
@@ -561,4 +562,33 @@ test("Catapults: a stone hits whoever's oval it lands in, the nearest first", ()
   assert.eq(hitAt(t, { x: 0.515, y: 0.4 }), "b");
   assert.eq(hitAt(t, { x: 0.2, y: 0.2 + TARGET_RY * 0.9 }), "c");
   assert.eq(hitAt(t, { x: 0.8, y: 0.6 }), null);
+});
+
+// ─── Two shields (Sam: "should be possible for more than one person") ──────
+import { shieldCount, TWO_SHIELDS } from "../../js/missions.js";
+
+test("usually one shield; some missions give two, to the top two", () => {
+  let two = 0;
+  for (let seed = 1; seed <= 200; seed++) {
+    const g = castle(seed);
+    g.day = 2;
+    const r = finishMission(g, 0, stillIn(g));
+    assert.eq(r.shields.length, shieldCount(g));
+    assert.eq(r.shields, r.scores.slice(0, r.shields.length).map(([id]) => id));
+    if (r.shields.length === 2) two++;
+  }
+  assert.gt(two, 200 * TWO_SHIELDS * 0.6, `${two}/200 had two`);
+  assert.lt(two, 200 * TWO_SHIELDS * 1.4, `${two}/200 had two`);
+});
+
+test("two shields: the Traitors can murder neither", () => {
+  const g = castle(9);
+  roundTable(g, stillIn(g).find((id) => id !== "dot"));
+  g.history[0].quiet = true;
+  roundTable(g, stillIn(g).find((id) => id !== "dot"));
+  const [a, b] = murderIdeas(g);
+  g.shields = [a, b];
+  assert.notOk(murderIdeas(g).includes(a) || murderIdeas(g).includes(b));
+  const victim = night(g);
+  assert.ok(victim !== a && victim !== b);
 });

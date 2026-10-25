@@ -77,3 +77,8 @@ tablecloth: `paper_only.gd` then `clean_paper.gd`), Zara Zoom, Madame Mystic.
 | 20 | Max Muddle | Always gets lost. |
 | 21 | Olive Oddsocks | Never wears socks that match. |
 | 22 | Barry Banjo | Plays the banjo. Badly. |
+
+**Drawings with holes in** (like Sam's shield necklace): use
+`tools/image-fix/ink_only.gd <photo> <out.png> [height] [edge]`. It keeps
+only strong pen and marker, drops paper, shadows and specks, and adds a
+thin white sticker edge (cutout.gd would keep the paper inside the loop).

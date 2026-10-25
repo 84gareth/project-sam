@@ -855,3 +855,13 @@ button.small:active, .door:active { transform: translateY(3px); box-shadow: 0 1p
 .board-voter { font-family: var(--font); font-weight: 600; }
 #debug-missions { display: flex; flex-wrap: wrap; justify-content: center; max-width: 700px; }
 #debug-missions .question { flex: 0 0 calc(50% - 5px); min-height: 52px; }
+
+/* Sam's shield necklace, worn by today's shield winners. */
+.puppet-body { position: relative; }
+.necklace { display: none; position: absolute; left: 50%; top: 27%; height: 26%; width: auto; transform: translateX(-50%); pointer-events: none; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.5)); }
+.puppet.has-shield .necklace { display: block; }
+.puppet-body .necklace { height: 26% !important; }
+.wearing { position: relative; display: inline-block; }
+.wearing .necklace { display: block; height: 26%; }
+.shield-target { width: 90%; height: auto; margin: 0 auto; background: none; border: none; border-radius: 0; display: block; filter: drop-shadow(0 3px 3px rgba(0,0,0,0.5)); }
+.puppet.flip .puppet-body .necklace { transform: translateX(-50%); }

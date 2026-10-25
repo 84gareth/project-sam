@@ -29,6 +29,8 @@ function rng(game, ...parts) {
 
 const player = (game, id) => game.players.find((p) => p.id === id);
 export const isTraitor = (game, id) => player(game, id).side === TRAITOR;
+// Who won a shield at today's mission (worn until the next day).
+export const hasShield = (game, id) => (game.shields ?? []).includes(id);
 export const stillIn = (game) => game.players.filter((p) => p.inGame).map((p) => p.id);
 // Computer players still in. With `everyone`, Sam counts too (the balance
 // tests let the computer play his part).
@@ -400,7 +402,7 @@ function threat(game, id) {
 // After Catapults, only someone who was hit can be murdered (Sam).
 export function murderIdeas(game) {
   const up = game.upForMurder && game.upForMurder.day === game.history.length ? game.upForMurder.ids : null;
-  const ok = (id) => !isTraitor(game, id) && id !== game.shield;
+  const ok = (id) => !isTraitor(game, id) && !hasShield(game, id);
   const pool = stillIn(game).filter((id) => ok(id) && (!up || up.includes(id)));
   return (pool.length ? pool : stillIn(game).filter(ok))
     .sort((a, b) => threat(game, b) - threat(game, a) || (a < b ? -1 : 1));
@@ -413,8 +415,8 @@ export function night(game, playerPick = null) {
   const samPicks = game.playerSide === TRAITOR && player(game, game.playerId).inGame;
   const victim = samPicks && playerPick ? playerPick : murderIdeas(game)[0];
   if (isTraitor(game, victim)) throw new Error("Traitors can't murder a Traitor");
-  if (victim === game.shield) throw new Error("they have the shield");
-  game.shield = null;   // a shield lasts one night
+  if (hasShield(game, victim)) throw new Error("they have a shield");
+  game.shields = [];   // a shield lasts one night
   player(game, victim).inGame = false;
   game.history[game.history.length - 1].murdered = victim;
   return victim;
@@ -659,7 +661,7 @@ export const isRecruitNight = (game) => nightKind(game) === "recruit";
 
 // A quiet night: nobody is murdered, and the shield wears off.
 export function quietNight(game) {
-  game.shield = null;
+  game.shields = [];
   game.history[game.history.length - 1].quiet = true;
 }
 
@@ -690,7 +692,7 @@ export function recruit(game, pick = null) {
     }
   }
   game.recruited = who;
-  game.shield = null;
+  game.shields = [];
   game.history[game.history.length - 1].recruited = who;
   return who;
 }
@@ -763,6 +765,6 @@ export function whosWho(game) {
     if (gone) side = p.side;
     else if (p.id === game.playerId) side = game.playerSide;
     else if (samTraitor && p.side === TRAITOR) side = TRAITOR;
-    return { id: p.id, gone, side, you: p.id === game.playerId, shield: game.shield === p.id };
+    return { id: p.id, gone, side, you: p.id === game.playerId, shield: hasShield(game, p.id) };
   });
 }

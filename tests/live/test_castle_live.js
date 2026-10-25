@@ -423,7 +423,7 @@ test("Castle Bells: ring every tune back right and you win the shield", async ()
   }
   await until(() => visible(doc, "mission-result"), "the result", 8000);
   assert.ok(doc.getElementById("mission-score").textContent.includes("perfectly"));
-  assert.ok(doc.getElementById("mission-shield").textContent.includes("You win the shield"));
+  assert.ok(doc.getElementById("mission-shield").textContent.includes("You win a shield"));
   assert.gt(page.game.pot, 0);
   assert.ok(doc.getElementById("mission-pot").textContent.includes("£"));
   doc.getElementById("mission-done").click();
@@ -443,7 +443,7 @@ test("Chilli Pie Shuffle: follow the chilli pie three times", async () => {
   }
   await until(() => visible(doc, "mission-result"), "the result", 8000);
   assert.ok(doc.getElementById("mission-score").textContent.includes("3 times out of 3"));
-  assert.ok(doc.getElementById("mission-shield").textContent.includes("You win the shield"));
+  assert.ok(doc.getElementById("mission-shield").textContent.includes("You win a shield"));
 });
 
 test("each room has its own sound, and the Round Table has a crackling fire", async () => {
@@ -588,7 +588,7 @@ test("Catapults: hit the shield and it breaks", async () => {
   }
   while (!visible(doc, "mission-result")) await fireAt(page, doc, doc.querySelector(".flyer:not(.hit)").dataset.id);
   await result(doc);
-  assert.eq(page.game.shield, null);
+  assert.eq(page.game.shields, []);
   assert.ok(doc.getElementById("mission-shield").textContent.includes("broken"));
 });
 
@@ -607,8 +607,8 @@ test("Cooking: cook their hated food and find the shield", async () => {
   doc.getElementById("serve").click();
   await until(() => visible(doc, "mission-result"), "the result", 8000);
   assert.ok(doc.getElementById("mission-score").textContent.includes("least favourite"));
-  assert.ok(doc.getElementById("mission-shield").textContent.includes("You found the shield"));
-  assert.eq(page.game.shield, "pepper");
+  assert.ok(doc.getElementById("mission-shield").textContent.includes("You found a shield"));
+  assert.eq(page.game.shields[0], "pepper");
 });
 
 // ─── The other nine missions, played well ───────────────────────────────────
@@ -901,4 +901,19 @@ test("your character's name shows (with 'you'), not just 'You'", async () => {
   doc.getElementById("pause").click();
   assert.ok(doc.querySelector('.who-you').textContent.includes("Chef Pepper (you)"));
   assert.notOk([...doc.querySelectorAll("button, span, b, p")].some((e) => e.childElementCount === 0 && e.textContent.trim() === "You"), "no bare 'You' anywhere");
+});
+
+test("whoever has a shield wears Sam's shield necklace", async () => {
+  const { page, doc } = await toCastle(seedFor("pepper", FAITHFUL));
+  const room = page.world.me.room;
+  const id = Object.entries(page.world.people).find(([, p]) => p.room === room)[0];
+  page.game.shields = [id];
+  page.castleTick();
+  const puppet = doc.querySelector(`.puppet[data-id="${id}"]`);
+  assert.ok(puppet.classList.contains("has-shield"));
+  assert.eq(page.getComputedStyle(puppet.querySelector(".necklace")).display, "block", "the necklace shows");
+  const other = doc.querySelector(`.puppet:not([data-id="${id}"]) .necklace`);
+  if (other) assert.eq(page.getComputedStyle(other).display, "none", "nobody else wears one");
+  doc.getElementById("to-table").click();
+  assert.ok(doc.querySelector(`#walk-line .wearing .cutout[data-id="${id}"]`), "wearing it on the walk too");
 });

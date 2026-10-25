@@ -101,6 +101,10 @@ export function computerScore(game, id, mission) {
 // Finish today's mission with Sam's score (0 to 1). Everyone still in gets
 // a score; the pot grows; the best player wins the shield.
 // Returns { mission, scores: [[id, score]] best first, won, shield }.
+// How many shields today's mission gives: usually 1, sometimes 2.
+export const TWO_SHIELDS = 0.3;
+export const shieldCount = (game) => (rng(game, "shields", game.day)() < TWO_SHIELDS ? 2 : 1);
+
 // `mission` defaults to today's (the debug menu passes its own).
 // `shield`: "broken" (nobody gets it) or who found it; else the best player.
 export function finishMission(game, samScore, stillIn, mission = todaysMission(game), shield = undefined) {
@@ -109,8 +113,16 @@ export function finishMission(game, samScore, stillIn, mission = todaysMission(g
   const average = scores.reduce((sum, [, s]) => sum + s, 0) / scores.length;
   const won = Math.round((average * POT_PER_MISSION) / 500) * 500;
   game.pot = (game.pot ?? 0) + won;
-  game.shield = shield === "broken" ? null : shield ?? scores[0][0];
-  return { mission, scores, won, shield: game.shield };
+  // Usually one shield, sometimes two (Sam: "should be possible for more
+  // than one person to win one"): the best players win them. Someone who
+  // found one (Cooking) gets one of them.
+  const count = shieldCount(game);
+  if (shield === "broken") game.shields = [];
+  else {
+    const first = shield ?? scores[0][0];
+    game.shields = [first, ...scores.map(([id]) => id).filter((id) => id !== first)].slice(0, count);
+  }
+  return { mission, scores, won, shields: game.shields, count };
 }
 
 // ─── Castle Bells ───────────────────────────────────────────────────────────
