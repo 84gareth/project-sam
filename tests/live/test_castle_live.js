@@ -448,8 +448,10 @@ test("Chilli Pie Shuffle: follow the chilli pie three times", async () => {
 
 test("each room has its own sound, and the Round Table has a crackling fire", async () => {
   const { page, doc } = await toCastle(seedFor("pepper", FAITHFUL));
+  page.castleTick();
   await until(() => doc.body.dataset.roomSound === "hall", "the great hall's sound");
   page.world.me.room = "garden";
+  page.castleTick();
   await until(() => doc.body.dataset.roomSound === "garden", "the garden's sound");
   doc.getElementById("to-table").click();
   await until(() => doc.body.dataset.roomSound === "table", "the fire at the Round Table");
@@ -963,4 +965,19 @@ test("a Traitor Sam chooses who gets the dagger when it's down to 8", async () =
   doc.getElementById("murder").click();
   await until(() => visible(doc, "start-day") || visible(doc, "breakfast-over"), "breakfast", 10000);
   assert.ok(doc.getElementById("dagger-news").textContent.includes("gave YOU the dagger"));
+});
+
+
+test("Round Table talk: lots of lines, and the buttons stay on the screen", async () => {
+  const { doc } = await toCastle(seedFor("pepper", FAITHFUL));
+  doc.getElementById("to-table").click();
+  await until(() => visible(doc, "talk-options"), "Sam's turn", 15000);
+  // Pile on extra lines, like a long talk.
+  const lines = doc.getElementById("talk-lines");
+  for (let i = 0; i < 12; i++) lines.append(lines.firstElementChild.cloneNode(true));
+  const screenBottom = doc.getElementById("screen-talk").getBoundingClientRect().bottom;
+  for (const b of doc.querySelectorAll("#talk-options .question")) assert.ok(b.getBoundingClientRect().bottom <= screenBottom + 1, "a choice is on the screen");
+  doc.querySelector("#talk-options .question").click();
+  await until(() => visible(doc, "to-vote"), "Time to vote");
+  assert.ok(doc.getElementById("to-vote").getBoundingClientRect().bottom <= screenBottom + 1, "the vote button is on the screen");
 });

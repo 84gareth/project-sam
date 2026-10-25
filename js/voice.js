@@ -71,8 +71,10 @@ export function say(text, id, opts = {}) {
   if (FAST) { speak(text, id, opts); return Promise.resolve(); }
   return new Promise((resolve) => {
     const u = speak(text, id, opts);
-    const guess = 1200 + text.length * 75;
-    const timer = setTimeout(resolve, u ? guess * 2 : 400);
+    // If the browser never says it's finished (iPads sometimes don't), stop
+    // waiting soon after the line should have ended, not long after.
+    const guess = 1000 + text.length * 70;
+    const timer = setTimeout(resolve, u ? guess * 1.3 : 400);
     if (u) u.onend = u.onerror = () => { clearTimeout(timer); resolve(); };
   });
 }

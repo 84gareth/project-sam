@@ -898,3 +898,11 @@ button.small:active, .door:active { transform: translateY(3px); box-shadow: 0 1p
 .dagger-x2 { position: absolute; top: -10px; right: -10px; background: #d23a2c; color: #fff; font: 400 18px var(--title-font); border: 2px solid var(--ink); border-radius: 12px; padding: 0 6px; }
 .chalkboard { position: relative; }
 .dagger-news { max-width: 760px; text-align: center; color: #ffb3a8; }
+
+/* The Round Table talk: the list of what people say scrolls, and the
+   buttons underneath always stay on the screen (Gareth: they disappeared
+   off the bottom). */
+#screen-talk { justify-content: flex-start; }
+#screen-talk > * { flex-shrink: 0; }
+#screen-talk .talk-lines { flex: 1 1 0; min-height: 0; flex-shrink: 1; }
+.talk-line { flex-shrink: 0; }

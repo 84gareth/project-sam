@@ -406,14 +406,16 @@ async function roundTableTalk() {
   show("screen-talk");
   setRoomSound("table");   // a crackling fire (Gareth)
   setMusic("table");       // and tense music, for the whole Round Table (Gareth)
-  narrate("Everyone sits down at the Round Table.");
+  // Each person finishes speaking before the next starts, and Sam's turn
+  // only comes when everyone's done (Gareth: lines were cut off when he
+  // tapped a choice too quickly).
+  await narrate("Everyone sits down at the Round Table.");
   const talk = tableTalk(game);
   for (const t of talk) {
-    await wait(1500);
-    lines.append(talkLine(t.speaker, t.text));
-    say(t.text, t.speaker, { queue: true });
+    addLine(lines, talkLine(t.speaker, t.text));
+    await Promise.all([say(t.text, t.speaker), wait(900)]);
   }
-  await wait(1000);
+  await wait(400);
   const opts = $("talk-options");
   opts.replaceChildren();
   for (const o of talkOptions(game, talk)) {
@@ -424,18 +426,26 @@ async function roundTableTalk() {
       const reply = playerSays(game, o);
       opts.hidden = true;
       if (o.kind !== "quiet") {
-        lines.append(talkLine(game.playerId, o.text, label(game.playerId)));
+        addLine(lines, talkLine(game.playerId, o.text, label(game.playerId)));
         await say(o.text, game.playerId);
       }
       if (reply) {
-        lines.append(talkLine(reply.speaker, reply.text));
-        say(reply.text, reply.speaker, { queue: true });
+        addLine(lines, talkLine(reply.speaker, reply.text));
+        await say(reply.text, reply.speaker);
       }
       $("to-vote").hidden = false;
+      lines.scrollTop = lines.scrollHeight;
     });
     opts.append(b);
   }
   opts.hidden = false;
+}
+
+// Add a line and keep the newest in view (the list scrolls; the buttons
+// below it stay on the screen).
+function addLine(lines, row) {
+  lines.append(row);
+  lines.scrollTop = lines.scrollHeight;
 }
 
 function talkLine(id, text, label = character(id).name) {
