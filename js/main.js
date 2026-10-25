@@ -12,6 +12,7 @@ import { narrate } from "./voice.js";
 import { MISSIONS } from "./missions.js";
 import { startMission } from "./mission-ui.js";
 import { arriveAtCastle } from "./castle.js";
+import { loadGame } from "./save.js";
 
 let pickedId = null;
 // The game in progress, once a character is chosen. Exposed for the live tests.
@@ -51,6 +52,17 @@ $("title").textContent = GAME_NAME;
 $("version").textContent = "v" + VERSION;
 buildCards();
 $("start").addEventListener("click", () => show("screen-pick"));
+// A saved game: carry on from the start of the day you got to.
+const saved = new URLSearchParams(location.search).has("seed") ? null : loadGame();
+if (saved) {
+  $("carry-on").hidden = false;
+  $("carry-on").textContent = `Carry on: day ${saved.day} as ${character(saved.playerId).name}`;
+  $("carry-on").addEventListener("click", () => {
+    window.game = saved;
+    setMe(saved.playerId);
+    goToCastle(saved, { resume: true });
+  });
+}
 $("choose").addEventListener("click", () => pickedId && startGame());
 // All aboard! A short train ride with the steam train sound (Sam), THEN
 // the castle (Gareth: the sound was playing after you'd arrived).

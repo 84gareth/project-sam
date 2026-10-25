@@ -14,6 +14,7 @@ import {
 import { say, narrate, voicesOn, setVoices } from "./voice.js";
 import { drumRoll, play, setRoomSound } from "./sound.js";
 import { startMission } from "./mission-ui.js";
+import { saveGame, clearSave } from "./save.js";
 
 let game = null;
 let tableVote = null;
@@ -22,8 +23,9 @@ let world = null;
 let chatTarget = null;
 let joinTarget = null;
 
-export function goToCastle(g) {
-  game = arriveAtCastle(g);
+// `resume`: carry on a saved game from the start of its day.
+export function goToCastle(g, { resume = false } = {}) {
+  game = resume ? g : arriveAtCastle(g);
   window.game = game;
   world = createWorld(game, Math.random);
   window.world = world;
@@ -36,6 +38,7 @@ export function goToCastle(g) {
 // Each day from day 2 starts with its mission, then the castle.
 // (No mission on day 1: Gareth.)
 function startDay() {
+  saveGame(game);   // a reload comes back to here
   if (game.day === 1) enterCastle();
   else startMission(game, enterCastle);
 }
@@ -499,6 +502,7 @@ async function reveal(result) {
 }
 
 function gameOver(text) {
+  clearSave();
   $("game-over-text").textContent = text;
   narrate(text, { queue: true });
   $("game-over").hidden = false;
@@ -527,6 +531,7 @@ async function goNight() {
   const victim = night(game);
   await wait(1800);
   if (victim === me) {
+    clearSave();
     await sealedLetter("you have been murdered.");
     $("night-over").hidden = false;
   } else {
@@ -722,6 +727,7 @@ function showRoster() {
     $("breakfast-over-text").textContent =
       `${won === FAITHFUL ? "The Faithfuls win" : "The Traitors win"} the £${(game.pot ?? 0).toLocaleString("en-GB")} pot! The Traitors were ${traitors.join(", ")}.`;
     narrate($("breakfast-over-text").textContent, { queue: true });
+    clearSave();
     $("breakfast-over").hidden = false;
   } else {
     $("start-day").hidden = false;

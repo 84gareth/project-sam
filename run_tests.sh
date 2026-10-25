@@ -54,7 +54,8 @@ for _ in range(100):
         time.sleep(0.05)
 EOF
 
-# --virtual-time-budget lets the async tests finish before the page is read.
+# --virtual-time-budget lets the async tests finish before the page is read
+# (120 s of test-clock time; the full suite passed 30 s on 2026-10-25).
 # A 120 s stopwatch (macOS has no `timeout` command, so Python keeps it): a
 # test stuck in an endless loop fails the run instead of freezing it.
 python3 - "$CHROME" "$PROFILE" "http://127.0.0.1:$PORT/tests/index.html?only=$ONLY" <<'EOF' | tee "$OUTFILE"
@@ -64,7 +65,7 @@ try:
     page = subprocess.run(
         [chrome, "--headless=new", "--disable-gpu", "--no-first-run",
          "--no-default-browser-check", "--user-data-dir=" + profile,
-         "--virtual-time-budget=30000", "--dump-dom", url],
+         "--virtual-time-budget=120000", "--dump-dom", url],
         capture_output=True, text=True, timeout=120).stdout
 except subprocess.TimeoutExpired:
     print("TIMED OUT after 120 s: a test is probably stuck in an endless loop.")

@@ -810,3 +810,17 @@ test("pause: shows everyone, and closes again", async () => {
   doc.getElementById("overview-close").click();
   assert.notOk(visible(doc, "overview"));
 });
+
+test("saving: reload the page and carry on from the day you got to", async () => {
+  const { page } = await toCastle(seedFor("pepper", FAITHFUL));
+  const day = page.game.day;
+  const again = await openPage("../index.html?fast=1");
+  const doc = again.document;
+  await until(() => visible(doc, "carry-on"), "a Carry on button");
+  assert.ok(doc.getElementById("carry-on").textContent.includes("Chef Pepper"));
+  doc.getElementById("carry-on").click();
+  await until(() => visible(doc, "screen-castle"), "back in the castle");
+  assert.eq(again.game.day, day);
+  assert.eq(again.game.playerId, "pepper");
+  assert.ok(doc.querySelector(".puppet.me"));
+});
