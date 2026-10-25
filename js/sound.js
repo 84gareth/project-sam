@@ -139,7 +139,7 @@ export function bell(i) {
 // ─── Music (Gareth, 2026-10-25: "tense music during the round table") ──────
 // One looping track at a time, under the room sounds, fading in and out.
 const MUSIC = {
-  table: ["music-round-table.mp3", 0.28],   // Mixkit 597 "Vertigo"
+  table: ["music-round-table.mp3", 0.15],   // Mixkit 671 "Piano Horror" (loud: average 0.13)
 };
 const musicBuffers = {};
 let musicNow = null;   // { name, src, gain }
