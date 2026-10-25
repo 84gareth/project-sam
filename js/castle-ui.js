@@ -6,6 +6,7 @@ import {
   night, murderIdeas, breakfastGroups, tableTalk, talkOptions, playerSays,
   isRecruitNight, recruit, recruitIdeas, joinChat, nightKind, quietNight, whosWho,
   finalRound, finalChoices, prizeShare, allTraitors, hasShield,
+  isDaggerNight, giveDagger, daggerIdeas, daggerHolder, hasDagger,
 } from "./castle.js";
 import { DAYS } from "./game.js";
 import { $, show, badge, card, character, wait, FAST } from "./ui.js";
@@ -98,10 +99,13 @@ function necklace(id) {
 }
 // A cut-out, wearing the shield necklace if they have one today.
 function wearing(id, picture) {
-  if (!hasShield(game, id)) return picture;
+  const shield = hasShield(game, id), dagger = hasDagger(game, id);
+  if (!shield && !dagger) return picture;
   const box = document.createElement("span");
-  box.className = "wearing has-shield";
-  box.append(picture, necklace(id));
+  box.className = "wearing" + (shield ? " has-shield" : "") + (dagger ? " has-dagger" : "");
+  box.append(picture);
+  if (shield) box.append(necklace(id));
+  if (dagger) box.append(daggerImg());
   return box;
 }
 
@@ -187,7 +191,7 @@ function puppetEl(id) {
   }
   // Sam's shield necklace, worn by whoever won a shield today (Sam: "seen
   // wearing this around their necks until the next day").
-  body.append(necklace(id));
+  body.append(necklace(id), daggerImg());
   // A big speech bubble with bouncing dots when they're chatting.
   const dots = document.createElement("span");
   dots.className = "puppet-chat";
@@ -284,6 +288,7 @@ function render() {
     const moving = id === game.playerId ? p.walking : p.mode === "walk";
     el.classList.toggle("walking", moving);
     el.classList.toggle("has-shield", hasShield(game, id));
+    el.classList.toggle("has-dagger", hasDagger(game, id));
     el.classList.toggle("flip", p.facing === "left");
     el.classList.toggle("chatting", p.mode === "chat" && id !== chatTarget);
   }
@@ -485,6 +490,12 @@ async function castVote() {
     who.className = "board-voter";
     who.textContent = label(voter);
     if (voter === game.playerId) b.classList.add("me-board");
+    if (voter === result.dagger) {
+      const x2 = document.createElement("span");
+      x2.className = "dagger-x2";
+      x2.textContent = "x2";
+      b.append(x2);
+    }
     const chalk = document.createElement("span");
     chalk.className = "chalk";
     chalk.textContent = character(target).name + (target === game.playerId ? " (you!)" : "");
@@ -878,6 +889,62 @@ function traitorsMeeting() {
   show("screen-traitors");
 }
 
+// The night it gets down to 8, the Traitors also give out the dagger (Sam).
+// A Traitor Sam picks who gets it; otherwise the Traitors decide.
+let daggerMode = false;
+let daggerVictim = null;
+function toBreakfast(victim) {
+  if (!isDaggerNight(game)) return breakfast(victim);
+  if (game.playerSide === TRAITOR && stillIn(game).includes(game.playerId)) return daggerMeeting(victim);
+  giveDagger(game);
+  breakfast(victim);
+}
+
+function daggerMeeting(victim) {
+  daggerMode = true;
+  daggerVictim = victim;
+  victimPick = null;
+  $("murder").disabled = true;
+  $("murder").textContent = "Give them the dagger";
+  $("meeting-hint").textContent = "Only 8 players left! Who gets the dagger? It can be anyone, even you. Their vote counts twice at the next Round Table.";
+  narrate($("meeting-hint").textContent);
+  const ideas = daggerIdeas(game);
+  const fellows = stillIn(game).filter((id) => id !== game.playerId && isTraitor(game, id));
+  const box = $("traitor-ideas");
+  box.replaceChildren();
+  fellows.forEach((f) => {
+    const idea = ideas[0] === f ? "me" : label(ideas[0]);
+    const line = `Give the dagger to ${idea}. Two votes for us!`;
+    const p = document.createElement("p");
+    p.className = "idea";
+    p.textContent = `${character(f).name}: "${line}"`;
+    box.append(p);
+    say(line, f, { queue: true });
+  });
+  const cards = $("victim-cards");
+  cards.replaceChildren();
+  for (const id of stillIn(game)) {
+    const el = card(character(id), null);
+    el.addEventListener("click", () => {
+      victimPick = id;
+      for (const other of cards.children) other.classList.toggle("picked", other === el);
+      $("murder").disabled = false;
+    });
+    cards.append(el);
+  }
+  show("screen-traitors");
+}
+
+// The dagger in someone's hand, shown on their puppet and cut-out.
+function daggerImg() {
+  const d = document.createElement("img");
+  d.className = "held-dagger";
+  d.src = "assets/dagger.png";
+  d.alt = "";
+  d.draggable = false;
+  return d;
+}
+
 // Breakfast: little groups walk in. The murdered one never comes.
 async function breakfast(victim) {
   const arrivals = $("arrivals");
@@ -950,6 +1017,14 @@ function showRoster() {
     gone.append(who);
   }
   $("gone-box").hidden = false;
+  const holder = daggerHolder(game);
+  $("dagger-news").hidden = !holder;
+  if (holder) {
+    $("dagger-news").textContent = holder === game.playerId
+      ? "The Traitors gave YOU the dagger! Your vote counts twice at today's Round Table."
+      : `The Traitors gave the dagger to ${character(holder).name}! Their vote counts twice at today's Round Table.`;
+    narrate($("dagger-news").textContent, { queue: true });
+  }
   const won = winner(game);
   if (won) {
     const traitors = game.players.filter((p) => p.side === TRAITOR).map((p) => character(p.id).name);
@@ -982,6 +1057,7 @@ function openOverview() {
     if (p.gone === "murdered") lines.push(["Murdered", ""]);
     if (p.side) lines.push([p.side === TRAITOR ? "Traitor" : "Faithful", p.side]);
     if (p.shield) lines.push(["Has a shield", "shield"]);
+    if (p.dagger) lines.push(["Has the dagger", "traitor"]);
     for (const [text, kind] of lines) {
       const tag = document.createElement("span");
       tag.className = "who-tag " + kind;
@@ -1026,14 +1102,18 @@ $("cast-vote").addEventListener("click", castVote);
 $("next-day").addEventListener("click", nextAfterReveal);
 $("murder").addEventListener("click", () => {
   if (!victimPick) return;
-  if (recruiting) {
+  if (daggerMode) {
+    daggerMode = false;
+    giveDagger(game, victimPick);
+    breakfast(daggerVictim);
+  } else if (recruiting) {
     recruit(game, victimPick);
-    breakfast(null);
+    toBreakfast(null);
   } else {
-    breakfast(night(game, victimPick));
+    toBreakfast(night(game, victimPick));
   }
 });
-$("to-breakfast").addEventListener("click", () => breakfast(game.history[game.history.length - 1].murdered ?? null));
+$("to-breakfast").addEventListener("click", () => toBreakfast(game.history[game.history.length - 1].murdered ?? null));
 $("start-day").addEventListener("click", startDay);
 for (const id of ["play-again", "night-play-again", "breakfast-play-again", "ending-play-again"]) {
   $(id).addEventListener("click", () => location.reload());

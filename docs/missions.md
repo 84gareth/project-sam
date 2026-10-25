@@ -180,3 +180,13 @@ and throw a green flame (end the game) or a red one (banish again). Sam
 picks one of four lines (`finalChoices`: two green, two red). Any red
 flame means another Round Table, until everyone throws green or two are
 left.
+
+## The dagger (Sam, 2026-10-25; v0.18.0)
+
+Sam drew the dagger (`assets/dagger.png`). The night it gets down to 8
+players, the Traitors give it to someone: anyone, even one of themselves
+(a Traitor Sam picks; otherwise they give it to their least-suspected
+Traitor, `daggerIdeas`). The holder carries it all the next day (on their
+puppet, in the walk) and their vote counts twice at that day's Round
+Table (an "x2" on their chalkboard). Breakfast says who has it. Once a
+game.

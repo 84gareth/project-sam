@@ -267,6 +267,7 @@ function wholeGame(seed) {
     }
     roundTable(g, null);
     if (winner(g)) break;
+    if (isDaggerNight(g)) giveDagger(g);
     const kind = nightKind(g);
     if (kind === "recruit") recruit(g);
     else if (kind === "murder") night(g);
@@ -596,4 +597,52 @@ test("who's who: a Traitor Sam sees his fellow Traitors; the shield is shown", (
     return;
   }
   assert.ok(false, "no game found");
+});
+
+// ─── The dagger (Sam) ───────────────────────────────────────────────────────
+import { isDaggerNight, giveDagger, daggerHolder, hasDagger, daggerIdeas, DAGGER_AT } from "../../js/castle.js";
+
+test("the dagger: given once, the night it gets down to 8; held the next day only", () => {
+  for (let seed = 1; seed <= 60; seed++) {
+    const g = wholeGame(seed);
+    if (!g.dagger) continue;
+    const day = g.dagger.day;
+    const h = g.history[day - 2];   // the day before: when it reached 8
+    assert.ok(g.history[day - 1] === undefined || g.history[day - 1].dagger === g.dagger.holder, "the holder's day");
+    assert.ok(h, `seed ${seed}`);
+  }
+  const g = castle(4);
+  for (const p of g.players.slice(DAGGER_AT + 1)) p.inGame = false;
+  assert.notOk(isDaggerNight(g), "9 left: not yet");
+  g.players[DAGGER_AT].inGame = false;
+  assert.ok(isDaggerNight(g), "8 left: tonight");
+  const holder = giveDagger(g);
+  assert.ok(hasDagger(g, holder));
+  assert.notOk(isDaggerNight(g), "only once");
+  g.day += 1;
+  assert.eq(daggerHolder(g), null, "gone the day after");
+});
+
+test("the dagger doubles its holder's vote at the Round Table", () => {
+  const g = castle(5);
+  const voters = stillIn(g);
+  const holder = voters.find((id) => id !== "dot");
+  g.dagger = { holder, day: g.day };
+  const r = roundTable(g, voters.find((id) => id !== "dot" && id !== holder));
+  const theirVote = r.votes.find(([v]) => v === holder)[1];
+  const plain = r.votes.filter(([, t]) => t === theirVote).length;
+  assert.eq(r.counts[theirVote], plain + 1, "two for the holder's choice");
+  assert.eq(r.dagger, holder);
+});
+
+test("the Traitors give it to one of their own unless a Traitor Sam picks", () => {
+  const g = castle(7);
+  assert.ok(isTraitor(g, daggerIdeas(g)[0]));
+  for (let seed = 1; seed <= 300; seed++) {
+    const t = castle(seed);
+    if (t.playerSide !== TRAITOR) continue;
+    const pick = stillIn(t).find((id) => !isTraitor(t, id));
+    assert.eq(giveDagger(t, pick), pick, "anyone, even a Faithful");
+    return;
+  }
 });

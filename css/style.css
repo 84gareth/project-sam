@@ -889,3 +889,12 @@ button.small:active, .door:active { transform: translateY(3px); box-shadow: 0 1p
 @keyframes burn { from { transform: translateX(-50%) scaleY(0.1); opacity: 0; } to { transform: translateX(-50%) scaleY(1); opacity: 1; } }
 @keyframes flicker-flame { from { transform: translateX(-50%) scaleY(1) rotate(-2deg); } to { transform: translateX(-50%) scaleY(1.06) rotate(2deg); } }
 .mini-flame { height: 34px; width: auto; }
+
+/* Sam's dagger, held all day by whoever the Traitors gave it to. */
+.held-dagger { display: none; position: absolute; right: -22%; top: 26%; height: 52%; width: auto; transform: rotate(18deg); pointer-events: none; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.5)); }
+.puppet-body .held-dagger { height: 52% !important; }
+.puppet.has-dagger .held-dagger, .wearing .held-dagger { display: block; }
+.puppet.flip .puppet-body .held-dagger { transform: rotate(18deg); }
+.dagger-x2 { position: absolute; top: -10px; right: -10px; background: #d23a2c; color: #fff; font: 400 18px var(--title-font); border: 2px solid var(--ink); border-radius: 12px; padding: 0 6px; }
+.chalkboard { position: relative; }
+.dagger-news { max-width: 760px; text-align: center; color: #ffb3a8; }

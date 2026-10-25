@@ -31,6 +31,32 @@ const player = (game, id) => game.players.find((p) => p.id === id);
 export const isTraitor = (game, id) => player(game, id).side === TRAITOR;
 // Who won a shield at today's mission (worn until the next day).
 export const hasShield = (game, id) => (game.shields ?? []).includes(id);
+
+// ─── The dagger (Sam, 2026-10-25) ───────────────────────────────────────────
+// The night it gets down to 8 players, the Traitors give someone the dagger
+// (anyone, even one of themselves). The holder carries it all the next day,
+// and their vote counts twice at that day's Round Table. Once a game.
+export const DAGGER_AT = 8;
+export const isDaggerNight = (game) => !game.dagger && game.day <= DAYS && stillIn(game).length <= DAGGER_AT;
+export const daggerHolder = (game) => (game.dagger && game.dagger.day === game.day ? game.dagger.holder : null);
+export const hasDagger = (game, id) => daggerHolder(game) === id;
+// Who the Traitors would give it to, best first: a Traitor nobody suspects
+// much (an extra vote for their side), then everyone else.
+export function daggerIdeas(game) {
+  const honest = brains(game).filter((id) => !isTraitor(game, id));
+  const suspicion = (x) => honest.reduce((sum, h) => sum + (h === x ? 0 : game.scores[h][x]), 0);
+  const left = stillIn(game);
+  const traitors = left.filter((id) => isTraitor(game, id)).sort((a, b) => suspicion(a) - suspicion(b) || (a < b ? -1 : 1));
+  return [...traitors, ...left.filter((id) => !isTraitor(game, id))];
+}
+// Give it out tonight: Sam's pick if he's a Traitor still in, else theirs.
+// It's for the coming day (game.day is already the next day at night).
+export function giveDagger(game, pick = null) {
+  const samPicks = game.playerSide === TRAITOR && player(game, game.playerId).inGame;
+  const holder = samPicks && pick ? pick : daggerIdeas(game)[0];
+  game.dagger = { holder, day: game.day };
+  return holder;
+}
 export const stillIn = (game) => game.players.filter((p) => p.inGame).map((p) => p.id);
 // Computer players still in. With `everyone`, Sam counts too (the balance
 // tests let the computer play his part).
@@ -298,14 +324,15 @@ export function computerVote(game, id) {
 export function roundTable(game, playerVote) {
   const voters = stillIn(game);
   const votes = voters.map((v) => [v, game.scores[v] ? computerVote(game, v) : playerVote]);
+  // The dagger: its holder's vote counts twice today (Sam).
   const counts = {};
-  for (const [, t] of votes) counts[t] = (counts[t] || 0) + 1;
+  for (const [v, t] of votes) counts[t] = (counts[t] || 0) + (hasDagger(game, v) ? 2 : 1);
   const top = Math.max(...Object.values(counts));
   const tied = Object.keys(counts).filter((id) => counts[id] === top).sort();
   const banished = tied[Math.floor(rng(game, "tie", game.day)() * tied.length)];
   const side = player(game, banished).side;
   player(game, banished).inGame = false;
-  const result = { day: game.day, votes, counts, banished, side };
+  const result = { day: game.day, votes, counts, banished, side, dagger: daggerHolder(game) };
   game.history.push(result);
   learn(game, result);
   game.day += 1;
@@ -802,6 +829,6 @@ export function whosWho(game) {
     if (gone) side = p.side;
     else if (p.id === game.playerId) side = game.playerSide;
     else if (samTraitor && p.side === TRAITOR) side = TRAITOR;
-    return { id: p.id, gone, side, you: p.id === game.playerId, shield: hasShield(game, p.id) };
+    return { id: p.id, gone, side, you: p.id === game.playerId, shield: hasShield(game, p.id), dagger: hasDagger(game, p.id) };
   });
 }

@@ -921,3 +921,46 @@ test("whoever has a shield wears Sam's shield necklace", async () => {
   doc.getElementById("to-table").click();
   assert.ok(doc.querySelector(`#walk-line .wearing .cutout[data-id="${id}"]`), "wearing it on the walk too");
 });
+
+
+test("the dagger: news at breakfast, held all day, x2 on the chalkboard", async () => {
+  const { page, doc } = await toCastle(seedFor("pepper", FAITHFUL));
+  const g = page.game;
+  const holder = stillIn(g).find((id) => id !== "pepper");
+  g.dagger = { holder, day: g.day };
+  // Breakfast news (as if it was given last night).
+  page.castleTick();
+  const puppet = doc.querySelector(`.puppet[data-id="${holder}"]`);
+  if (puppet) assert.eq(page.getComputedStyle(puppet.querySelector(".held-dagger")).display, "block", "holding it");
+  doc.getElementById("to-table").click();
+  assert.ok(doc.querySelector(`#walk-line .wearing.has-dagger .cutout[data-id="${holder}"]`), "holding it on the walk");
+  await talkThenTable(doc);
+  doc.querySelector("#table-cards .card").click();
+  doc.getElementById("cast-vote").click();
+  await until(() => !doc.getElementById("to-reveal").hidden, "the chalkboards", 20000);
+  assert.eq(doc.querySelectorAll(".dagger-x2").length, 1, "the holder's board says x2");
+});
+
+test("a Traitor Sam chooses who gets the dagger when it's down to 8", async () => {
+  const { page, doc } = await toCastle(nightSeed(TRAITOR));
+  await voteAndReveal(doc);
+  if (!visible(doc, "after-reveal")) return;
+  for (const p of page.game.players.filter((x) => x.inGame && x.id !== "pepper" && x.side !== TRAITOR).slice(0, 999)) {
+    if (stillIn(page.game).length <= 8) break;
+    p.inGame = false;
+  }
+  doc.getElementById("next-day").click();
+  await until(() => visible(doc, "screen-traitors") || visible(doc, "to-breakfast"), "the night", 8000);
+  if (visible(doc, "to-breakfast")) doc.getElementById("to-breakfast").click();
+  else {
+    doc.querySelector("#victim-cards .card").click();
+    doc.getElementById("murder").click();
+  }
+  await until(() => visible(doc, "screen-traitors") && doc.getElementById("murder").textContent.includes("dagger"), "the dagger choice", 8000);
+  const pick = doc.querySelector('#victim-cards .card[data-id="pepper"]');
+  assert.ok(pick, "Sam can give it to himself");
+  pick.click();
+  doc.getElementById("murder").click();
+  await until(() => visible(doc, "start-day") || visible(doc, "breakfast-over"), "breakfast", 10000);
+  assert.ok(doc.getElementById("dagger-news").textContent.includes("gave YOU the dagger"));
+});
