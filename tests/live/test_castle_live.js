@@ -453,6 +453,7 @@ test("each room has its own sound, and the Round Table has a crackling fire", as
   await until(() => doc.body.dataset.roomSound === "garden", "the garden's sound");
   doc.getElementById("to-table").click();
   await until(() => doc.body.dataset.roomSound === "table", "the fire at the Round Table");
+  assert.eq(doc.body.dataset.music, "table", "and the tense music");
   await new Promise((r) => setTimeout(r, 300));
   assert.eq(doc.body.dataset.roomSound, "table", "and it stays on");
   await voteAndReveal(doc);
@@ -460,6 +461,7 @@ test("each room has its own sound, and the Round Table has a crackling fire", as
   if (!visible(doc, "after-reveal")) return;   // the game ended at the table
   doc.getElementById("next-day").click();
   await until(() => doc.body.dataset.roomSound === "", "quiet at night");
+  assert.eq(doc.body.dataset.music, "", "the music stops at night");
 });
 
 test("debug menu (?debug): play any mission on its own, then back to the list", async () => {

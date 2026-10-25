@@ -75,7 +75,7 @@ const ROOM_SOUNDS = {
   garden: ["room-garden.mp3", 0.35],   // birds singing
   kitchen: ["room-kitchen.mp3", 0.25], // cooking sizzling
   library: ["room-library.mp3", 0.3],  // a quiet ticking clock
-  table: ["room-table.mp3", 0.35],     // the Round Table's crackling fire (Gareth)
+  table: ["room-table.mp3", 1.3],      // the Round Table's crackling fire (Gareth: "I can't hear the fireplace at all")
 };
 const roomBuffers = {};
 let roomNow = null;   // { room, src, gain }
@@ -131,4 +131,42 @@ export function bell(i) {
   osc.connect(gain).connect(audio.destination);
   osc.start(now);
   osc.stop(now + 1.2);
+}
+
+// ─── Music (Gareth, 2026-10-25: "tense music during the round table") ──────
+// One looping track at a time, under the room sounds, fading in and out.
+const MUSIC = {
+  table: ["music-round-table.mp3", 0.28],   // Mixkit 597 "Vertigo"
+};
+const musicBuffers = {};
+let musicNow = null;   // { name, src, gain }
+export function setMusic(name) {
+  if ((musicNow ? musicNow.name : null) === name) return;
+  document.body.dataset.music = name || "";   // which one (live tests read it)
+  if (musicNow && musicNow.src && audio) {
+    const old = musicNow;
+    old.gain.gain.setTargetAtTime(0, audio.currentTime, 0.5);
+    setTimeout(() => { try { old.src.stop(); } catch { /* already stopped */ } }, 2500);
+  }
+  musicNow = name ? { name, src: null, gain: null } : null;
+  if (!name || !audio) return;
+  const start = () => {
+    if (!musicNow || musicNow.name !== name || musicNow.src) return;
+    const src = audio.createBufferSource();
+    src.buffer = musicBuffers[name];
+    src.loop = true;
+    const gain = audio.createGain();
+    gain.gain.setValueAtTime(0, audio.currentTime);
+    gain.gain.setTargetAtTime(MUSIC[name][1], audio.currentTime, 0.8);
+    src.connect(gain).connect(audio.destination);
+    src.start();
+    musicNow.src = src;
+    musicNow.gain = gain;
+  };
+  if (musicBuffers[name]) return start();
+  fetch(`assets/sounds/${MUSIC[name][0]}`)
+    .then((r) => r.arrayBuffer())
+    .then((data) => audio.decodeAudioData(data))
+    .then((buf) => { musicBuffers[name] = buf; start(); })
+    .catch(() => { /* no music, then */ });
 }

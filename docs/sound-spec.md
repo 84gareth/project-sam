@@ -63,3 +63,10 @@ Sam: a slow-motion walk to the Round Table "with some dramatic music",
 every day, everyone in one long line. Music: Mixkit 676 "Epical Drums 01"
 (Gareth's pick, 3.4 MB, Mixkit free licence), `walk-drums.mp3`; the first
 12 seconds play, fading out over the last 2.
+
+## Round Table music (v0.14.1)
+Gareth: "tense music during the round table". Mixkit 597 "Vertigo" (his
+pick, 6.1 MB, Mixkit free licence), `music-round-table.mp3`, loops quietly
+(0.28) from the Round Table talk to the reveal, and in the final and the
+ending; stops at night and when a new day starts. The fire went up from
+0.35 to 1.3 ("I can't hear the fireplace at all").

@@ -13,7 +13,7 @@ import {
   ROOMS, FLOOR, createWorld, step, tapTo, walkUpTo, nextTo, neighbour, peopleIn,
 } from "./puppets.js";
 import { say, narrate, voicesOn, setVoices } from "./voice.js";
-import { drumRoll, play, setRoomSound } from "./sound.js";
+import { drumRoll, play, setRoomSound, setMusic } from "./sound.js";
 import { startMission } from "./mission-ui.js";
 import { saveGame, clearSave } from "./save.js";
 
@@ -40,6 +40,7 @@ export function goToCastle(g, { resume = false } = {}) {
 // (No mission on day 1: Gareth.)
 function startDay() {
   saveGame(game);   // a reload comes back to here
+  setMusic(null);
   if (game.day === 1) enterCastle();
   else startMission(game, enterCastle);
 }
@@ -354,6 +355,7 @@ async function roundTableTalk() {
   $("to-vote").hidden = true;
   show("screen-talk");
   setRoomSound("table");   // a crackling fire (Gareth)
+  setMusic("table");       // and tense music, for the whole Round Table (Gareth)
   narrate("Everyone sits down at the Round Table.");
   const talk = tableTalk(game);
   for (const t of talk) {
@@ -521,6 +523,7 @@ function finalScreen() {
   $("final-next").hidden = true;
   show("screen-final");
   setRoomSound("table");
+  setMusic("table");
   narrate("The final! " + $("final-text").textContent);
 }
 
@@ -662,6 +665,7 @@ let victimPick = null;
 
 async function goNight() {
   setRoomSound(null);
+  setMusic(null);
   const me = game.playerId;
   if (nightKind(game) === "quiet") return quietNightScreen();
   if (game.playerSide === TRAITOR) return traitorsMeeting();
