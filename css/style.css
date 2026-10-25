@@ -12,7 +12,7 @@ html, body {
   height: 100%;
   background: var(--bg);
   color: var(--text);
-  font-family: -apple-system, system-ui, sans-serif;
+  font-family: var(--font);
   /* Touch play: no text selection, no grey tap flash, no browser pinch. */
   -webkit-user-select: none;
   user-select: none;
@@ -48,7 +48,7 @@ button.big {
   border-radius: 16px;
   background: var(--accent);
   color: #1c1f29;
-  font: 700 28px -apple-system, system-ui, sans-serif;
+  font: 700 28px var(--font);
 }
 button.big:disabled { opacity: 0.4; }
 button.big:active { transform: scale(0.97); }
@@ -159,7 +159,7 @@ button.small {
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.9);
   color: #1c1f29;
-  font: 700 18px -apple-system, system-ui, sans-serif;
+  font: 700 18px var(--font);
 }
 
 /* 5. A chat */
@@ -183,7 +183,7 @@ button.small {
   border-radius: 14px;
   background: #3b5998;
   color: #fff;
-  font: 700 19px -apple-system, system-ui, sans-serif;
+  font: 700 19px var(--font);
 }
 .question:active { transform: scale(0.97); }
 
@@ -415,7 +415,7 @@ button.small {
   border-radius: 12px;
   background: rgba(20, 22, 30, 0.75);
   color: #fff;
-  font: 700 16px -apple-system, system-ui, sans-serif;
+  font: 700 16px var(--font);
   z-index: 2000;   /* always above the puppets */
 }
 .door-left { left: 6px; }
@@ -479,7 +479,7 @@ button.small {
   border-radius: 14px;
   background: rgba(20, 22, 30, 0.85);
   color: #fff;
-  font: 700 14px -apple-system, system-ui, sans-serif;
+  font: 700 14px var(--font);
   white-space: nowrap;
 }
 .name-tag.me { background: var(--accent); color: #1c1f29; border-color: #fff; }
@@ -510,7 +510,7 @@ button.small {
 .bells { display: flex; gap: 24px; }
 .bell {
   width: 150px; height: 150px; border: 6px solid #2a1d0c; border-radius: 50% 50% 18px 18px;
-  font: 800 22px -apple-system, system-ui, sans-serif; color: #1c1f29;
+  font: 800 22px var(--font); color: #1c1f29;
   opacity: 0.75; transition: transform 0.12s, opacity 0.12s, box-shadow 0.12s;
 }
 .bell.lit { opacity: 1; transform: scale(1.12) rotate(-6deg); box-shadow: 0 0 40px 12px #fff6; }
@@ -578,7 +578,7 @@ button.small {
 .trucks { display: flex; gap: 10px; }
 .truck { width: 220px; display: flex; flex-direction: column; gap: 6px; background: rgba(20, 22, 30, 0.8); padding: 10px; border-radius: 16px; }
 .truck h3 { margin: 0; font-size: 20px; text-align: center; }
-.food, .box { min-height: 48px; border: none; border-radius: 12px; background: #3b5998; color: #fff; font: 700 18px -apple-system, system-ui, sans-serif; }
+.food, .box { min-height: 48px; border: none; border-radius: 12px; background: #3b5998; color: #fff; font: 700 18px var(--font); }
 .food.picked { background: var(--accent); color: #1c1f29; }
 .box { background: #6b4a22; border: 3px dashed #e6c58a; }
 .box.picked { background: var(--accent); color: #1c1f29; }
@@ -596,12 +596,12 @@ button.small {
 .where-people { display: flex; gap: 6px; justify-content: center; }
 .where-people .portrait, .where-people .badge { width: 80px; height: 80px; }
 .where-options { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
-.where-option, .print-option, .gallery-pick { border: none; border-radius: 16px; background: rgba(20, 22, 30, 0.8); color: #fff; padding: 10px; display: flex; flex-direction: column; align-items: center; gap: 6px; font: 700 17px -apple-system, system-ui, sans-serif; }
+.where-option, .print-option, .gallery-pick { border: none; border-radius: 16px; background: rgba(20, 22, 30, 0.8); color: #fff; padding: 10px; display: flex; flex-direction: column; align-items: center; gap: 6px; font: 700 17px var(--font); }
 .where-option .portrait, .where-option .badge { width: 110px; height: 110px; }
 /* Letter Jumble */
 .jumble-answer, .jumble-tiles, .jumble-tools { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
 .jumble-slot { width: 60px; height: 70px; border-bottom: 5px solid #fff; font-size: 44px; font-weight: 800; text-align: center; text-shadow: 0 2px 6px #000; }
-.jumble-tile { width: 70px; height: 70px; border: none; border-radius: 14px; background: var(--accent); color: #1c1f29; font: 800 38px -apple-system, system-ui, sans-serif; }
+.jumble-tile { width: 70px; height: 70px; border: none; border-radius: 14px; background: var(--accent); color: #1c1f29; font: 800 38px var(--font); }
 .jumble-tile:disabled { opacity: 0.25; }
 .jumble-tools .question { min-width: 180px; }
 /* Secret Code */
@@ -612,7 +612,7 @@ button.small {
 .code-cell.now { border-color: var(--accent); }
 .code-letter { min-height: 36px; font-size: 30px; font-weight: 800; }
 .code-letters { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; max-width: 760px; }
-.code-button { width: 64px; height: 64px; border: none; border-radius: 14px; background: #3b5998; color: #fff; font: 800 30px -apple-system, system-ui, sans-serif; }
+.code-button { width: 64px; height: 64px; border: none; border-radius: 14px; background: #3b5998; color: #fff; font: 800 30px var(--font); }
 /* Garden Maze */
 .maze-row { display: flex; align-items: center; gap: 30px; }
 .maze { position: relative; display: grid; width: 594px; max-width: 70cqw; background: #8fbf6a; border: 6px solid #2f5d1f; border-radius: 8px; }
@@ -687,7 +687,7 @@ button.small {
 .card.me-card { position: relative; background: rgba(242, 193, 78, 0.35); }
 .you-ribbon {
   position: absolute; top: -8px; left: 50%; transform: translateX(-50%); z-index: 2;
-  background: var(--accent); color: #1c1f29; font: 900 14px -apple-system, system-ui, sans-serif;
+  background: var(--accent); color: #1c1f29; font: 900 14px var(--font);
   padding: 1px 10px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.5);
 }
 .me-cutout { filter: drop-shadow(0 0 6px #f2c14e) drop-shadow(0 0 3px #f2c14e) drop-shadow(0 6px 6px rgba(0, 0, 0, 0.6)); }
@@ -710,7 +710,7 @@ button.small {
   background: radial-gradient(circle at 35% 35%, #d23a2c, #8b1a1a 70%); color: #f4d9a0;
   font: 900 32px Georgia, serif; line-height: 64px; box-shadow: 0 3px 6px rgba(0, 0, 0, 0.5); transition: opacity 0.3s;
 }
-.envelope-label { position: absolute; bottom: 10px; left: 0; right: 0; color: #5a3d1a; font: 700 18px -apple-system, system-ui, sans-serif; }
+.envelope-label { position: absolute; bottom: 10px; left: 0; right: 0; color: #5a3d1a; font: 700 18px var(--font); }
 .envelope.opening .wax-seal { opacity: 0; }
 .envelope.opening .envelope-flap { transform: rotateX(180deg); }
 @keyframes slide-in { from { transform: translateY(120px) rotate(-8deg); opacity: 0; } }
@@ -724,7 +724,7 @@ button.small {
 /* Pause: who's who */
 .pause {
   position: absolute; left: 14px; bottom: 14px; z-index: 3000; width: 60px; height: 60px; border-radius: 50%;
-  border: 3px solid #fff; background: rgba(20, 22, 30, 0.85); color: #fff; font: 900 22px -apple-system, system-ui, sans-serif;
+  border: 3px solid #fff; background: rgba(20, 22, 30, 0.85); color: #fff; font: 900 22px var(--font);
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.5);
 }
 .pause[hidden], .overview[hidden] { display: none; }
@@ -757,3 +757,101 @@ button.small {
 .confetti span { position: absolute; top: -20px; width: 12px; height: 18px; border-radius: 3px; animation: confetti-fall linear infinite; }
 @keyframes confetti-fall { to { transform: translateY(110cqh) rotate(720deg); } }
 .ending > *, #screen-final > * { flex-shrink: 0; }
+
+/* ═══ Storybook look (Sam, 2026-10-25: "cartoon storybook": big, bouncy,
+   chunky buttons, fun round writing, bright colours). Fonts: Fredoka for
+   writing, Luckiest Guy for titles (both SIL Open Font Licence, saved in
+   assets/fonts so they work offline). ════════════════════════════════════ */
+@font-face { font-family: "Fredoka"; src: url("../assets/fonts/fredoka.woff2") format("woff2"); font-weight: 300 700; font-display: swap; }
+@font-face { font-family: "Luckiest Guy"; src: url("../assets/fonts/luckiest-guy.woff2") format("woff2"); font-display: swap; }
+:root {
+  --font: "Fredoka", -apple-system, system-ui, sans-serif;
+  --title-font: "Luckiest Guy", "Fredoka", sans-serif;
+  --ink: #241238;            /* the dark outline round everything */
+  --panel: linear-gradient(#41307a, #2a1d55);
+  --accent: #ffd447;
+}
+html, body { font-family: var(--font); font-weight: 500; }
+
+/* Titles: big cartoon letters with a thick dark outline. */
+h1, h2, .reveal, .ending-result .reveal, .turn p {
+  font-family: var(--title-font);
+  font-weight: 400;
+  letter-spacing: 1.5px;
+  color: #fff;
+  text-shadow: 3px 3px 0 var(--ink), -2px -2px 0 var(--ink), 2px -2px 0 var(--ink), -2px 2px 0 var(--ink), 0 6px 0 var(--ink), 0 8px 14px rgba(0, 0, 0, 0.45);
+}
+#title { font-size: 58px; color: var(--accent); }
+h2 { font-size: 40px; }
+.reveal.faithful { color: #8fd3ff; }
+.reveal.traitor { color: #ff8a7a; }
+.most-votes, .mission-how, .mission-status, .hint, .final-text, .stones {
+  text-shadow: 2px 2px 0 var(--ink), -1px -1px 0 var(--ink), 1px -1px 0 var(--ink), -1px 1px 0 var(--ink);
+}
+
+/* Chunky buttons that squash when you press them. */
+button { font-family: var(--font); cursor: pointer; }
+button.big {
+  font-family: var(--title-font); font-weight: 400; font-size: 30px; letter-spacing: 1px;
+  color: #4a2300; text-shadow: 0 2px 0 rgba(255, 255, 255, 0.55);
+  background: linear-gradient(#ffe57a, #ffc23a 55%, #f59a1b);
+  border: 4px solid var(--ink); border-radius: 26px;
+  box-shadow: 0 7px 0 var(--ink), 0 12px 20px rgba(0, 0, 0, 0.35);
+  transition: transform 0.08s, box-shadow 0.08s;
+}
+button.big:active:not(:disabled) { transform: translateY(5px); box-shadow: 0 2px 0 var(--ink), 0 4px 8px rgba(0, 0, 0, 0.3); }
+button.big:disabled { opacity: 1; filter: grayscale(0.9) brightness(0.8); }
+.question {
+  font-weight: 600; font-size: 19px; color: #fff; text-shadow: 0 2px 0 rgba(0, 0, 0, 0.35);
+  background: linear-gradient(#6fb6ff, #3b7de0 60%, #2c63c4);
+  border: 3px solid var(--ink); border-radius: 20px;
+  box-shadow: 0 5px 0 var(--ink), 0 8px 14px rgba(0, 0, 0, 0.3);
+  transition: transform 0.08s, box-shadow 0.08s;
+}
+.question:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--ink); }
+button.small, .door {
+  font-weight: 600; color: var(--ink);
+  background: linear-gradient(#ffffff, #e4e0f5);
+  border: 3px solid var(--ink); border-radius: 16px;
+  box-shadow: 0 4px 0 var(--ink);
+}
+button.small:active, .door:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--ink); }
+.door { color: var(--ink); }
+.pause { background: linear-gradient(#ffe57a, #f5a623); color: var(--ink); border: 4px solid var(--ink); box-shadow: 0 4px 0 var(--ink); }
+.name-tag { font-family: var(--font); font-weight: 600; border: 2px solid var(--ink) !important; box-shadow: 0 2px 0 var(--ink); }
+.code-button, .jumble-tile, .food, .box {
+  border: 3px solid var(--ink) !important; box-shadow: 0 4px 0 var(--ink); font-family: var(--font); font-weight: 700;
+  transition: transform 0.08s, box-shadow 0.08s;
+}
+.code-button:active, .jumble-tile:active, .food:active, .box:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--ink); }
+.jumble-tile { font-family: var(--title-font); font-weight: 400; }
+
+/* Storybook panels: rounded purple boxes with a thick outline. */
+.station-panel, .mission-result, .ending-result, .truck, .card, .who, .fellows, .room-name {
+  background: var(--panel);
+  border: 4px solid var(--ink);
+  box-shadow: 0 6px 0 var(--ink), 0 10px 18px rgba(0, 0, 0, 0.35);
+}
+.station-panel { border-radius: 30px; padding: 22px 46px; }
+.card { border-radius: 20px; border-width: 3px; box-shadow: 0 5px 0 var(--ink); }
+.card.picked { background: linear-gradient(#ffe57a, #f5b02a); color: #3a1d00; border-color: var(--ink); }
+.card.picked .card-about { color: #5a3a10; }
+.card-name { font-weight: 700; }
+.card.me-card { background: linear-gradient(#ffe57a, #f5b02a); color: #3a1d00; }
+.who { border-width: 3px; box-shadow: 0 4px 0 var(--ink); }
+.fellows { color: #ffb3a8; border-radius: 16px; }
+.room-name { padding: 2px 14px; border-radius: 14px; }
+.talk-bubble, .bubble, .diner-clue {
+  background: #fffaf0; color: var(--ink); border: 3px solid var(--ink); border-radius: 22px;
+  box-shadow: 0 4px 0 var(--ink); font-weight: 600;
+}
+.you-ribbon { font-family: var(--title-font); font-weight: 400; letter-spacing: 1px; border: 2px solid var(--ink); }
+.who-tag { font-family: var(--title-font); font-weight: 400; letter-spacing: 0.5px; border: 2px solid var(--ink); }
+.overview { background: radial-gradient(circle at 50% 30%, #3b2a6b, #140c2a 80%); }
+/* Chalkboards in centred rows too (Gareth: rows centred). */
+.boards { display: flex; flex-wrap: wrap; justify-content: center; align-content: flex-start; }
+.boards .chalkboard { flex: 0 0 120px; box-sizing: border-box; }
+.chalkboard { border-radius: 10px; box-shadow: 0 5px 0 #3a2410, 0 8px 14px rgba(0, 0, 0, 0.35); }
+.board-voter { font-family: var(--font); font-weight: 600; }
+#debug-missions { display: flex; flex-wrap: wrap; justify-content: center; max-width: 700px; }
+#debug-missions .question { flex: 0 0 calc(50% - 5px); min-height: 52px; }

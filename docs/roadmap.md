@@ -100,7 +100,10 @@ party, and every Traitor of the game (v0.14.0). Next: Sam plays a whole
 game.
 
 ## Phase 7: Look and sound
-Anything else for the look and sound, once the game is fun.
+Anything else for the look and sound, once the game is fun. Started
+2026-10-25 at Gareth's request: the storybook look (Sam's pick: chunky
+squashy buttons, Fredoka and Luckiest Guy fonts, outlined purple panels;
+v0.15.0).
 
 ## Sam's character drawings ✅ all 22 (2026-10-24)
 Added as they come in. Done: 22 of 22 (Captain Puddle, Granny Gumdrop, Professor Fizz, Ruby Rails, Chef Pepper, Sir Reginald Waffle, Doctor Plaster, Lola Loud, Farmer Fern, Detective Dot, Benny Biscuit, Madame Mystic, Tiny Tom, Zara Zoom, Mr Grumble, Penny Pockets, Coach Kick, Stationmaster Stan, Ivy Inkwell, Max Muddle, Olive Oddsocks, Barry Banjo).
