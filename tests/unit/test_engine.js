@@ -93,3 +93,25 @@ test("not waiting for someone: their part is left out, the rest goes on", () => 
   const v = applyDecision(g2, "votes", { dot: "ruby" });
   assert.ok(v.banished, "the vote still happens");
 });
+
+// ─── Rejoining ──────────────────────────────────────────────────────────────
+import { resumePoint } from "../../js/net-engine.js";
+
+test("rejoining: back at the right part of the day", () => {
+  const day1 = ["go", "says", "votes", "go", "night", "go"];
+  assert.eq(resumePoint([], false), "castle", "the very start");
+  assert.eq(resumePoint(["go"], false), "talk");
+  assert.eq(resumePoint(["go", "says"], false), "table");
+  assert.eq(resumePoint(["go", "says", "votes"], false), "reveal");
+  assert.eq(resumePoint(["go", "says", "votes", "go"], false), "night");
+  assert.eq(resumePoint(["go", "says", "votes", "go", "night"], false), "breakfast");
+  assert.eq(resumePoint(day1, false), "dayStart", "day 2 begins with its mission");
+  assert.eq(resumePoint([...day1, "mission"], false), "castle");
+  // After day 12's vote: the final.
+  const twelveDays = [...day1];
+  for (let d = 2; d <= 12; d++) twelveDays.push("mission", "go", "says", "votes", "go", "night", "go");
+  twelveDays.length -= 2;   // day 12 ends at its vote's "go on"
+  assert.eq(resumePoint(twelveDays, false), "final");
+  assert.eq(resumePoint([...twelveDays, "final"], false), "table", "a red flame: vote again");
+  assert.eq(resumePoint([...twelveDays, "final"], true), "ending");
+});

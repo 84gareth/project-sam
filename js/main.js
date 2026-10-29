@@ -7,7 +7,7 @@ import { GAME_NAME, VERSION } from "./version.js";
 import { CHARACTERS } from "./characters.js";
 import { newGame, TRAITOR } from "./game.js";
 import { $, show, badge, card, character, setMe } from "./ui.js";
-import { goToCastle } from "./castle-ui.js";
+import { goToCastle, rejoinCastle } from "./castle-ui.js";
 import { unlockSounds, play } from "./sound.js";
 import { narrate, setSecretsQuiet } from "./voice.js";
 import { MISSIONS } from "./missions.js";
@@ -85,6 +85,17 @@ document.addEventListener("multiplayer-start", (e) => {
   pickedId = window.game.playerId;
   setMe(pickedId);
   showReady();
+});
+
+// Multiplayer, rejoining after a reload: straight back into the game.
+document.addEventListener("multiplayer-rejoin", (e) => {
+  const { game, engine: eng, pos, results } = e.detail;
+  window.game = game;
+  engine = eng;
+  pickedId = game.playerId;
+  setMe(pickedId);
+  setSecretsQuiet(true);
+  rejoinCastle(game, eng, pos, results);
 });
 
 // All aboard! A short train ride with the steam train sound (Sam), THEN

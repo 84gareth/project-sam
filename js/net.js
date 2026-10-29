@@ -22,7 +22,7 @@ function tabUid() {
 // Rooms kept in this browser's storage; other tabs hear about changes.
 export function localNet(store = window.localStorage) {
   const key = (name) => `project-sam-room:${name}`;
-  const channel = typeof BroadcastChannel !== "undefined" ? new BroadcastChannel("project-sam-net") : null;
+
   const listeners = new Map();   // name -> Set of callbacks
   // Tell listeners a moment later, always with the newest room, like a real
   // network: telling them straight away, from inside another listener, could
@@ -30,17 +30,61 @@ export function localNet(store = window.localStorage) {
   const tell = (name) => queueMicrotask(() => {
     for (const cb of [...(listeners.get(name) ?? [])]) cb(readRoom(name));
   });
-  if (channel) channel.onmessage = (e) => tell(e.data);
-  function readRoom(name) {
-    try { return JSON.parse(store.getItem(key(name))); } catch { return null; }
+  // Other tabs hear about a change through the browser's own "storage"
+  // event, which only fires once the change has landed there. (A separate
+  // message could arrive first, read old data, and leave a tab stuck.)
+  if (typeof window !== "undefined") {
+    window.addEventListener("storage", (e) => {
+      const m = e.key && /^project-sam-room:([^:]+)/.exec(e.key);
+      if (m && listeners.has(m[1])) tell(m[1]);
+    });
   }
-  // `change(room)` returns the new room (or null to leave it alone).
+  // Like Firebase, each player's seat is stored on its own, apart from the
+  // rest of the room (which only the host writes). Saving the whole room as
+  // one block let two devices saving at once wipe out each other's change
+  // (flaky multiplayer tests, 2026-10-29).
+  const seatKey = (name, uid) => `${key(name)}:seat:${uid}`;
+  function readRoom(name) {
+    try {
+      const main = JSON.parse(store.getItem(key(name)));
+      if (!main) return null;
+      const seats = {};
+      const prefix = `${key(name)}:seat:`;
+      for (let i = 0; i < store.length; i++) {
+        const k = store.key(i);
+        if (k && k.startsWith(prefix)) seats[k.slice(prefix.length)] = JSON.parse(store.getItem(k));
+      }
+      return { ...main, seats };
+    } catch { return null; }
+  }
+  function write(name, room) {
+    const { seats = {}, ...main } = room;
+    store.setItem(key(name), JSON.stringify(main));
+    for (const [uid, seat] of Object.entries(seats)) writeSeat(name, uid, seat);
+  }
+  function writeSeat(name, uid, seat) {
+    const k = seatKey(name, uid);
+    const text = JSON.stringify(seat);
+    if (store.getItem(k) !== text) store.setItem(k, text);
+  }
+  const told = (name) => tell(name);
+  // `change(room)` returns the new room (or null to leave it alone). For
+  // tests and one-writer changes only: it rewrites every seat it's given.
   function updateRoom(name, change) {
     const next = change(readRoom(name));
     if (!next) return readRoom(name);
+    write(name, next);
+    told(name);
+    return next;
+  }
+  // Change only the host's part of the room.
+  function updateMain(name, change) {
+    let main;
+    try { main = JSON.parse(store.getItem(key(name))); } catch { main = null; }
+    if (!main) return null;
+    const next = change(main);
     store.setItem(key(name), JSON.stringify(next));
-    channel?.postMessage(name);
-    tell(name);
+    told(name);
     return next;
   }
   function watchRoom(name, onChange) {
@@ -54,10 +98,9 @@ export function localNet(store = window.localStorage) {
     ready: async () => net,
     readRoom: async (name) => readRoom(name),
     createRoom: async (name, room) => updateRoom(name, () => room),
-    setSeat: async (name, uid, seat) => updateRoom(name, (r) => (r ? { ...r, seats: { ...r.seats, [uid]: seat } } : null)),
-    // Keys may be paths ("log/3"), like Firebase's.
-    setRoom: async (name, patch) => updateRoom(name, (r) => {
-      if (!r) return null;
+    setSeat: async (name, uid, seat) => { writeSeat(name, uid, seat); told(name); },
+    // Keys may be paths ("log/3"), like Firebase's. The host's part only.
+    setRoom: async (name, patch) => updateMain(name, (r) => {
       const next = structuredClone(r);
       for (const [path, value] of Object.entries(patch)) {
         const parts = path.split("/");
@@ -67,7 +110,13 @@ export function localNet(store = window.localStorage) {
       }
       return next;
     }),
-    setAct: async (name, uid, act) => updateRoom(name, (r) => (r ? { ...r, seats: { ...r.seats, [uid]: { ...r.seats[uid], act } } } : null)),
+    setAct: async (name, uid, act) => {
+      const k = seatKey(name, uid);
+      let seat;
+      try { seat = JSON.parse(store.getItem(k)) ?? {}; } catch { seat = {}; }
+      writeSeat(name, uid, { ...seat, act });
+      told(name);
+    },
   };
   return net;
 }

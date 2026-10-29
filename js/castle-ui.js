@@ -48,6 +48,36 @@ export function goToCastle(g, { resume = false, engine: e = null } = {}) {
   startDay();
 }
 
+// Rejoining a multiplayer game (a reload, a sleepy iPad): the engine has
+// caught up; carry on at `pos` (net-engine.js resumePoint), using what was
+// decided last (`results`) where a screen needs it.
+export function rejoinCastle(g, e, pos, results) {
+  game = g;
+  engine = e;
+  setTeam((id) => game.playerSide === TRAITOR && id !== game.playerId && isTraitor(game, id));
+  window.game = game;
+  world = createWorld(game, Math.random);
+  window.world = world;
+  showVoicesButton();
+  const last = (type) => results.filter((r) => r && type(r)).pop() ?? {};
+  if (!stillIn(game).includes(game.playerId)) {
+    showRoster();
+    $("start-day").hidden = true;
+    $("breakfast-over-text").textContent = "You're out of this game. The others are playing on!";
+    $("breakfast-over").hidden = false;
+    return show("screen-breakfast");
+  }
+  if (pos === "castle") return enterCastle();
+  if (pos === "dayStart") return startDay();
+  if (pos === "talk") return roundTableTalk();
+  if (pos === "table") return goToTable();
+  if (pos === "reveal") return reveal(last((r) => r.banished));
+  if (pos === "night") return goNight();
+  if (pos === "breakfast") { nightResult = last((r) => r.kind); return breakfast(nightResult.victim ?? null); }
+  if (pos === "final") return finalScreen();
+  return ending();
+}
+
 // ─── Chatting ───────────────────────────────────────────────────────────────
 
 // Each day from day 2 starts with its mission, then the castle.

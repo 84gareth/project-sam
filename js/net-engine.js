@@ -32,6 +32,28 @@ export function readyToDecide(game, room, k, skip = false) {
 export const waitingFor = (game, room, k) =>
   needed(game).filter((who) => room.seats?.[room.play.uids[who]]?.act?.k !== k);
 
+// Where in the day a player rejoins, from the decisions made so far (their
+// types, in order). Pure. Each day goes: (mission from day 2), go to the
+// table, says, votes, go on from the reveal, night, go from breakfast. After
+// day 12's vote comes the final: final, then votes again if not ended.
+// `ended`: is the game over (the final ended, or someone won)?
+export function resumePoint(types, ended, days = 12) {
+  let pos = "dayStart", day = 1;
+  for (const t of types) {
+    if (pos === "dayStart") pos = t === "mission" ? "castle" : "talk";
+    else if (pos === "castle") pos = "talk";
+    else if (pos === "talk") pos = "table";
+    else if (pos === "table") { pos = "reveal"; day += 1; }
+    else if (pos === "reveal") pos = day > days ? "final" : "night";
+    else if (pos === "night") pos = "breakfast";
+    else if (pos === "breakfast") pos = "dayStart";
+    else if (pos === "final") pos = "table";
+  }
+  if (ended) return "ending";
+  if (pos === "dayStart" && day === 1) return "castle";
+  return pos;
+}
+
 export function netEngine(net, roomName, game, isHost, onWaiting = () => {}) {
   let next = 0;                  // the next decision this device will ask for
   let applied = 0;               // decisions applied from the log
@@ -70,6 +92,20 @@ export function netEngine(net, roomName, game, isHost, onWaiting = () => {}) {
     get game() { return game; },
     stop,
     isHost,
+    // Rejoining: wait until the decisions made so far are applied, then carry
+    // on from there. Returns { types, results } of what's been decided.
+    catchUp() {
+      return new Promise((resolve) => {
+        const check = () => {
+          if (!lastRoom) return setTimeout(check, 50);
+          const log = logList(lastRoom.log);
+          if (applied < log.length) return setTimeout(check, 50);
+          next = applied;
+          resolve({ types: log.map((e) => e.t), results: [...results] });
+        };
+        check();
+      });
+    },
     // The host: stop waiting for whoever hasn't answered this decision.
     dontWait() {
       skip = applied;

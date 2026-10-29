@@ -6,7 +6,8 @@ import {
   SYMBOLS, CODE_LENGTH, newCode, codeName, newRoom, join, pick, takenBy, canStart, seatOrder,
 } from "./lobby.js";
 import { localNet } from "./net.js";
-import { netEngine } from "./net-engine.js";
+import { netEngine, resumePoint } from "./net-engine.js";
+import { arriveAtCastle, winner } from "./castle.js";
 import { newGame } from "./game.js";
 import { firebaseNet } from "./firebase-net.js";
 import { $, show, badge, card, character, FAST } from "./ui.js";
@@ -209,15 +210,63 @@ function startGame() {
 // Everyone's game starts the same way (engine.js keeps them in step); main.js
 // tells each player their secret side.
 let begun = false;
-function begin(room) {
+function begin(room, rejoining = false) {
   if (begun || !room.play || !room.seats[net.uid]) return;
   begun = true;
   const me = room.seats[net.uid].character;
   const game = newGame(me, room.play.seed, room.play.humans);
+  // Rejoining: arrive first, so the engine can apply everything decided so
+  // far (a new game arrives at the castle later, in goToCastle).
+  if (rejoining) arriveAtCastle(game);
   const engine = netEngine(net, roomName, game, room.host === net.uid, showWaiting);
   engineRef = engine;
-  document.dispatchEvent(new CustomEvent("multiplayer-start", { detail: { game, engine } }));
+  remember();
+  if (!rejoining) {
+    document.dispatchEvent(new CustomEvent("multiplayer-start", { detail: { game, engine } }));
+    return;
+  }
+  engine.catchUp().then(({ types, results }) => {
+    const pos = resumePoint(types, winner(game) !== null);
+    document.dispatchEvent(new CustomEvent("multiplayer-rejoin", { detail: { game, engine, pos, results } }));
+  });
 }
+
+// ─── Rejoining (a reload, or the iPad went to sleep) ────────────────────────
+// This device remembers the game it's in, and its sign-in, so the station
+// can offer to rejoin it.
+const REJOIN = "project-sam-rejoin";
+function remember() {
+  try {
+    const auth = sessionStorage.getItem("project-sam-firebase");
+    const uid = sessionStorage.getItem("project-sam-uid");
+    localStorage.setItem(REJOIN, JSON.stringify({ room: roomName, auth, uid, local }));
+  } catch { /* can't remember: no rejoin, that's all */ }
+}
+export function forget() {
+  try { localStorage.removeItem(REJOIN); } catch { /* fine */ }
+}
+async function offerRejoin() {
+  let saved = null;
+  try { saved = JSON.parse(localStorage.getItem(REJOIN)); } catch { saved = null; }
+  if (!saved || saved.local !== local) return;
+  try {
+    if (saved.auth && !sessionStorage.getItem("project-sam-firebase")) sessionStorage.setItem("project-sam-firebase", saved.auth);
+    if (saved.uid && !sessionStorage.getItem("project-sam-uid")) sessionStorage.setItem("project-sam-uid", saved.uid);
+  } catch { /* fine */ }
+  await net.ready();
+  const room = await net.readRoom(saved.room).catch(() => null);
+  if (!room || !room.started || !room.seats?.[net.uid]) return forget();
+  $("rejoin").hidden = false;
+  $("rejoin").onclick = () => {
+    roomName = saved.room;
+    current = room;
+    stopWatching?.();
+    stopWatching = net.watchRoom(roomName, (r) => { if (r) current = r; });
+    begin(room, true);
+  };
+}
+// (Tests switch it on with ?rejoin.)
+if (!FAST || new URLSearchParams(location.search).has("rejoin")) offerRejoin().catch((err) => console.error(err));
 
 // ─── Waiting for the others ─────────────────────────────────────────────────
 // A sign at the top while this device waits for other players; after a

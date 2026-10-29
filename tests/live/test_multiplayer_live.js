@@ -162,3 +162,33 @@ test("waiting for someone: the sign says who, and the host can stop waiting", as
   doc.getElementById("dont-wait").click();
   await until(() => visible(doc, "screen-walk") || visible(doc, "screen-talk"), "on without them", 8000);
 });
+
+test("rejoining after a reload: back into the game where you left it", async () => {
+  const { page, doc } = await toMulti();
+  doc.getElementById("multi-host").click();
+  await until(() => visible(doc, "screen-lobby"), "the lobby");
+  const name = page.multiplayer.room;
+  const net = other();
+  net.updateRoom(name, (r) => join(r, net.uid, Date.now()).room);
+  net.updateRoom(name, (r) => pick(r, net.uid, "puddle").room);
+  await until(() => doc.querySelector('#lobby-cards .card[data-id="pepper"]'), "cards");
+  doc.querySelector('#lobby-cards .card[data-id="pepper"]').click();
+  await until(() => !doc.getElementById("lobby-start").disabled, "ready to start");
+  const stopBot = bot(net, name, "puddle");
+  doc.getElementById("lobby-start").click();
+  await until(() => visible(doc, "screen-ready"), "your side");
+  doc.getElementById("to-castle").click();
+  await until(() => visible(doc, "screen-castle"), "the castle", 8000);
+  doc.getElementById("to-table").click();
+  await until(() => visible(doc, "talk-options"), "the talk", 15000);
+  // The page reloads (the iPad slept)...
+  const again = await openPage("../index.html?fast=1&rejoin");
+  const doc2 = again.document;
+  await until(() => visible(doc2, "rejoin"), "the Rejoin button", 8000);
+  doc2.getElementById("rejoin").click();
+  await until(() => visible(doc2, "talk-options"), "back at the Round Table talk", 15000);
+  assert.eq(again.game.history.length, 0, "no vote yet");
+  doc2.querySelector("#talk-options .question").click();
+  await until(() => visible(doc2, "to-vote"), "both have spoken, carrying on", 10000);
+  stopBot();
+});
