@@ -25,7 +25,9 @@ export function makeRandom(seed) {
 // The game deals exactly TRAITOR_COUNT Traitors fairly among all 22, so you
 // are a Traitor about 3 games in 22 (Sam: "fair chance", 2026-10-24). You
 // find out after picking your character; you don't choose.
-export function newGame(playerId, seed = Date.now()) {
+// `humans`: every real player (Phase 8 multiplayer); single player is just
+// `playerId`. `playerId` is who's playing on this device.
+export function newGame(playerId, seed = Date.now(), humans = null) {
   if (!CHARACTERS.some((c) => c.id === playerId)) throw new Error(`no character "${playerId}"`);
   const random = makeRandom(seed);
   const everyone = CHARACTERS.map((c) => c.id);
@@ -39,6 +41,7 @@ export function newGame(playerId, seed = Date.now()) {
     seed,
     playerId,
     playerSide: traitors.includes(playerId) ? TRAITOR : FAITHFUL,
+    ...(humans ? { humans } : {}),
     players: CHARACTERS.map((c) => ({
       id: c.id,
       side: traitors.includes(c.id) ? TRAITOR : FAITHFUL,

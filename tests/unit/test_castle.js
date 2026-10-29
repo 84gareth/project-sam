@@ -666,3 +666,29 @@ test("the Traitors give it to one of their own unless a Traitor Sam picks", () =
     return;
   }
 });
+
+// ─── Several real players (Phase 8) ─────────────────────────────────────────
+import { humansOf, isHuman } from "../../js/castle.js";
+
+test("several real players: none get computer lists; each votes and speaks for themselves", () => {
+  const g = arriveAtCastle(newGame("dot", 3, ["dot", "puddle", "fizz"]));
+  assert.eq(humansOf(g), ["dot", "puddle", "fizz"]);
+  for (const h of ["dot", "puddle", "fizz"]) assert.notOk(g.scores[h], `${h} has no computer list`);
+  assert.ok(isHuman(g, "fizz"));
+  const r = roundTable(g, { dot: "ruby", puddle: "ruby", fizz: "pepper" });
+  assert.eq(r.votes.find(([v]) => v === "puddle")[1], "ruby");
+  assert.eq(r.votes.find(([v]) => v === "fizz")[1], "pepper");
+  const before = g.scores.gumdrop?.ruby;
+  playerSays(g, { kind: "quiet", target: null }, "fizz");
+  if (before !== undefined) assert.ok(g.scores.gumdrop.fizz !== undefined);
+});
+
+test("several real players: the same game on every device, whoever is looking", () => {
+  const a = arriveAtCastle(newGame("dot", 9, ["dot", "puddle"]));
+  const b = arriveAtCastle({ ...newGame("puddle", 9, ["dot", "puddle"]) });
+  assert.eq(tableTalk(a), tableTalk(b), "the talk doesn't depend on who's looking");
+  roundTable(a, { dot: "ruby", puddle: "fizz" });
+  roundTable(b, { dot: "ruby", puddle: "fizz" });
+  assert.eq(a.history, b.history);
+  assert.eq(a.scores, b.scores);
+});

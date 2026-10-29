@@ -29,6 +29,12 @@ function rng(game, ...parts) {
 
 const player = (game, id) => game.players.find((p) => p.id === id);
 export const isTraitor = (game, id) => player(game, id).side === TRAITOR;
+// The real players (Phase 8: several; single player: just one). Rules that
+// change the game use this list; `game.playerId` is only "who's looking"
+// on this device, so every device works the game out the same way.
+export const humansOf = (game) => game.humans ?? [game.playerId];
+export const isHuman = (game, id) => humansOf(game).includes(id);
+const humanTraitorIn = (game) => humansOf(game).some((id) => isTraitor(game, id) && player(game, id).inGame);
 // Who won a shield at today's mission (worn until the next day).
 export const hasShield = (game, id) => (game.shields ?? []).includes(id);
 
@@ -52,7 +58,7 @@ export function daggerIdeas(game) {
 // Give it out tonight: Sam's pick if he's a Traitor still in, else theirs.
 // It's for the coming day (game.day is already the next day at night).
 export function giveDagger(game, pick = null) {
-  const samPicks = game.playerSide === TRAITOR && player(game, game.playerId).inGame;
+  const samPicks = humanTraitorIn(game);
   const holder = samPicks && pick ? pick : daggerIdeas(game)[0];
   game.dagger = { holder, day: game.day };
   return holder;
@@ -70,7 +76,7 @@ export function arriveAtCastle(game, { everyone = false } = {}) {
   game.history = [];
   game.scores = {};
   for (const me of game.players) {
-    if (me.id === game.playerId && !everyone) continue;
+    if (isHuman(game, me.id) && !everyone) continue;
     const r = rng(game, "hunch", me.id);
     const scores = {};
     for (const other of game.players) {
@@ -104,14 +110,16 @@ export function traitorTarget(game) {
 
 // What `id` says when asked `question` today. Asking again gives the same
 // answer. Returns { text, names } (names: the people mentioned, in order).
-export function answer(game, id, question) {
+// `viewer`: who's asking (this device's player); null for the version
+// everyone sees (the Round Table talk), so all devices agree.
+export function answer(game, id, question, viewer = game.playerId) {
   const r = rng(game, "answer", game.day, id, question);
   const list = suspectList(game, id);
   const sneaky = isTraitor(game, id);
   const say = (text, names = []) => ({ text, names });
   // Sam is a Traitor talking to another Traitor: no fibs between them, just
   // sneaky whispers (Gareth, 2026-10-24).
-  if (sneaky && game.playerSide === TRAITOR && id !== game.playerId) {
+  if (sneaky && viewer && isTraitor(game, viewer) && id !== viewer) {
     const target = traitorTarget(game);
     const vote = computerVote(game, id);
     switch (question) {
@@ -321,9 +329,12 @@ export function computerVote(game, id) {
 // The Round Table. `playerVote`: who Sam tapped (ignored if Sam is played
 // by the computer). Everyone votes in seat order; the most votes leaves;
 // a tie is settled by a seeded coin. Then everyone learns from the votes.
+// `playerVote`: the one real player's vote, or { player: vote } for several.
 export function roundTable(game, playerVote) {
   const voters = stillIn(game);
-  const votes = voters.map((v) => [v, game.scores[v] ? computerVote(game, v) : playerVote]);
+  const humanVote = (v) => (playerVote && typeof playerVote === "object" ? playerVote[v] : playerVote);
+  const votes = voters.map((v) => [v, game.scores[v] ? computerVote(game, v)
+    : humanVote(v) ?? voters.find((o) => o !== v)]);
   // The dagger: its holder's vote counts twice today (Sam).
   const counts = {};
   for (const [v, t] of votes) counts[t] = (counts[t] || 0) + (hasDagger(game, v) ? 2 : 1);
@@ -429,10 +440,15 @@ export function finalChoices(game) {
 // One vote in the final. `samVote` is Sam's ("end" or "banish"); computer
 // players decide for themselves. With only two left, it ends. Each vote is
 // [who, "end" | "banish", what they say].
+// `samVote`/`samLine`: the one real player's; or samVote = { player:
+// { vote, line } } for several.
 export function finalRound(game, samVote = null, samLine = null) {
+  const many = samVote && typeof samVote === "object" ? samVote : null;
   const votes = stillIn(game).map((id) => {
-    const v = game.scores[id] ? finalVote(game, id) : samVote ?? "end";
-    return [id, v, id === game.playerId && samLine ? samLine : finalLine(game, id, v)];
+    const h = many ? many[id] : null;
+    const v = game.scores[id] ? finalVote(game, id) : h ? h.vote : samVote ?? "end";
+    const line = h?.line ?? (id === game.playerId && samLine ? samLine : null);
+    return [id, v, line ?? finalLine(game, id, v)];
   });
   const allEnd = stillIn(game).length <= 2 || votes.every(([, v]) => v === "end");
   if (allEnd) game.ended = true;
@@ -482,7 +498,7 @@ export function murderIdeas(game) {
 // the game, he picks (`playerPick`); otherwise the computer Traitors pick
 // the most dangerous Faithful. Returns the murdered player's id.
 export function night(game, playerPick = null) {
-  const samPicks = game.playerSide === TRAITOR && player(game, game.playerId).inGame;
+  const samPicks = humanTraitorIn(game);
   const victim = samPicks && playerPick ? playerPick : murderIdeas(game)[0];
   if (isTraitor(game, victim)) throw new Error("Traitors can't murder a Traitor");
   if (hasShield(game, victim)) throw new Error("they have a shield");
@@ -517,7 +533,7 @@ export function breakfastGroups(game) {
 // Who someone is about to accuse at the Round Table: the name they'd give
 // if you asked who they'll vote for.
 function accuses(game, id) {
-  return answer(game, id, "vote").names[0];
+  return answer(game, id, "vote", null).names[0];
 }
 
 // Today's talk before the vote: two or three people accuse someone (often
@@ -580,7 +596,7 @@ export function tableTalk(game) {
     used.add(s);
     const reason = why(target);
     talk.push({ speaker: s, text: inCharacter(s, `${pickOne(accuse, r)(nameOf(target))} ${reason}`.trim(), r), names: [target] });
-    if (target !== game.playerId) {
+    if (!isHuman(game, target)) {   // a real player answers for themselves
       used.add(target);
       talk.push({ speaker: target, text: inCharacter(target, pickOne(defend, r), r), names: [] });
     }
@@ -664,8 +680,7 @@ export function talkOptions(game, talk) {
 // someone makes straight away, or null.
 export const TALK_SWAY = 0.12;
 export const QUIET_RISK = 0.1;
-export function playerSays(game, option) {
-  const me = game.playerId;
+export function playerSays(game, option, me = game.playerId) {
   const honest = brains(game).filter((b) => !isTraitor(game, b));
   const r = rng(game, "says", game.day, option.kind);
   const nudge = (who, by) => {
@@ -785,7 +800,7 @@ export function recruitIdeas(game) {
 // Recruit `pick` (Sam's choice when he's a Traitor) or the Traitors' first
 // idea. The new Traitor's list turns fake, like the others'. Returns who.
 export function recruit(game, pick = null) {
-  const samPicks = game.playerSide === TRAITOR && player(game, game.playerId).inGame;
+  const samPicks = humanTraitorIn(game);
   const who = samPicks && pick ? pick : recruitIdeas(game)[0];
   if (isTraitor(game, who)) throw new Error("already a Traitor");
   player(game, who).side = TRAITOR;

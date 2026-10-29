@@ -108,7 +108,9 @@ export const shieldCount = (game) => (rng(game, "shields", game.day)() < TWO_SHI
 // `mission` defaults to today's (the debug menu passes its own).
 // `shield`: "broken" (nobody gets it) or who found it; else the best player.
 export function finishMission(game, samScore, stillIn, mission = todaysMission(game), shield = undefined) {
-  const scores = stillIn.map((id) => [id, id === game.playerId ? samScore : computerScore(game, id, mission)]);
+  // `samScore`: the one real player's score, or { player: score } for several.
+  const humanScore = (id) => (samScore && typeof samScore === "object" ? samScore[id] : id === game.playerId ? samScore : undefined);
+  const scores = stillIn.map((id) => [id, humanScore(id) ?? computerScore(game, id, mission)]);
   scores.sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1));
   const average = scores.reduce((sum, [, s]) => sum + s, 0) / scores.length;
   const won = Math.round((average * POT_PER_MISSION) / 500) * 500;
@@ -170,7 +172,8 @@ export const STONES = 5;
 const SHIELD_SLIP = 0.03;   // a miss that hits the shield instead
 export function computerThrows(game, stillIn) {
   const mission = MISSIONS.find((m) => m.id === "catapults");
-  return stillIn.filter((id) => id !== game.playerId).map((id) => {
+  const humans = game.humans ?? [game.playerId];
+  return stillIn.filter((id) => !humans.includes(id)).map((id) => {
     const r = rng(game, "throw", game.day, id);
     if (computerScore(game, id, mission) > 0.5) return { thrower: id, target: suspectList(game, id)[0] };
     return { thrower: id, target: r() < SHIELD_SLIP ? "shield" : null };
