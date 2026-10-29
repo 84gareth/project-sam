@@ -14,6 +14,13 @@ export const FIREBASE = {
 // Firebase sends { path, data }: "put" replaces what's at `path`, "patch"
 // merges `data`'s keys into it. A null deletes.
 export function applyEvent(state, kind, path, data) {
+  // A patch's keys can be paths themselves ("log/3": a multi-place update):
+  // apply each as a put at that place.
+  if (kind === "patch" && data && Object.keys(data).some((k) => k.includes("/"))) {
+    let next = state;
+    for (const [k, v] of Object.entries(data)) next = applyEvent(next, "put", `${path}/${k}`, v);
+    return next;
+  }
   const parts = path.split("/").filter(Boolean);
   const set = (obj, i) => {
     if (i === parts.length) {

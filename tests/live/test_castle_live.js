@@ -1069,3 +1069,14 @@ test("Catapults day is never announced as a no-murder day (Sam's bug)", async ()
   page.castleJump.showRoster();
   assert.notOk(visible(doc, "quiet-news"), "no promise of a quiet night on Catapults day");
 });
+
+test("multiplayer: tapping another real player says to talk to them for real", async () => {
+  const { page, doc } = await toCastle(seedFor("pepper", FAITHFUL));
+  page.game.humans = ["pepper", "puddle"];
+  Object.assign(page.world.people.puddle, { room: page.world.me.room, mode: "chat", with: "pepper", timer: 99, x: 0.3, y: 0.85 });
+  page.castleTick();
+  doc.querySelector('.puppet[data-id="puddle"]').click();
+  assert.ok(visible(doc, "screen-chat"));
+  assert.ok(doc.getElementById("bubble-text").textContent.includes("real player"));
+  assert.eq(doc.querySelectorAll("#questions .question").length, 0, "no computer questions");
+});

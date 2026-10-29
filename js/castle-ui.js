@@ -5,7 +5,7 @@ import {
   arriveAtCastle, answer, roundTable, winner, stillIn, isTraitor, QUESTIONS,
   night, murderIdeas, breakfastGroups, tableTalk, talkOptions, playerSays,
   isRecruitNight, recruit, recruitIdeas, joinChat, nightKind, quietNight, whosWho,
-  finalRound, finalChoices, prizeShare, allTraitors, hasShield,
+  finalRound, finalChoices, prizeShare, allTraitors, hasShield, isHuman,
   isDaggerNight, giveDagger, daggerIdeas, daggerHolder, hasDagger,
   computerChoice, canMurderTonight, noMurderToday,
 } from "./castle.js";
@@ -307,7 +307,19 @@ function render() {
   placeNames(ids);
 }
 
+// Another real player (multiplayer): talk to them for real, not here.
+function realPlayerChat(id) {
+  $("chat-picture").replaceChildren(wearing(id, cutout(id)));
+  $("chat-name").textContent = character(id).name;
+  $("bubble-text").textContent = `${character(id).name} is a real player! Talk to them for real... but keep your secret!`;
+  $("bubble-list").hidden = true;
+  $("bubble").hidden = false;
+  $("questions").replaceChildren();
+  show("screen-chat");
+}
+
 function openChat(id) {
+  if (isHuman(game, id) && id !== game.playerId) return realPlayerChat(id);
   const c = character(id);
   // They stop to talk while you chat.
   const them = world && world.people[id];
@@ -332,6 +344,8 @@ function openChat(id) {
 // usually lets him in (castle.js joinChat).
 function openJoin(a, b) {
   joinTarget = null;
+  // A chat with a real player in it: go and talk to them for real.
+  if (isHuman(game, a) || isHuman(game, b)) return realPlayerChat(isHuman(game, a) ? a : b);
   const j = joinChat(game, a, b);
   for (const id of [a, b]) {
     const p = world.people[id];

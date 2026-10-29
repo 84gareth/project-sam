@@ -59,3 +59,12 @@ test("live changes from Firebase keep our copy of the room right", () => {
   room = applyEvent(room, "put", "/seats/p2", null);
   assert.eq(Object.keys(room.seats), ["h"], "null deletes");
 });
+
+test("a multi-place patch ('log/3') lands in the right place", () => {
+  let room = applyEvent(null, "put", "/", { host: "h", log: [{ t: "go" }] });
+  room = applyEvent(room, "patch", "/", { "log/1": { t: "votes" } });
+  assert.eq(room.log[1], { t: "votes" });
+  assert.eq(room["log/1"], undefined);
+  room = applyEvent(room, "patch", "/seats", { "p2/act": { k: 0 } });
+  assert.eq(room.seats.p2.act, { k: 0 });
+});

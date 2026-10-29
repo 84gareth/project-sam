@@ -115,5 +115,9 @@ through Gareth's own Firebase project. Built all at once over several
 sessions (Sam and Gareth's choice): see `docs/multiplayer-spec.md`.
 Done so far: the start screens, host and join with the code, and the
 lobby, working between real devices through Firebase (v0.21.0; Gareth's
-project set up 2026-10-29). Next: the host runs the game for everyone.
+project set up 2026-10-29); every change to the game is an engine
+decision (v0.22.0); multiplayer games play in step on every device:
+missions, castle, Round Table, nights, the final (v0.23.x; tried for real
+in two tabs through Firebase). Next: rejoining after a reload or sleep, a
+host "don't wait" button for stuck players, and watching after you're out.
 
