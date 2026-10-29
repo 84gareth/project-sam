@@ -1012,3 +1012,30 @@ span.chest-inside { font: 400 22px var(--title-font); color: #ff7b6b; text-shado
 .chest:disabled { opacity: 1; }
 .chest.open .lid { transform: translate(-4px, -10px) rotate(-28deg); transform-box: fill-box; transform-origin: left bottom; }
 .chest-inside { top: 46px; }
+/* Phones (Gareth, 2026-10-29). A wide screen: the castle room fills the
+   height, with the button and hint over the bottom of the picture, so
+   there's less empty black at the sides. */
+@media (min-aspect-ratio: 17/10) {
+  .stage { width: min(100cqw, calc(100cqh * 16 / 9)); }
+  .castle .walk-hint { display: none; }
+}
+/* Round Table talk: room for the coloured edges round the pictures. */
+#screen-talk .talk-lines { padding: 12px; box-sizing: border-box; }
+/* Letter Jumble: the person's picture as a clue. */
+.jumble-clue { display: flex; justify-content: center; }
+.jumble-clue .badge, .jumble-clue .portrait { width: 90px; height: 90px; }
+/* The lobby on a short screen: everything smaller, so the characters get
+   room. */
+@media (max-height: 520px) {
+  #screen-lobby { gap: 4px; }
+  #screen-lobby h2 { font-size: 28px; margin: 0; }
+  #screen-lobby .code-slot { width: 56px; height: 56px; border-radius: 12px; }
+  #screen-lobby .code-slot svg, #screen-lobby .code-slot img { transform: scale(0.7); }
+  #lobby-hint { margin: 0; font-size: 15px; }
+  .name-row { margin: 0; font-size: 17px; }
+  .name-row input { min-height: 40px; font-size: 17px; }
+  #lobby-players .who { width: auto; flex-direction: row; padding: 3px 10px; gap: 6px; }
+  #lobby-players .who .badge, #lobby-players .who .portrait { width: 36px; height: 36px; }
+  #lobby-players .who-name { font-size: 13px; }
+  #screen-lobby .cards { min-height: 45cqh; }
+}

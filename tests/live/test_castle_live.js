@@ -209,7 +209,9 @@ test("night 1: if the Traitors recruit Sam, a letter makes him a Traitor", async
 });
 
 test("a Faithful who is murdered (night 2) gets the letter", async () => {
-  // A seed where the night-1 recruit isn't Sam and night 2 murders Sam.
+  // A seed where the night-1 recruit isn't Sam and night 2 is a murder.
+  // The computer Traitors hardly ever pick Sam, so everyone else gets a
+  // shield that night (below).
   let seed = 0;
   for (let s = 1; s <= 5000 && !seed; s++) {
     if (newGame("pepper", s).playerSide !== FAITHFUL) continue;
@@ -221,7 +223,7 @@ test("a Faithful who is murdered (night 2) gets the letter", async () => {
     sayQuiet(g);
     roundTable(g, stillIn(g).find((id) => id !== "pepper"));
     if (winner(g) || !stillIn(g).includes("pepper")) continue;
-    if (nightKind(g) === "murder" && night(g) === "pepper") seed = s;
+    if (nightKind(g) === "murder") seed = s;
   }
   assert.gt(seed, 0, "found a game");
   const { page, doc } = await toCastle(seed);
@@ -243,6 +245,7 @@ test("a Faithful who is murdered (night 2) gets the letter", async () => {
   doc.getElementById("to-reveal").click();
   await until(() => visible(doc, "after-reveal") || visible(doc, "game-over"), "the reveal", 8000);
   if (visible(doc, "game-over")) return;   // the game ended at the table instead
+  page.game.shields = stillIn(page.game).filter((id) => id !== "pepper" && !isTraitor(page.game, id));
   await clickNext(doc);
   await until(() => visible(doc, "envelope"), "a sealed letter", 8000);
   doc.getElementById("envelope").click();
@@ -693,6 +696,23 @@ test("the leaderboard fits a phone: the button stays on screen, even with lots o
   const app = doc.getElementById("app").getBoundingClientRect();
   const done = doc.getElementById("mission-done").getBoundingClientRect();
   assert.ok(done.bottom <= app.bottom + 1 && done.top >= app.top, `the button is on screen (${Math.round(done.bottom)} <= ${Math.round(app.bottom)})`);
+});
+
+test("Letter Jumble: their picture as a clue, and Undo takes back a letter", async () => {
+  const { page, doc, box } = await playMission("jumble");
+  const w = jumbleWords(page.game, stillIn(page.game))[0];
+  await until(() => box.dataset.word === "0" && box.querySelector(".jumble-tile"), "word 1", 8000);
+  assert.ok(box.querySelector(".jumble-clue .badge, .jumble-clue .portrait"), "a picture clue");
+  const slots = () => [...box.querySelectorAll(".jumble-slot")].map((s) => s.textContent).join("");
+  const wrong = [...box.querySelectorAll(".jumble-tile")].find((t) => t.dataset.letter !== w.word[0]);
+  box.querySelector(`.jumble-tile[data-letter="${w.word[0]}"]`).click();
+  wrong.click();
+  assert.eq(slots(), w.word[0] + wrong.dataset.letter);
+  doc.getElementById("jumble-undo").click();
+  assert.eq(slots(), w.word[0], "the last letter is gone");
+  assert.notOk(wrong.disabled, "its tile is back");
+  for (const letter of w.word.slice(1)) box.querySelector(`.jumble-tile[data-letter="${letter}"]:not(:disabled)`).click();
+  await until(() => box.dataset.word === "1", "on to word 2", 8000);
 });
 
 test("Secret Code: crack all three words", async () => {

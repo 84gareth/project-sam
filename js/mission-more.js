@@ -113,6 +113,15 @@ async function jumble(ctx) {
         for (const sl of slots) sl.textContent = "";
         for (const t of tiles.children) t.disabled = false;
       };
+      // Undo the last letter (Gareth: "needs an undo button").
+      const undo = () => {
+        const last = [...slots].reverse().find((sl) => sl.textContent);
+        if (done || !last) return;
+        tries += 1;   // a wrong try's clear-up is cancelled: you're fixing it
+        const tile = [...tiles.children].reverse().find((t) => t.disabled && t.dataset.letter === last.textContent);
+        last.textContent = "";
+        if (tile) tile.disabled = false;
+      };
       w.letters.forEach((letter) => {
         const t = button("jumble-tile", letter);
         t.dataset.letter = letter;
@@ -132,14 +141,20 @@ async function jumble(ctx) {
         };
         tiles.append(t);
       });
+      const back = button("question", "Undo");
+      back.id = "jumble-undo";
+      back.onclick = undo;
       const again = button("question", "Start again");
       again.onclick = reset;
       const skip = button("question", "Skip");
       skip.id = "jumble-skip";
       skip.onclick = () => { done = true; resolve(false); };
       const tools = el("div", "jumble-tools");
-      tools.append(again, skip);
-      box.replaceChildren(answer, tiles, tools);
+      tools.append(back, again, skip);
+      // A clue: their picture (Gareth: the jumble was too hard).
+      const clue = el("div", "jumble-clue");
+      clue.append(badge(character(w.id)));
+      box.replaceChildren(clue, answer, tiles, tools);
     });
     if (ok) {
       solved += 1;

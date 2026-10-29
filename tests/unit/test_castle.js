@@ -369,19 +369,16 @@ test("Traitors whisper the truth to a Traitor Sam, and fib to a Faithful Sam", (
 // ─── Round Table talk ───────────────────────────────────────────────────────
 import { tableTalk, talkOptions, playerSays, TALK_SWAY, QUIET_RISK } from "../../js/castle.js";
 
-test("Round Table talk: two or three accusations, and the accused stick up for themselves", () => {
-  const counts = new Set();
+test("Round Table talk: two accusations, and the accused stick up for themselves", () => {
   for (let seed = 1; seed <= 30; seed++) {
     const g = castle(seed);
     const talk = tableTalk(g);
     const accusations = talk.filter((t) => t.names.length === 1);
-    counts.add(accusations.length);
-    assert.ok(accusations.length === 2 || accusations.length === 3, `seed ${seed}: ${accusations.length}`);
+    assert.eq(accusations.length, 2, `seed ${seed}`);
     assert.eq(new Set(accusations.map((a) => a.names[0])).size, accusations.length, "different people accused");
     for (const t of talk) assert.ok(stillIn(g).includes(t.speaker) && t.speaker !== "dot", "only computer players speak");
     assert.eq(tableTalk(g), talk, "the same talk if you look again");
   }
-  assert.eq(counts.size, 2, "sometimes two, sometimes three");
 });
 
 test("Sam's options: four, always an accusation, staying quiet last; lots of variety", () => {

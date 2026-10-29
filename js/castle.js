@@ -639,6 +639,7 @@ function accuses(game, id) {
 // with a reason, sometimes a real clue from yesterday's votes), the accused
 // answer back, and others chime in. Everyone talks in their own way.
 // Returns [{ speaker, text, names }]; an accusation names exactly one person.
+export const TALK_CHIME = 0.25;
 export function tableTalk(game) {
   const r = rng(game, "talk", game.day);
   const speakers = brains(game);
@@ -686,7 +687,9 @@ export function tableTalk(game) {
   const talk = [];
   const accused = [];
   const used = new Set();
-  const wanted = 2 + (r() < 0.5 ? 1 : 0);
+  // Two accusations, and only sometimes someone joins in (Gareth: the talk
+  // went on a bit too long, 2026-10-29).
+  const wanted = 2;
   for (const s of speakers) {
     if (accused.length === wanted) break;
     const target = accuses(game, s);
@@ -700,7 +703,7 @@ export function tableTalk(game) {
       talk.push({ speaker: target, text: inCharacter(target, pickOne(defend, r), r), names: [] });
     }
     // Sometimes someone else joins in.
-    if (r() < 0.5) {
+    if (r() < TALK_CHIME) {
       const other = speakers.find((o) => !used.has(o) && o !== target);
       if (other) {
         used.add(other);
