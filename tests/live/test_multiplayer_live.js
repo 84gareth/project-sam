@@ -3,6 +3,7 @@
 // room storage the page uses.
 import { test, assert, openPage, until } from "../framework.js";
 import { localNet } from "../../js/net.js";
+import { pack, unpack } from "../../js/net-engine.js";
 import { newRoom, join, pick, codeName } from "../../js/lobby.js";
 
 const visible = (doc, id) => !doc.getElementById(id).hidden;
@@ -57,10 +58,10 @@ function bot(net, name, me) {
       says: { kind: "quiet", target: null, text: "Say nothing." },
       votes: others[0],
       night: null,
-      mission: { mission: act.data?.mission, score: 0.5 },
+      mission: { mission: unpack(act.data)?.mission, score: 0.5, hits: [null, "shield", null] },
       final: { vote: "end", line: "End it!" },
     }[act.t];
-    net.setAct(name, net.uid, { k: act.k, t: act.t, data: data ?? null });
+    net.setAct(name, net.uid, { k: act.k, t: act.t, data: pack(data) });
   });
   return stop;
 }

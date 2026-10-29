@@ -134,3 +134,23 @@ test("the waiting sign names nobody at night: it would give the Traitors away", 
   assert.eq(waitingLine(["Olive Oddsocks", "Madame Mystic"], "votes"), "Waiting for Olive Oddsocks, Madame Mystic...");
   assert.eq(waitingLine(["Olive Oddsocks", "Madame Mystic"], "night"), "Waiting for the night to end...");
 });
+
+import { likeFirebase } from "../../js/net.js";
+import { pack, unpack } from "../../js/net-engine.js";
+test("Firebase drops empty places, so parts travel as text (the stuck Catapults)", () => {
+  assert.eq(likeFirebase([null, "shield", null]), { 1: "shield" }, "what Firebase does to a list with gaps");
+  assert.eq(likeFirebase({ a: null, b: [1, null, 3] }), { b: [1, null, 3] });
+  const g = arriveAtCastle(newGame("dot", 4, HUMANS));
+  g.day = 5;
+  const hits = { dot: [null, "shield", null], puddle: [null, null, null], fizz: ["barry", null, null] };
+  const room = { play: { uids: { dot: "u1", puddle: "u2", fizz: "u3" } }, seats: {} };
+  for (const [id, h] of Object.entries(hits)) {
+    room.seats[room.play.uids[id]] = likeFirebase({ act: { k: 9, t: "mission", data: pack({ mission: "catapults", score: 0, hits: h }) } });
+  }
+  const d = readyToDecide(g, room, 9);
+  assert.eq(d.parts.dot.hits, [null, "shield", null], "the misses come back");
+  const logged = likeFirebase({ t: d.t, parts: pack(d.parts) });
+  const r = applyDecision(g, logged.t, unpack(logged.parts));
+  assert.ok(r.broken, "dot hit the shield");
+  assert.ok(r.hit.includes("barry"));
+});

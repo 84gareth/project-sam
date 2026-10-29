@@ -7,6 +7,14 @@
 
 import { applyDecision, needed } from "./engine.js";
 
+// Firebase quietly drops empty places: [null, "shield", null] comes back
+// as { 1: "shield" }, and a null field vanishes. A missed catapult stone
+// is a null, so the result broke on every device, and rejoining too
+// (Gareth, 2026-10-29). So each player's part, and each decision's parts,
+// travel as text, which Firebase keeps exactly.
+export const pack = (value) => JSON.stringify(value ?? null);
+export const unpack = (text) => (typeof text === "string" ? JSON.parse(text) : text ?? null);
+
 // The log as a list (Firebase may hand it back as { "0": ..., "1": ... }).
 export const logList = (log) => (Array.isArray(log) ? log : Object.keys(log ?? {})
   .map(Number).sort((a, b) => a - b).map((i) => log[i]));
@@ -24,7 +32,7 @@ export function readyToDecide(game, room, k, skip = false) {
       return null;
     }
     type = type ?? act.t;
-    parts[who] = act.data ?? null;
+    parts[who] = unpack(act.data);
   }
   return type ? { t: type, parts } : null;
 }
@@ -77,7 +85,7 @@ export function netEngine(net, roomName, game, isHost, onWaiting = () => {}) {
     const log = logList(room.log);
     while (applied < log.length && log[applied]) {
       const e = log[applied];
-      results[applied] = applyDecision(game, e.t, e.parts ?? {});
+      results[applied] = applyDecision(game, e.t, unpack(e.parts) ?? {});
       waiting.get(applied)?.(results[applied]);
       waiting.delete(applied);
       applied += 1;
@@ -89,7 +97,7 @@ export function netEngine(net, roomName, game, isHost, onWaiting = () => {}) {
       const d = readyToDecide(game, room, applied, skip === applied);
       if (d) {
         writing = applied;
-        net.setRoom(roomName, { [`log/${applied}`]: d }).catch((err) => { writing = -1; console.error(err); });
+        net.setRoom(roomName, { [`log/${applied}`]: { t: d.t, parts: pack(d.parts) } }).catch((err) => { writing = -1; console.error(err); });
       }
     }
   }
@@ -139,7 +147,7 @@ export function netEngine(net, roomName, game, isHost, onWaiting = () => {}) {
       if (k < applied) return Promise.resolve(results[k]);
       types.set(k, type);
       const done = new Promise((resolve) => waiting.set(k, resolve));
-      net.setAct(roomName, net.uid, { k, t: type, data: data ?? null }).catch((err) => console.error(err));
+      net.setAct(roomName, net.uid, { k, t: type, data: pack(data) }).catch((err) => console.error(err));
       return done;
     },
   };

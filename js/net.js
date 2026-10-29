@@ -7,6 +7,28 @@
 // (host), and watchRoom(name, onChange) -> stop. All but watchRoom return
 // promises. The Firebase version is in firebase-net.js.
 
+// What Firebase does to a value it stores (so the local version, and the
+// tests, see the same): nulls are dropped, and a list with gaps comes back
+// as an object unless more than half its places are filled. Pure.
+export function likeFirebase(v) {
+  if (v === null || v === undefined) return null;
+  if (Array.isArray(v)) {
+    const items = v.map(likeFirebase);
+    const filled = items.filter((x) => x !== null).length;
+    if (filled === 0) return null;
+    let end = items.length;
+    while (items[end - 1] === null) end -= 1;
+    if (filled * 2 > end) return items.slice(0, end);
+    return Object.fromEntries(items.map((x, i) => [i, x]).filter(([, x]) => x !== null));
+  }
+  if (typeof v === "object") {
+    const out = {};
+    for (const [k, x] of Object.entries(v)) { const y = likeFirebase(x); if (y !== null) out[k] = y; }
+    return Object.keys(out).length ? out : null;
+  }
+  return v;
+}
+
 // Who this tab is: a random id, kept for this tab only (two tabs on one
 // computer are two players).
 function tabUid() {
@@ -97,8 +119,8 @@ export function localNet(store = window.localStorage) {
     kind: "local", uid: tabUid(), updateRoom, watchRoom,
     ready: async () => net,
     readRoom: async (name) => readRoom(name),
-    createRoom: async (name, room) => updateRoom(name, () => room),
-    setSeat: async (name, uid, seat) => { writeSeat(name, uid, seat); told(name); },
+    createRoom: async (name, room) => updateRoom(name, () => likeFirebase(room)),
+    setSeat: async (name, uid, seat) => { writeSeat(name, uid, likeFirebase(seat) ?? {}); told(name); },
     // Keys may be paths ("log/3"), like Firebase's. The host's part only.
     setRoom: async (name, patch) => updateMain(name, (r) => {
       const next = structuredClone(r);
@@ -106,7 +128,7 @@ export function localNet(store = window.localStorage) {
         const parts = path.split("/");
         let at = next;
         for (const p of parts.slice(0, -1)) at = at[p] ??= {};
-        at[parts[parts.length - 1]] = value;
+        at[parts[parts.length - 1]] = likeFirebase(value);
       }
       return next;
     }),
@@ -114,7 +136,7 @@ export function localNet(store = window.localStorage) {
       const k = seatKey(name, uid);
       let seat;
       try { seat = JSON.parse(store.getItem(k)) ?? {}; } catch { seat = {}; }
-      writeSeat(name, uid, { ...seat, act });
+      writeSeat(name, uid, { ...seat, act: likeFirebase(act) });
       told(name);
     },
   };
