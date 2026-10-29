@@ -6,6 +6,8 @@ import {
   SYMBOLS, CODE_LENGTH, newCode, codeName, newRoom, join, pick, takenBy, canStart, seatOrder,
 } from "./lobby.js";
 import { localNet } from "./net.js";
+import { netEngine } from "./net-engine.js";
+import { newGame } from "./game.js";
 import { firebaseNet } from "./firebase-net.js";
 import { $, show, badge, card, character, FAST } from "./ui.js";
 import { narrate } from "./voice.js";
@@ -187,11 +189,33 @@ function drawLobby(room) {
   $("lobby-start").hidden = !isHost || room.started;
   $("lobby-start").disabled = !canStart(room);
   $("lobby-cards").hidden = room.started;
-  $("lobby-soon").hidden = !room.started;
+  $("lobby-soon").hidden = true;
+  if (room.started) begin(room);
 }
 
 function startGame() {
-  if (current && canStart(current)) net.setRoom(roomName, { started: true }).catch((err) => console.error(err));
+  if (!current || !canStart(current)) return;
+  // The deal: a seed for the shared game, the real players (by character)
+  // in seat order, and which device each is.
+  const order = seatOrder(current);
+  const play = {
+    seed: Date.now() % 2147483647,
+    humans: order.map((uid) => current.seats[uid].character),
+    uids: Object.fromEntries(order.map((uid) => [current.seats[uid].character, uid])),
+  };
+  net.setRoom(roomName, { started: true, play }).catch((err) => console.error(err));
+}
+
+// Everyone's game starts the same way (engine.js keeps them in step); main.js
+// tells each player their secret side.
+let begun = false;
+function begin(room) {
+  if (begun || !room.play || !room.seats[net.uid]) return;
+  begun = true;
+  const me = room.seats[net.uid].character;
+  const game = newGame(me, room.play.seed, room.play.humans);
+  const engine = netEngine(net, roomName, game, room.host === net.uid);
+  document.dispatchEvent(new CustomEvent("multiplayer-start", { detail: { game, engine } }));
 }
 
 // ─── Buttons ────────────────────────────────────────────────────────────────

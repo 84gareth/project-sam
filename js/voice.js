@@ -67,7 +67,12 @@ export const NARRATOR = "narrator";
 // Returns a promise that resolves when the line has been said (or about as
 // long as it would take, if the browser never says), so the game can wait
 // for it (Gareth: the vote count carried on before the line had finished).
+// Multiplayer in one house: secret lines (your side, Traitor talk) are shown
+// but not spoken, or everyone nearby would hear them (Phase 8).
+let secretsQuiet = false;
+export const setSecretsQuiet = (on) => { secretsQuiet = on; };
 export function say(text, id, opts = {}) {
+  if (opts.secret && secretsQuiet) return Promise.resolve();
   if (FAST) { speak(text, id, opts); return Promise.resolve(); }
   return new Promise((resolve) => {
     const u = speak(text, id, opts);
@@ -94,4 +99,4 @@ function speak(text, id, { queue = false } = {}) {
   return u;
 }
 
-export const narrate = (text, opts) => say(text, NARRATOR, opts);
+export const narrate = (text, opts = {}) => say(text, NARRATOR, opts);

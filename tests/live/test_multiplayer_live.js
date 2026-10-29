@@ -35,8 +35,90 @@ test("host: get a code, someone joins, everyone picks, start", async () => {
   doc.querySelector('#lobby-cards .card[data-id="pepper"]').click();
   await until(() => !doc.getElementById("lobby-start").disabled, "everyone has picked");
   doc.getElementById("lobby-start").click();
-  await until(() => visible(doc, "lobby-soon"), "started");
-  assert.ok((await net.readRoom(name)).started, "the other device sees it start");
+  await until(() => visible(doc, "screen-ready"), "the game starts: you find out your side");
+  const room = await net.readRoom(name);
+  assert.ok(room.started, "the other device sees it start");
+  assert.eq(room.play.humans.sort(), ["pepper", "puddle"], "both real players are in the game");
+  assert.eq(page.game.humans.sort(), ["pepper", "puddle"]);
+});
+
+// The other device, played by the test: whenever the host's device asks
+// for decision k, it answers decision k too (simply).
+function bot(net, name, me) {
+  let done = -1;
+  const stop = net.watchRoom(name, (room) => {
+    if (!room?.play) return;
+    const act = room.seats[room.host]?.act;
+    if (!act || act.k <= done) return;
+    done = act.k;
+    const others = room.play.humans.filter((h) => h !== me);
+    const data = {
+      go: true,
+      says: { kind: "quiet", target: null, text: "Say nothing." },
+      votes: others[0],
+      night: null,
+      mission: { mission: act.data?.mission, score: 0.5 },
+      final: { vote: "end", line: "End it!" },
+    }[act.t];
+    net.setAct(name, net.uid, { k: act.k, t: act.t, data: data ?? null });
+  });
+  return stop;
+}
+
+test("two real players play a whole day together", async () => {
+  const { page, doc } = await toMulti();
+  doc.getElementById("multi-host").click();
+  await until(() => visible(doc, "screen-lobby"), "the lobby");
+  const name = page.multiplayer.room;
+  const net = other();
+  net.updateRoom(name, (r) => join(r, net.uid, Date.now()).room);
+  net.updateRoom(name, (r) => pick(r, net.uid, "puddle").room);
+  await until(() => doc.querySelector('#lobby-cards .card[data-id="pepper"]'), "cards");
+  doc.querySelector('#lobby-cards .card[data-id="pepper"]').click();
+  await until(() => !doc.getElementById("lobby-start").disabled, "ready to start");
+  const stopBot = bot(net, name, "puddle");
+  doc.getElementById("lobby-start").click();
+  await until(() => visible(doc, "screen-ready"), "your side");
+  doc.getElementById("to-castle").click();
+  await until(() => visible(doc, "screen-castle"), "the castle", 8000);
+  doc.getElementById("to-table").click();
+  await until(() => visible(doc, "talk-options"), "the talk (after both are ready)", 15000);
+  doc.querySelector("#talk-options .question").click();
+  await until(() => visible(doc, "to-vote"), "both have spoken", 10000);
+  doc.getElementById("to-vote").click();
+  doc.querySelector("#table-cards .card").click();
+  doc.getElementById("cast-vote").click();
+  await until(() => visible(doc, "to-reveal"), "the chalkboards", 20000);
+  const voter = [...doc.querySelectorAll(".board-voter")].find((b) => b.textContent.startsWith("Captain Puddle"));
+  assert.ok(voter, "Captain Puddle's chalkboard is there");
+  doc.getElementById("to-reveal").click();
+  await until(() => visible(doc, "after-reveal") || visible(doc, "game-over"), "the reveal", 10000);
+  if (visible(doc, "after-reveal")) {
+    doc.getElementById("next-day").click();
+    // The night: a Traitor host picks; a Faithful host waits.
+    await until(() => visible(doc, "screen-traitors") || visible(doc, "to-breakfast") || visible(doc, "night-over")
+      || visible(doc, "envelope"), "the night", 10000);
+    if (visible(doc, "screen-traitors")) {
+      doc.querySelector("#victim-cards .card").click();
+      doc.getElementById("murder").click();
+    } else if (visible(doc, "envelope")) {
+      doc.getElementById("envelope").click();
+      await until(() => visible(doc, "to-breakfast"), "after the letter", 8000);
+      doc.getElementById("to-breakfast").click();
+    } else if (visible(doc, "to-breakfast")) {
+      doc.getElementById("to-breakfast").click();
+    }
+    await until(() => visible(doc, "start-day") || visible(doc, "breakfast-over"), "breakfast", 10000);
+    doc.getElementById("start-day").click();
+    await until(() => visible(doc, "screen-mission"), "day 2's mission, after both are ready", 10000);
+    doc.getElementById("mission-go").click();
+    page.missionGiveUp();
+    await until(() => visible(doc, "mission-result"), "the mission result, once both have finished", 10000);
+    assert.eq(page.game.day, 2);
+  }
+  const room = await net.readRoom(name);
+  assert.gt(Object.keys(room.log).length, 5, "decisions in the shared log");
+  stopBot();
 });
 
 test("join: tap the host's four symbols", async () => {

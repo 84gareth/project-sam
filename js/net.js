@@ -53,7 +53,19 @@ export function localNet(store = window.localStorage) {
     readRoom: async (name) => readRoom(name),
     createRoom: async (name, room) => updateRoom(name, () => room),
     setSeat: async (name, uid, seat) => updateRoom(name, (r) => (r ? { ...r, seats: { ...r.seats, [uid]: seat } } : null)),
-    setRoom: async (name, patch) => updateRoom(name, (r) => (r ? { ...r, ...patch } : null)),
+    // Keys may be paths ("log/3"), like Firebase's.
+    setRoom: async (name, patch) => updateRoom(name, (r) => {
+      if (!r) return null;
+      const next = structuredClone(r);
+      for (const [path, value] of Object.entries(patch)) {
+        const parts = path.split("/");
+        let at = next;
+        for (const p of parts.slice(0, -1)) at = at[p] ??= {};
+        at[parts[parts.length - 1]] = value;
+      }
+      return next;
+    }),
+    setAct: async (name, uid, act) => updateRoom(name, (r) => (r ? { ...r, seats: { ...r.seats, [uid]: { ...r.seats[uid], act } } } : null)),
   };
   return net;
 }

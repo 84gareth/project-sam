@@ -53,7 +53,7 @@ export function goToCastle(g, { resume = false, engine: e = null } = {}) {
 // Each day from day 2 starts with its mission, then the castle.
 // (No mission on day 1: Gareth.)
 function startDay() {
-  saveGame(game);   // a reload comes back to here
+  if (engine.kind === "solo") saveGame(game);   // a reload comes back to here (single player)
   setMusic(null);
   if (game.day === 1) enterCastle();
   else startMission(game, enterCastle, null, engine);
@@ -379,7 +379,8 @@ function ask(id, question) {
   const spoken = question === "list"
     ? a.text + " " + a.names.map((n) => character(n).name).join(", ")
     : a.text;
-  say(spoken, id);
+  // A Traitor whispering to a Traitor is a secret (not spoken in multiplayer).
+  say(spoken, id, { secret: game.playerSide === TRAITOR && isTraitor(game, id) });
 }
 
 function showVoicesButton() {
@@ -842,7 +843,7 @@ async function sealedLetter(words) {
   void $("letter").offsetWidth;
   $("letter").classList.add("unfold");
   $("letter").hidden = false;
-  narrate(`By order of the Traitors, ${words}`);
+  narrate(`By order of the Traitors, ${words}`, { secret: words.includes("Traitor!") });
 }
 
 // A Traitor's night: choose (with only 2 left), pick who, and give out the
@@ -929,7 +930,7 @@ function traitorsMeeting(mode) {
       : `Let's pick ${idea}. They're getting close to us!`;
     p.textContent = `${character(f).name}: "${line}"`;
     box.append(p);
-    say(line, f, { queue: true });
+    say(line, f, { queue: true, secret: true });
   });
   if (fellows.length === 0) {
     const p = document.createElement("p");
@@ -956,7 +957,7 @@ function daggerMeeting() {
     p.className = "idea";
     p.textContent = `${character(f).name}: "${line}"`;
     box.append(p);
-    say(line, f, { queue: true });
+    say(line, f, { queue: true, secret: true });
   });
   return pickFromCards(stillIn(game), "Give them the dagger");
 }

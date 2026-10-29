@@ -78,6 +78,7 @@ export function firebaseNet(config = FIREBASE, store = window.sessionStorage) {
     createRoom: (name, room) => call("PUT", `rooms/${name}`, room),
     setSeat: (name, uid, seat) => call("PUT", `rooms/${name}/seats/${uid}`, seat),
     setRoom: (name, patch) => call("PATCH", `rooms/${name}`, patch),
+    setAct: (name, uid, act) => call("PUT", `rooms/${name}/seats/${uid}/act`, act),
     // Live changes: our copy of the room, kept up to date. Reconnects with a
     // fresh sign-in before the hour-long token runs out.
     watchRoom(name, onChange) {

@@ -9,7 +9,7 @@ import { newGame, TRAITOR } from "./game.js";
 import { $, show, badge, card, character, setMe } from "./ui.js";
 import { goToCastle } from "./castle-ui.js";
 import { unlockSounds, play } from "./sound.js";
-import { narrate } from "./voice.js";
+import { narrate, setSecretsQuiet } from "./voice.js";
 import { MISSIONS } from "./missions.js";
 import { startMission } from "./mission-ui.js";
 import { arriveAtCastle } from "./castle.js";
@@ -38,6 +38,11 @@ function startGame() {
   const seed = Number(new URLSearchParams(location.search).get("seed")) || Date.now();
   window.game = newGame(pickedId, seed);
   setMe(pickedId);
+  showReady();
+}
+
+// You are ... You are a Traitor/Faithful (secret!).
+function showReady() {
   const side = window.game.playerSide;
   const c = character(pickedId);
   $("ready-badge").replaceWith(Object.assign(badge(c, true), { id: "ready-badge" }));
@@ -45,7 +50,9 @@ function startGame() {
   $("ready-side").textContent = side === TRAITOR ? "You are a Traitor. Shh!" : "You are a Faithful.";
   $("ready-side").className = "ready-side " + side;
   show("screen-ready");
-  narrate(`${$("ready-who").textContent} ${$("ready-side").textContent}`);
+  // Your side is a secret: in multiplayer it's only shown, never spoken.
+  narrate($("ready-who").textContent);
+  narrate($("ready-side").textContent, { queue: true, secret: true });
 }
 
 document.title = GAME_NAME;
@@ -68,13 +75,25 @@ if (saved) {
   });
 }
 $("choose").addEventListener("click", () => pickedId && startGame());
+// Multiplayer: the host started the game; this device's player finds out
+// their secret side (Phase 8).
+let engine = null;
+document.addEventListener("multiplayer-start", (e) => {
+  window.game = e.detail.game;
+  engine = e.detail.engine;
+  setSecretsQuiet(true);
+  pickedId = window.game.playerId;
+  setMe(pickedId);
+  showReady();
+});
+
 // All aboard! A short train ride with the steam train sound (Sam), THEN
 // the castle (Gareth: the sound was playing after you'd arrived).
 $("to-castle").addEventListener("click", async () => {
   show("screen-train");
   narrate("All aboard! The train is taking you to the castle.");
   await play("train");
-  goToCastle(window.game);
+  goToCastle(window.game, engine ? { engine } : {});
 });
 // The debug menu (Gareth: "a debug menu to play each mission on its own to
 // test it"). Add ?debug to the address to see its button at the station.
