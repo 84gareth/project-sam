@@ -3,9 +3,10 @@
 // missions.js; these files draw and listen.
 import {
   finishMission, todaysMission, bellTune, BELL_ROUNDS, BELLS, bellScore, pieRound, PIE_ROUNDS, pieScore,
-  STONES, finishCatapults, galleryTargets, moveTargets, landing, hitAt, SLING, SLING_MAX_PULL, FLIGHT, TRUCKS, HATES, cookingDiner, shieldTruck, finishCooking, flopResult, truckFoods,
+  STONES, finishCatapults, galleryTargets, moveTargets, landing, hitAt, SLING, SLING_MAX_PULL, FLIGHT, TRUCKS, HATES, cookingDiner, shieldTruck, finishCooking, flopResult, flopPart, cookScore, truckFoods,
 } from "./missions.js";
 import { PLAY } from "./mission-more.js";
+import { soloEngine } from "./engine.js";
 import { stillIn } from "./castle.js";
 import { $, show, character, wait, badge, FAST } from "./ui.js";
 import { narrate, say } from "./voice.js";
@@ -25,8 +26,12 @@ const CONTAINERS = ["bells", "pies", "catapult", "cooking", "mission-play"];
 
 // Show today's mission (or `only`, from the debug menu); `done` runs when
 // Sam taps the button at the end.
-export function startMission(g, done, only = null) {
+// `eng`: the engine making decisions (engine.js); none for the test menu,
+// which plays a mission on its own.
+let engine = null;
+export function startMission(g, done, only = null, eng = null) {
   game = g;
+  engine = eng ?? soloEngine(g);
   onDone = done;
   const m = mission = only ?? todaysMission(game);
   $("mission-done").textContent = only ? "Back to the missions" : "Go to the castle";
@@ -84,7 +89,7 @@ function stopTimers() {
 }
 
 // The tests' way to finish a mission at once, as badly as possible.
-if (FAST) window.missionGiveUp = () => finish(null, "You gave up.", flopResult(game, stillIn(game), mission));
+if (FAST) window.missionGiveUp = () => finish(null, "You gave up.", flopPart(mission));
 
 // Who won a shield today, in words.
 function shieldLine(r) {
@@ -106,7 +111,12 @@ async function finish(score, line, done = null, extra = "") {
   if (finished) return;
   finished = true;
   stopTimers();
-  const r = done ?? finishMission(game, score, stillIn(game), mission);
+  // `done` here is this player's part: { score, hits?, found? }.
+  const part = done ?? { score };
+  // Waiting for the others to finish (multiplayer); at once on your own.
+  $("mission-status").textContent = engine.kind === "solo" ? "" : "Waiting for everyone to finish...";
+  const r = await engine.decide("mission", { mission: mission.id, ...part });
+  if (typeof extra === "function") extra = extra(r);
   $("mission-score").textContent = line;
   $("mission-pot").textContent = `The team won ${money(r.won)}! The pot is now ${money(game.pot)}.`;
   $("mission-extra").textContent = extra;
@@ -385,14 +395,14 @@ async function playCatapults() {
   });
   field.onpointerdown = field.onpointermove = field.onpointerup = null;
   await wait(900);
-  const result = finishCatapults(game, hits, stillIn(game), mission);
   const mine = hits.filter((h) => h && h !== "shield");
   const line = mine.length ? `You hit ${mine.length} out of ${STONES}!` : "You didn't hit anyone!";
-  const names = result.hit.map((id) => id === game.playerId ? `${character(id).name} (you)` : character(id).name);
-  const extra = names.length
-    ? `Up for murder tonight: ${names.join(", ")}.`
-    : "Nobody was hit, so nobody is up for murder!";
-  finish(null, line, result, extra);
+  finish(null, line, { score: mine.length / STONES, hits }, (result) => {
+    const names = result.hit.map((id) => id === game.playerId ? `${character(id).name} (you)` : character(id).name);
+    return names.length
+      ? `Up for murder tonight: ${names.join(", ")}.`
+      : "Nobody was hit, so nobody is up for murder!";
+  });
 }
 
 // ─── Cooking Challenge ──────────────────────────────────────────────────────
@@ -456,7 +466,7 @@ async function playCooking() {
     o.textContent = Number(o.dataset.box) === where ? "Shield!" : "Empty";
     o.classList.toggle("has-shield", Number(o.dataset.box) === where);
   }
-  const result = finishCooking(game, diner, meal, box, stillIn(game), mission);
+  const result = { score: cookScore(diner, meal), found: box === where };
   const reaction = result.score === 1
     ? `Yuck! ${HATES[diner][0]}! My least favourite!`
     : "Mmm, that's quite nice actually.";

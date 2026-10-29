@@ -40,13 +40,24 @@ async function toCastle(seed) {
 // Give up today's mission at once (the test-only give-up: as badly as
 // possible, the same as flopResult), then go to the castle.
 async function flopMission(page, doc) {
+  await until(() => visible(doc, "screen-mission"), "the day's mission");
   doc.getElementById("mission-go").click();
   page.missionGiveUp();
-  assert.ok(visible(doc, "mission-result"), "the mission is over");
+  await until(() => visible(doc, "mission-result"), "the mission is over");
   doc.getElementById("mission-done").click();
   await until(() => !doc.getElementById("screen-castle").hidden, "on to the castle");
 }
 const visible = (doc, id) => !doc.getElementById(id).hidden;
+// Decisions take a moment now (engine.js), even on your own: click, then
+// wait for the next screen.
+async function clickTable(doc) {
+  doc.getElementById("to-table").click();
+  await until(() => visible(doc, "screen-walk") || visible(doc, "screen-talk"), "off to the Round Table");
+}
+async function clickNext(doc) {
+  doc.getElementById("next-day").click();
+  await until(() => !visible(doc, "screen-banished"), "on from the reveal", 8000);
+}
 // Redraw the castle now (after a test moves people about).
 const redraw = (page) => page.castleTick();
 // Someone in Sam's room who isn't busy chatting (tapping a chatting pair
@@ -130,7 +141,7 @@ function nightSeed(side, want) {
 }
 
 async function talkThenTable(doc) {
-  if (doc.getElementById("screen-talk").hidden) doc.getElementById("to-table").click();
+  if (doc.getElementById("screen-talk").hidden) await clickTable(doc);
   await until(() => !doc.getElementById("talk-options").hidden, "the Round Table talk", 8000);
   doc.querySelector("#talk-options .question").click();
   await until(() => !doc.getElementById("to-vote").hidden, "Sam has spoken");
@@ -163,7 +174,7 @@ test("Round Table: vote, everyone shows a chalkboard, drum roll, reveal, next da
   const word = out.side === TRAITOR ? "TRAITOR!" : "FAITHFUL!";
   assert.eq(doc.getElementById("reveal").textContent, `I am a... ${word}`);
   assert.ok(visible(doc, "after-reveal"), "Night falls button");
-  doc.getElementById("next-day").click();
+  await clickNext(doc);
   await until(() => visible(doc, "to-breakfast") || visible(doc, "night-over"), "the night passes");
   doc.getElementById("to-breakfast").click();
   await until(() => visible(doc, "start-day") || visible(doc, "breakfast-over"), "breakfast", 8000);
@@ -185,7 +196,7 @@ test("Round Table: vote, everyone shows a chalkboard, drum roll, reveal, next da
 test("night 1: if the Traitors recruit Sam, a letter makes him a Traitor", async () => {
   const { page, doc } = await toCastle(nightSeed(FAITHFUL, (v) => v === "pepper"));
   await voteAndReveal(doc);
-  doc.getElementById("next-day").click();
+  await clickNext(doc);
   await until(() => visible(doc, "envelope"), "a sealed letter", 8000);
   assert.notOk(visible(doc, "letter"), "sealed until you tap it");
   assert.notOk(visible(doc, "to-breakfast"), "open it first");
@@ -215,14 +226,14 @@ test("a Faithful who is murdered (night 2) gets the letter", async () => {
   assert.gt(seed, 0, "found a game");
   const { page, doc } = await toCastle(seed);
   await voteAndReveal(doc);
-  doc.getElementById("next-day").click();
+  await clickNext(doc);
   await until(() => visible(doc, "to-breakfast"), "no letter on night 1", 8000);
   doc.getElementById("to-breakfast").click();
   await until(() => visible(doc, "start-day"), "breakfast", 8000);
   doc.getElementById("start-day").click();
   await flopMission(page, doc);
   // Day 2: the Round Table picks the first person still on the list.
-  doc.getElementById("to-table").click();
+  await clickTable(doc);
   await until(() => visible(doc, "talk-options"), "the talk", 8000);
   doc.querySelector("#talk-options .question:last-child").click();
   doc.getElementById("to-vote").click();
@@ -232,7 +243,7 @@ test("a Faithful who is murdered (night 2) gets the letter", async () => {
   doc.getElementById("to-reveal").click();
   await until(() => visible(doc, "after-reveal") || visible(doc, "game-over"), "the reveal", 8000);
   if (visible(doc, "game-over")) return;   // the game ended at the table instead
-  doc.getElementById("next-day").click();
+  await clickNext(doc);
   await until(() => visible(doc, "envelope"), "a sealed letter", 8000);
   doc.getElementById("envelope").click();
   await until(() => visible(doc, "letter"), "the letter unfolds", 8000);
@@ -243,7 +254,7 @@ test("a Faithful who is murdered (night 2) gets the letter", async () => {
 test("a Traitor goes to the secret meeting and picks who to recruit (night 1)", async () => {
   const { page, doc } = await toCastle(nightSeed(TRAITOR));
   await voteAndReveal(doc);
-  doc.getElementById("next-day").click();
+  await clickNext(doc);
   assert.ok(visible(doc, "screen-traitors"), "the secret meeting");
   assert.gt(doc.querySelectorAll("#traitor-ideas .idea").length, 0, "the others give ideas");
   assert.ok(doc.getElementById("meeting-hint").textContent.includes("recruit"), "it's the recruiting night");
@@ -301,7 +312,7 @@ test("at the secret meeting, each Traitor says their idea out loud", async () =>
   const { page, doc } = await toCastle(nightSeed(TRAITOR));
   await voteAndReveal(doc);
   const said = listen(page);
-  doc.getElementById("next-day").click();
+  await clickNext(doc);
   const ideas = [...doc.querySelectorAll("#traitor-ideas .idea")];
   const spoken = said.filter((s) => s.text.startsWith("Let's"));
   assert.eq(spoken.length, ideas.length, "one spoken line per idea");
@@ -311,7 +322,7 @@ test("at the secret meeting, each Traitor says their idea out loud", async () =>
 
 test("Round Table talk: people accuse and defend, then Sam joins in", async () => {
   const { page, doc } = await toCastle(seedFor("pepper", FAITHFUL));
-  doc.getElementById("to-table").click();
+  await clickTable(doc);
   await until(() => visible(doc, "screen-talk"), "after the walk, talk comes before the vote", 8000);
   await until(() => visible(doc, "talk-options"), "Sam's turn to speak", 8000);
   assert.gt(doc.querySelectorAll("#talk-lines .talk-line").length, 1, "people have spoken");
@@ -455,7 +466,7 @@ test("each room has its own sound, and the Round Table has a crackling fire", as
   page.world.me.room = "garden";
   page.castleTick();
   await until(() => doc.body.dataset.roomSound === "garden", "the garden's sound");
-  doc.getElementById("to-table").click();
+  await clickTable(doc);
   await until(() => doc.body.dataset.roomSound === "table", "the fire at the Round Table");
   assert.eq(doc.body.dataset.music, "table", "and the tense music");
   await new Promise((r) => setTimeout(r, 300));
@@ -463,7 +474,7 @@ test("each room has its own sound, and the Round Table has a crackling fire", as
   await voteAndReveal(doc);
   assert.eq(doc.body.dataset.roomSound, "table", "through the vote and the reveal");
   if (!visible(doc, "after-reveal")) return;   // the game ended at the table
-  doc.getElementById("next-day").click();
+  await clickNext(doc);
   await until(() => doc.body.dataset.roomSound === "", "quiet at night");
   assert.eq(doc.body.dataset.music, "", "the music stops at night");
 });
@@ -483,6 +494,7 @@ test("debug menu (?debug): play any mission on its own, then back to the list", 
     // Give up at once, then back to the list.
     doc.getElementById("mission-go").click();
     page.missionGiveUp();
+    await until(() => visible(doc, "mission-result"), "the result");
     assert.eq(doc.getElementById("mission-done").textContent, "Back to the missions");
     doc.getElementById("mission-done").click();
     assert.ok(visible(doc, "screen-debug"), "back to the list");
@@ -518,7 +530,7 @@ test("a quiet night: the Traitors only plot, and everyone comes to breakfast", a
       p.inGame = false;
     }
     assert.eq(nightKind(g), "quiet", "a no-murder night");
-    doc.getElementById("next-day").click();
+    await clickNext(doc);
     await until(() => visible(doc, "to-breakfast"), "the quiet night", 8000);
     assert.notOk(visible(doc, "letter"), "no letter");
     assert.ok(visible(doc, "screen-night"), `${side}: the night screen, not the Traitors' meeting`);
@@ -532,8 +544,8 @@ test("a quiet night: the Traitors only plot, and everyone comes to breakfast", a
 
 test("everyone walks to the Round Table in slow motion, to drums", async () => {
   const { page, doc } = await toCastle(seedFor("pepper", FAITHFUL));
-  doc.getElementById("to-table").click();
-  assert.ok(visible(doc, "screen-walk"), "the walk comes first");
+  await clickTable(doc);
+  assert.gt(doc.querySelectorAll("#walk-line [data-id]").length, 0, "the walk comes first");
   const walkers = [...doc.querySelectorAll("#walk-line [data-id]")].map((e) => e.dataset.id).sort();
   assert.eq(walkers, stillIn(page.game).sort(), "everyone still in, Sam too");
   await until(() => visible(doc, "screen-talk"), "then the talk", 8000);
@@ -790,7 +802,7 @@ test("Lights Out: put all nine pieces back", async () => {
 
 test("staying quiet at the Round Table: someone notices", async () => {
   const { doc } = await toCastle(seedFor("pepper", FAITHFUL));
-  doc.getElementById("to-table").click();
+  await clickTable(doc);
   await until(() => visible(doc, "talk-options"), "Sam's turn to speak", 8000);
   const before = doc.querySelectorAll("#talk-lines .talk-line").length;
   doc.querySelector("#talk-options .question:last-child").click();
@@ -803,7 +815,7 @@ test("staying quiet at the Round Table: someone notices", async () => {
 test("your own character is marked: the walk, your chalkboard, the reveal list", async () => {
   const { doc } = await toCastle(seedFor("pepper", FAITHFUL));
   assert.ok(doc.querySelector('.puppet.me'), "your puppet glows in the castle");
-  doc.getElementById("to-table").click();
+  await clickTable(doc);
   assert.ok(doc.querySelector('#walk-line .me-cutout[data-id="pepper"]'), "you glow in the walk");
   assert.eq(doc.querySelectorAll("#walk-line .me-cutout").length, 1, "only you");
   await talkThenTable(doc);
@@ -861,7 +873,7 @@ test("after day 12's vote comes the final", async () => {
   await voteAndReveal(doc);
   if (!visible(doc, "after-reveal")) return;   // Sam was banished: that's the end
   assert.eq(doc.getElementById("next-day").textContent, "On to the final!");
-  doc.getElementById("next-day").click();
+  await clickNext(doc);
   assert.ok(visible(doc, "screen-final"));
 });
 
@@ -929,7 +941,7 @@ test("whoever has a shield wears Sam's shield necklace", async () => {
   assert.eq(page.getComputedStyle(puppet.querySelector(".necklace")).display, "block", "the necklace shows");
   const other = doc.querySelector(`.puppet:not([data-id="${id}"]) .necklace`);
   if (other) assert.eq(page.getComputedStyle(other).display, "none", "nobody else wears one");
-  doc.getElementById("to-table").click();
+  await clickTable(doc);
   assert.ok(doc.querySelector(`#walk-line .wearing .cutout[data-id="${id}"]`), "wearing it on the walk too");
 });
 
@@ -943,7 +955,7 @@ test("the dagger: news at breakfast, held all day, x2 on the chalkboard", async 
   page.castleTick();
   const puppet = doc.querySelector(`.puppet[data-id="${holder}"]`);
   if (puppet) assert.eq(page.getComputedStyle(puppet.querySelector(".held-dagger")).display, "block", "holding it");
-  doc.getElementById("to-table").click();
+  await clickTable(doc);
   assert.ok(doc.querySelector(`#walk-line .wearing.has-dagger .cutout[data-id="${holder}"]`), "holding it on the walk");
   await talkThenTable(doc);
   doc.querySelector("#table-cards .card").click();
@@ -960,7 +972,7 @@ test("a Traitor Sam chooses who gets the dagger when it's down to 8", async () =
     if (stillIn(page.game).length <= 8) break;
     p.inGame = false;
   }
-  doc.getElementById("next-day").click();
+  await clickNext(doc);
   await until(() => visible(doc, "screen-traitors") || visible(doc, "to-breakfast"), "the night", 8000);
   if (visible(doc, "to-breakfast")) doc.getElementById("to-breakfast").click();
   else {
@@ -979,7 +991,7 @@ test("a Traitor Sam chooses who gets the dagger when it's down to 8", async () =
 
 test("Round Table talk: lots of lines, and the buttons stay on the screen", async () => {
   const { doc } = await toCastle(seedFor("pepper", FAITHFUL));
-  doc.getElementById("to-table").click();
+  await clickTable(doc);
   await until(() => visible(doc, "talk-options"), "Sam's turn", 15000);
   // Pile on extra lines, like a long talk.
   const lines = doc.getElementById("talk-lines");
@@ -1030,13 +1042,13 @@ test("only 2 Traitors left: a Traitor Sam chooses recruit or murder", async () =
   g.history.unshift({ quiet: true });   // not night 1
   const others = g.players.filter((p) => p.inGame && p.side === TRAITOR && p.id !== "pepper");
   for (const p of others.slice(1)) p.inGame = false;   // Sam and one more
-  doc.getElementById("next-day").click();
+  await clickNext(doc);
   await until(() => visible(doc, "screen-traitors") && doc.querySelector(".choose-option"), "the choice", 8000);
   const choices = [...doc.querySelectorAll(".choose-option")].map((b) => b.textContent);
   assert.ok(choices.includes("Recruit someone new"));
   assert.ok(choices.includes("Murder someone") || choices.includes("Do nothing tonight"));
   doc.querySelector(".choose-option").click();
-  assert.ok(doc.getElementById("murder").textContent.includes("Recruit"), "on to recruiting");
+  await until(() => doc.getElementById("murder").textContent.includes("Recruit"), "on to recruiting");
   assert.ok(doc.querySelectorAll("#victim-cards .card").length > 0);
 });
 

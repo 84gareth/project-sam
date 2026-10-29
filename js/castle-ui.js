@@ -19,6 +19,7 @@ import { drumRoll, play, setRoomSound, setMusic } from "./sound.js";
 import { startMission } from "./mission-ui.js";
 import { todaysMission } from "./missions.js";
 import { saveGame, clearSave } from "./save.js";
+import { soloEngine, daggerTonight } from "./engine.js";
 
 let game = null;
 let tableVote = null;
@@ -32,8 +33,12 @@ let chatTarget = null;
 let joinTarget = null;
 
 // `resume`: carry on a saved game from the start of its day.
-export function goToCastle(g, { resume = false } = {}) {
+// `engine`: how decisions are made (engine.js): at once in single player,
+// with everyone in multiplayer.
+let engine = null;
+export function goToCastle(g, { resume = false, engine: e = null } = {}) {
   game = resume ? g : arriveAtCastle(g);
+  engine = e ?? soloEngine(game);
   // Fellow Traitors, marked in red, but only if Sam is a Traitor himself.
   setTeam((id) => game.playerSide === TRAITOR && id !== game.playerId && isTraitor(game, id));
   window.game = game;
@@ -51,7 +56,7 @@ function startDay() {
   saveGame(game);   // a reload comes back to here
   setMusic(null);
   if (game.day === 1) enterCastle();
-  else startMission(game, enterCastle);
+  else startMission(game, enterCastle, null, engine);
 }
 
 function enterCastle() {
@@ -430,15 +435,18 @@ async function roundTableTalk() {
     b.className = "question";
     b.textContent = o.text;
     b.addEventListener("click", async () => {
-      const reply = playerSays(game, o);
       opts.hidden = true;
-      if (o.kind !== "quiet") {
-        addLine(lines, talkLine(game.playerId, o.text, label(game.playerId)));
-        await say(o.text, game.playerId);
-      }
-      if (reply) {
-        addLine(lines, talkLine(reply.speaker, reply.text));
-        await say(reply.text, reply.speaker);
+      // Everyone's choices are made together; then each is said in turn.
+      const { lines: said } = await engine.decide("says", o);
+      for (const { id, option, reply } of said) {
+        if (option.kind !== "quiet") {
+          addLine(lines, talkLine(id, option.text, label(id)));
+          await say(option.text, id);
+        }
+        if (reply) {
+          addLine(lines, talkLine(reply.speaker, reply.text));
+          await say(reply.text, reply.speaker);
+        }
       }
       $("to-vote").hidden = false;
       lines.scrollTop = lines.scrollHeight;
@@ -489,7 +497,8 @@ function goToTable() {
 // "they all need to have a chalk board for who theyre going to write down").
 async function castVote() {
   if (!tableVote) return;
-  const result = roundTable(game, tableVote);
+  $("cast-vote").disabled = true;
+  const result = await engine.decide("votes", tableVote);
   const boards = $("boards");
   boards.replaceChildren();
   $("most-votes").hidden = true;
@@ -615,7 +624,7 @@ function finalScreen() {
 async function finalChoice(option) {
   $("final-choice").hidden = true;
   $("final-text").textContent = "Everyone gathers round the fire pit...";
-  const { votes, allEnd } = finalRound(game, option.vote, option.text);
+  const { votes, allEnd } = await engine.decide("final", { vote: option.vote, line: option.text });
   $("final-stage").hidden = false;
   const speaker = $("final-speaker");
   const flame = $("final-flame");
@@ -768,39 +777,51 @@ function gameOver(text) {
 
 let victimPick = null;
 
+// The night is one decision (engine.js): a Traitor chooses first (what to
+// do, who, and the dagger if it's that night), everyone else just waits,
+// then it's decided and each player sees what happened to them.
 async function goNight() {
   setRoomSound(null);
   setMusic(null);
   const me = game.playerId;
   const kind = nightKind(game);
-  if (kind === "quiet") return quietNightScreen();
-  if (game.playerSide === TRAITOR) {
-    if (kind === "choose") return chooseScreen();
-    return traitorsMeeting(kind === "recruit" ? "recruit" : "murder");
+  let part = null;
+  if (game.playerSide === TRAITOR && stillIn(game).includes(me)) {
+    part = await traitorsNight(kind);
   }
-  // A Faithful waits in their room... is there a letter?
+  // Night falls (a Traitor's choices are in; everyone waits for the rest).
   $("night-title").textContent = "Night falls...";
-  $("night-text").textContent = "The Traitors are meeting in secret.";
+  $("night-text").textContent = game.playerSide === TRAITOR
+    ? (kind === "quiet" ? "Tonight the Traitors just plot. No murder tonight." : "The Traitors' plan is set...")
+    : "The Traitors are meeting in secret.";
   $("letter").hidden = true;
+  $("envelope").hidden = true;
   $("to-breakfast").hidden = true;
   $("night-over").hidden = true;
   show("screen-night");
   play("night");
-  $("envelope").hidden = true;
-  narrate("Night falls. The Traitors are meeting in secret.");
-  if (kind === "recruit" || (kind === "choose" && computerChoice(game) === "recruit")) return recruitNightFaithful();
-  const victim = night(game);
+  narrate(`Night falls. ${$("night-text").textContent}`);
+  const result = await engine.decide("night", part);
+  nightResult = result;
+  // A Traitor who made the plan goes straight to breakfast (as before).
+  if (part && part.choice !== "none" && game.playerSide === TRAITOR) return breakfast(result.victim ?? null);
   await wait(1800);
-  if (victim === me) {
+  if (result.victim === me) {
     clearSave();
     await sealedLetter("you have been murdered.");
     $("night-over").hidden = false;
-  } else {
+    return;
+  }
+  if (result.recruited === me) {
+    const others = stillIn(game).filter((id) => id !== me && isTraitor(game, id)).map((id) => character(id).name);
+    await sealedLetter(`you are now a Traitor! Your fellow Traitors are ${others.join(", ")}.`);
+  } else if (game.playerSide !== TRAITOR) {
     $("night-text").textContent = "Phew! No letter for you tonight.";
     narrate("Phew! No letter for you tonight.", { queue: true });
-    $("to-breakfast").hidden = false;
   }
+  $("to-breakfast").hidden = false;
 }
+let nightResult = {};
 
 // A letter from the Traitors slides under the door, sealed. Tap it: it
 // unfolds and is read out (Gareth). Resolves once it has been opened.
@@ -824,48 +845,23 @@ async function sealedLetter(words) {
   narrate(`By order of the Traitors, ${words}`);
 }
 
-// Every other night the Traitors only plot: no murder (so 12 days fit).
-async function quietNightScreen() {
-  quietNight(game);
-  const traitor = game.playerSide === TRAITOR;
-  $("night-title").textContent = "Night falls...";
-  $("night-text").textContent = traitor
-    ? "Tonight the Traitors just plot. No murder tonight."
-    : "The Traitors are plotting in secret...";
-  $("letter").hidden = true;
-  $("to-breakfast").hidden = true;
-  $("night-over").hidden = true;
-  show("screen-night");
-  play("night");
-  narrate(`Night falls. ${$("night-text").textContent}`);
-  await wait(1800);
-  if (!traitor) {
-    $("night-text").textContent = "Phew! No letter for you tonight.";
-    narrate("Phew! No letter for you tonight.", { queue: true });
+// A Traitor's night: choose (with only 2 left), pick who, and give out the
+// dagger if it's that night. Returns their part of the decision.
+async function traitorsNight(kind) {
+  if (kind === "quiet") return { choice: "none" };
+  let mode = kind === "recruit" ? "recruit" : "murder";
+  if (kind === "choose") {
+    const choice = await chooseScreen();
+    if (choice === "none") return { choice };
+    mode = choice;
   }
-  $("to-breakfast").hidden = false;
+  const pick = await traitorsMeeting(mode);
+  const dagger = daggerTonight(game, mode === "murder") ? await daggerMeeting() : null;
+  return { choice: mode, pick, dagger };
 }
 
-// A recruiting night for a Faithful (night 1, or when only 2 Traitors are
-// left): the Traitors recruit. Maybe Sam!
-async function recruitNightFaithful() {
-  const who = recruit(game);
-  await wait(1800);
-  if (who === game.playerId) {
-    const others = stillIn(game).filter((id) => id !== who && isTraitor(game, id)).map((id) => character(id).name);
-    await sealedLetter(`you are now a Traitor! Your fellow Traitors are ${others.join(", ")}.`);
-  } else {
-    $("night-text").textContent = "Phew! No letter for you tonight.";
-    narrate("Phew! No letter for you tonight.", { queue: true });
-  }
-  $("to-breakfast").hidden = false;
-}
-
-// Sam is a Traitor: the other Traitors give ideas, Sam picks. On night 1
-// they pick someone to recruit instead of someone to murder.
-let recruiting = false;
-// With only 2 Traitors left, a Traitor Sam chooses: recruit someone new,
-// or murder (or, on a no-murder night, do nothing).
+// With only 2 Traitors left, a Traitor chooses: recruit someone new, or
+// murder (or, on a no-murder night, do nothing).
 function chooseScreen() {
   play("night");
   const murder = canMurderTonight(game);
@@ -875,28 +871,47 @@ function chooseScreen() {
   narrate($("meeting-hint").textContent);
   $("traitor-ideas").replaceChildren();
   $("murder").hidden = true;
-  const box = $("victim-cards");
-  const option = (text, go) => {
-    const b = document.createElement("button");
-    b.className = "question choose-option";
-    b.textContent = text;
-    b.addEventListener("click", () => { $("murder").hidden = false; go(); });
-    return b;
-  };
-  box.replaceChildren(
-    option("Recruit someone new", () => traitorsMeeting("recruit")),
-    murder ? option("Murder someone", () => traitorsMeeting("murder")) : option("Do nothing tonight", () => quietNightScreen()),
-  );
   show("screen-traitors");
+  return new Promise((resolve) => {
+    const option = (text, choice) => {
+      const b = document.createElement("button");
+      b.className = "question choose-option";
+      b.textContent = text;
+      b.addEventListener("click", () => { $("murder").hidden = false; resolve(choice); });
+      return b;
+    };
+    $("victim-cards").replaceChildren(
+      option("Recruit someone new", "recruit"),
+      murder ? option("Murder someone", "murder") : option("Do nothing tonight", "none"),
+    );
+  });
 }
 
-function traitorsMeeting(mode = "murder") {
-  play("night");
+// Pick someone from cards; resolves when the big button is tapped.
+let meetingDone = null;
+function pickFromCards(ids, button) {
   victimPick = null;
   $("murder").hidden = false;
-  recruiting = mode === "recruit";
   $("murder").disabled = true;
-  $("murder").textContent = recruiting ? "Recruit them" : "Send the letter";
+  $("murder").textContent = button;
+  const cards = $("victim-cards");
+  cards.replaceChildren();
+  for (const id of ids) {
+    const el = card(character(id), null);
+    el.addEventListener("click", () => {
+      victimPick = id;
+      for (const other of cards.children) other.classList.toggle("picked", other === el);
+      $("murder").disabled = false;
+    });
+    cards.append(el);
+  }
+  show("screen-traitors");
+  return new Promise((resolve) => { meetingDone = resolve; });
+}
+
+function traitorsMeeting(mode) {
+  play("night");
+  const recruiting = mode === "recruit";
   const fewLeft = recruiting && game.history.length > 1;
   $("meeting-hint").textContent = recruiting
     ? `${fewLeft ? "Only 2 Traitors are left! " : ""}Tonight the Traitors recruit someone new. Who should join you? You pick.`
@@ -923,37 +938,11 @@ function traitorsMeeting(mode = "murder") {
     box.append(p);
     narrate(p.textContent, { queue: true });
   }
-  const cards = $("victim-cards");
-  cards.replaceChildren();
-  for (const id of ideas) {
-    const el = card(character(id), null);
-    el.addEventListener("click", () => {
-      victimPick = id;
-      for (const other of cards.children) other.classList.toggle("picked", other === el);
-      $("murder").disabled = false;
-    });
-    cards.append(el);
-  }
-  show("screen-traitors");
+  return pickFromCards(ideas, recruiting ? "Recruit them" : "Send the letter");
 }
 
 // The night it gets down to 8, the Traitors also give out the dagger (Sam).
-// A Traitor Sam picks who gets it; otherwise the Traitors decide.
-let daggerMode = false;
-let daggerVictim = null;
-function toBreakfast(victim) {
-  if (!isDaggerNight(game)) return breakfast(victim);
-  if (game.playerSide === TRAITOR && stillIn(game).includes(game.playerId)) return daggerMeeting(victim);
-  giveDagger(game);
-  breakfast(victim);
-}
-
-function daggerMeeting(victim) {
-  daggerMode = true;
-  daggerVictim = victim;
-  victimPick = null;
-  $("murder").disabled = true;
-  $("murder").textContent = "Give them the dagger";
+function daggerMeeting() {
   $("meeting-hint").textContent = "Only 8 players left! Who gets the dagger? It can be anyone, even you. Their vote counts twice at the next Round Table.";
   narrate($("meeting-hint").textContent);
   const ideas = daggerIdeas(game);
@@ -969,18 +958,7 @@ function daggerMeeting(victim) {
     box.append(p);
     say(line, f, { queue: true });
   });
-  const cards = $("victim-cards");
-  cards.replaceChildren();
-  for (const id of stillIn(game)) {
-    const el = card(character(id), null);
-    el.addEventListener("click", () => {
-      victimPick = id;
-      for (const other of cards.children) other.classList.toggle("picked", other === el);
-      $("murder").disabled = false;
-    });
-    cards.append(el);
-  }
-  show("screen-traitors");
+  return pickFromCards(stillIn(game), "Give them the dagger");
 }
 
 // The dagger in someone's hand, shown on their puppet and cut-out.
@@ -1148,25 +1126,33 @@ $("stage").addEventListener("click", (e) => {
 });
 $("door-left").addEventListener("click", (e) => { e.stopPropagation(); tapTo(world, 0, world.me.y); });
 $("door-right").addEventListener("click", (e) => { e.stopPropagation(); tapTo(world, 1, world.me.y); });
-$("to-table").addEventListener("click", walkToTable);
+$("to-table").addEventListener("click", async () => {
+  $("to-table").disabled = true;
+  await engine.decide("go", true);   // everyone heads to the table together
+  $("to-table").disabled = false;
+  walkToTable();
+});
 $("to-vote").addEventListener("click", goToTable);
 $("cast-vote").addEventListener("click", castVote);
-$("next-day").addEventListener("click", nextAfterReveal);
-$("murder").addEventListener("click", () => {
-  if (!victimPick) return;
-  if (daggerMode) {
-    daggerMode = false;
-    giveDagger(game, victimPick);
-    breakfast(daggerVictim);
-  } else if (recruiting) {
-    recruit(game, victimPick);
-    toBreakfast(null);
-  } else {
-    toBreakfast(night(game, victimPick));
-  }
+$("next-day").addEventListener("click", async () => {
+  $("next-day").disabled = true;
+  await engine.decide("go", true);
+  $("next-day").disabled = false;
+  nextAfterReveal();
 });
-$("to-breakfast").addEventListener("click", () => toBreakfast(game.history[game.history.length - 1].murdered ?? null));
-$("start-day").addEventListener("click", startDay);
+$("murder").addEventListener("click", () => {
+  if (!victimPick || !meetingDone) return;
+  const done = meetingDone;
+  meetingDone = null;
+  done(victimPick);
+});
+$("to-breakfast").addEventListener("click", () => breakfast(nightResult.victim ?? null));
+$("start-day").addEventListener("click", async () => {
+  $("start-day").disabled = true;
+  await engine.decide("go", true);
+  $("start-day").disabled = false;
+  startDay();
+});
 for (const id of ["play-again", "night-play-again", "breakfast-play-again", "ending-play-again"]) {
   $(id).addEventListener("click", () => location.reload());
 }

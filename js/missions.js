@@ -180,12 +180,15 @@ export function computerThrows(game, stillIn) {
   });
 }
 // `samHits`: what Sam's stones hit (ids, "shield", or null for a miss).
+// `samHits`: Sam's stones, or { player: stones } for several real players.
 export function finishCatapults(game, samHits, stillIn, mission = MISSIONS.find((m) => m.id === "catapults")) {
-  const throws = [...computerThrows(game, stillIn), ...samHits.map((target) => ({ thrower: game.playerId, target }))];
+  const byHuman = Array.isArray(samHits) ? { [game.playerId]: samHits } : samHits;
+  const throws = [...computerThrows(game, stillIn),
+    ...Object.entries(byHuman).flatMap(([thrower, hits]) => hits.map((target) => ({ thrower, target })))];
   const broken = throws.some((t) => t.target === "shield");
   const hit = [...new Set(throws.map((t) => t.target).filter((t) => t && t !== "shield"))];
-  const samScore = samHits.filter((t) => t && t !== "shield").length / STONES;
-  const result = finishMission(game, samScore, stillIn, mission, broken ? "broken" : undefined);
+  const scores = Object.fromEntries(Object.entries(byHuman).map(([id, hits]) => [id, hits.filter((t) => t && t !== "shield").length / STONES]));
+  const result = finishMission(game, scores, stillIn, mission, broken ? "broken" : undefined);
   game.upForMurder = { day: game.day, ids: hit };
   return { ...result, hit, broken, throws };
 }
@@ -611,4 +614,11 @@ export function lightsTap(state, where, at) {
   }
   s.picked = null;
   return s;
+}
+
+// The same, as one real player's part of the decision (engine.js).
+export function flopPart(mission) {
+  if (mission.id === "catapults") return { score: 0, hits: [null, null, null] };
+  if (mission.id === "cooking") return { score: 0.3, found: false };
+  return { score: 0 };
 }
