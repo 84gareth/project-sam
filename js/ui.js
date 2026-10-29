@@ -21,6 +21,31 @@ let teamCheck = () => false;
 export const setTeam = (fn) => { teamCheck = fn; };
 export const isFellow = (id) => teamCheck(id);
 
+// Multiplayer: the real players, marked in blue everywhere, and their real
+// names, shown above their character's name (Gareth, 2026-10-29).
+let realPlayers = new Set();
+let realNames = {};
+export function setPlayers(humans = [], names = {}) {
+  realPlayers = new Set(humans.length > 1 ? humans : []);
+  realNames = names ?? {};
+}
+export const isRealPlayer = (id) => realPlayers.has(id);
+export const realName = (id) => (realPlayers.has(id) ? realNames[id] || null : null);
+// Put a name into `el`: the real name (small, on top) if there is one, then
+// `text` (the character's name, or whatever the screen calls them).
+export function nameInto(el, id, text) {
+  el.replaceChildren();
+  const real = realName(id);
+  if (real) {
+    const top = document.createElement("span");
+    top.className = "real-name";
+    top.textContent = real;
+    el.append(top, document.createElement("br"));
+  }
+  el.append(text);
+  return el;
+}
+
 // Screens with no pause button: before the game, and during missions.
 const NO_PAUSE = ["screen-station", "screen-mode", "screen-multi", "screen-mp-join", "screen-lobby", "screen-pick", "screen-ready", "screen-train", "screen-mission", "screen-debug"];
 
@@ -35,13 +60,15 @@ export function show(screenId) {
 export function badge(c, big = false) {
   if (c.picture) {
     const img = document.createElement("img");
-    img.className = "portrait" + (big ? " big-portrait" : "") + (isMe(c.id) ? " me-badge" : "") + (isFellow(c.id) ? " fellow-badge" : "");
+    img.className = "portrait" + (big ? " big-portrait" : "") + (isMe(c.id) ? " me-badge" : "") + (isFellow(c.id) ? " fellow-badge" : "")
+      + (isRealPlayer(c.id) && !isMe(c.id) ? " player-badge" : "");
     img.src = c.picture;
     img.alt = c.name;
     return img;
   }
   const b = document.createElement("div");
-  b.className = "badge" + (big ? " big-badge" : "") + (isMe(c.id) ? " me-badge" : "") + (isFellow(c.id) ? " fellow-badge" : "");
+  b.className = "badge" + (big ? " big-badge" : "") + (isMe(c.id) ? " me-badge" : "") + (isFellow(c.id) ? " fellow-badge" : "")
+    + (isRealPlayer(c.id) && !isMe(c.id) ? " player-badge" : "");
   b.style.background = c.colour;
   b.textContent = initials(c.name);
   return b;
@@ -57,10 +84,14 @@ export function card(c, line = c.about) {
     el.classList.add("fellow-card");
     el.append(Object.assign(document.createElement("span"), { className: "you-ribbon traitor-ribbon", textContent: "TRAITOR" }));
   }
+  if (isRealPlayer(c.id) && !isMe(c.id)) {
+    el.classList.add("player-card");
+    el.append(Object.assign(document.createElement("span"), { className: "player-ribbon", textContent: "PLAYER" }));
+  }
   el.append(badge(c));
   const name = document.createElement("span");
   name.className = "card-name";
-  name.textContent = c.name;
+  nameInto(name, c.id, c.name);
   el.append(name);
   if (line) {
     const about = document.createElement("span");

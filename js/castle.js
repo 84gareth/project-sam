@@ -881,10 +881,12 @@ export function whosWho(game) {
     if (h.murdered) how[h.murdered] = "murdered";
   }
   const samTraitor = game.playerSide === TRAITOR;
+  // Out of the game: you may see everyone's side now (Gareth).
+  const out = !player(game, game.playerId).inGame;
   return game.players.map((p) => {
     const gone = how[p.id] ?? null;
     let side = null;
-    if (gone) side = p.side;
+    if (gone || out) side = p.side;
     else if (p.id === game.playerId) side = game.playerSide;
     else if (samTraitor && p.side === TRAITOR) side = TRAITOR;
     return { id: p.id, gone, side, you: p.id === game.playerId, shield: hasShield(game, p.id), dagger: hasDagger(game, p.id) };

@@ -4,6 +4,7 @@
 import { CHARACTERS } from "./characters.js";
 import {
   SYMBOLS, CODE_LENGTH, newCode, codeName, newRoom, join, pick, takenBy, canStart, seatOrder,
+  setName,
 } from "./lobby.js";
 import { localNet } from "./net.js";
 import { netEngine, resumePoint } from "./net-engine.js";
@@ -165,7 +166,9 @@ function drawLobby(room) {
     if (c) tile.append(badge(character(c)));
     const name = document.createElement("span");
     name.className = "who-name";
-    name.textContent = (c ? character(c).name : "Choosing...") + (uid === me ? " (you)" : "") + (uid === room.host ? " (host)" : "");
+    const real = room.seats[uid].name;
+    if (real) name.append(Object.assign(document.createElement("span"), { className: "real-name", textContent: real }), document.createElement("br"));
+    name.append((c ? character(c).name : "Choosing...") + (uid === me ? " (you)" : "") + (uid === room.host ? " (host)" : ""));
     tile.append(name);
     return tile;
   }));
@@ -187,6 +190,9 @@ function drawLobby(room) {
     el.classList.toggle("taken", !!owner && owner !== me);
     el.disabled = !!owner && owner !== me;
   }
+  const box = $("lobby-name");
+  if (document.activeElement !== box) box.value = room.seats[me]?.name ?? "";
+  $("lobby-name-row").hidden = room.started;
   $("lobby-start").hidden = !isHost || room.started;
   $("lobby-start").disabled = !canStart(room);
   $("lobby-cards").hidden = room.started;
@@ -203,6 +209,8 @@ function startGame() {
     seed: Date.now() % 2147483647,
     humans: order.map((uid) => current.seats[uid].character),
     uids: Object.fromEntries(order.map((uid) => [current.seats[uid].character, uid])),
+    names: Object.fromEntries(order.filter((uid) => current.seats[uid].name)
+      .map((uid) => [current.seats[uid].character, current.seats[uid].name])),
   };
   net.setRoom(roomName, { started: true, play }).catch((err) => console.error(err));
 }
@@ -215,6 +223,7 @@ function begin(room, rejoining = false) {
   begun = true;
   const me = room.seats[net.uid].character;
   const game = newGame(me, room.play.seed, room.play.humans);
+  game.names = room.play.names ?? {};
   // Rejoining: arrive first, so the engine can apply everything decided so
   // far (a new game arrives at the castle later, in goToCastle).
   if (rejoining) arriveAtCastle(game);
@@ -295,6 +304,16 @@ $("mp-join-back").addEventListener("click", () => show("screen-multi"));
 $("mp-join-clear").addEventListener("click", openJoin);
 $("mp-join-go").addEventListener("click", tryJoin);
 $("lobby-start").addEventListener("click", startGame);
+// Your real name: saved when you finish typing (or tap Done).
+function saveName() {
+  if (!current) return;
+  const r = setName(current, net.uid, $("lobby-name").value);
+  if (r.error) return;
+  $("lobby-name").value = r.room.seats[net.uid].name;
+  net.setSeat(roomName, net.uid, r.room.seats[net.uid]).catch((err) => console.error(err));
+}
+$("lobby-name").addEventListener("change", saveName);
+$("lobby-name").addEventListener("keydown", (e) => { if (e.key === "Enter") e.target.blur(); });
 $("dont-wait").addEventListener("click", () => { engineRef?.dontWait(); $("waiting").hidden = true; });
 $("lobby-leave").addEventListener("click", () => { stopWatching?.(); location.reload(); });
 

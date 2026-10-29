@@ -942,3 +942,28 @@ button.small:active, .door:active { transform: translateY(3px); box-shadow: 0 1p
 .waiting[hidden] { display: none; }
 .waiting { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); z-index: 3500; display: flex; align-items: center; gap: 12px;
   background: #fffaf0; color: var(--ink); border: 3px solid var(--ink); border-radius: 18px; box-shadow: 0 4px 0 var(--ink); padding: 6px 14px; font-weight: 700; max-width: 90cqw; }
+
+/* Multiplayer: real players in blue, their real names on top (Gareth). */
+.player-badge { outline: 5px solid #3b9dff; outline-offset: 2px; box-shadow: 0 0 16px 5px rgba(59, 157, 255, 0.75); }
+.fellow-badge.player-badge { box-shadow: 0 0 16px 5px rgba(59, 157, 255, 0.75), 0 0 0 9px rgba(226, 69, 60, 0.9); }
+.card.player-card { position: relative; }
+.player-ribbon { position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%); z-index: 2; background: #3b9dff; color: #fff;
+  font: 400 13px var(--title-font); letter-spacing: 1px; padding: 1px 10px; border-radius: 8px; border: 2px solid var(--ink); }
+.puppet.real-player .puppet-body img { filter: drop-shadow(0 0 6px #3b9dff) drop-shadow(0 0 3px #3b9dff); }
+.name-tag.real-player { background: #2c63c4 !important; color: #fff; }
+.real-name { font-family: var(--title-font); font-weight: 400; letter-spacing: 0.5px; color: #9fd0ff; font-size: 0.95em; }
+.name-tag .real-name, .chalkboard .real-name { color: #ffe57a; }
+.name-row { display: flex; align-items: center; justify-content: center; gap: 10px; font: 400 20px var(--title-font); margin: 6px 0; }
+.name-row input { font: inherit; font-size: 20px; width: 220px; min-height: 48px; padding: 4px 12px; border: 3px solid var(--ink); border-radius: 12px; background: #fffaf0; color: var(--ink); }
+.who-name .real-name { color: #2c63c4; }
+/* The mission leaderboard (Gareth). */
+.leaders { display: flex; flex-direction: column; gap: 4px; margin: 8px auto; max-width: 520px; width: 100%; }
+.leader { display: grid; grid-template-columns: 30px 44px 1fr 120px; align-items: center; gap: 8px; padding: 2px 8px; border-radius: 10px; text-align: left; }
+.leader .badge, .leader .portrait { width: 40px; height: 40px; }
+.leader-place { font: 400 20px var(--title-font); text-align: center; }
+.leader-name { font-size: 16px; line-height: 1.1; }
+.leader-bar { height: 14px; border: 2px solid var(--ink); border-radius: 8px; background: #fffaf0; overflow: hidden; }
+.leader-bar > span { display: block; height: 100%; background: #f2c14e; }
+.leader-you { background: rgba(242, 193, 78, 0.35); }
+.leader-player { background: rgba(59, 157, 255, 0.25); }
+.leader .real-name { color: #2c63c4; }

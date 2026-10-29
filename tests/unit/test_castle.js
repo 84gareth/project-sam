@@ -692,3 +692,12 @@ test("several real players: the same game on every device, whoever is looking", 
   assert.eq(a.history, b.history);
   assert.eq(a.scores, b.scores);
 });
+
+test("who's who: a player who's out sees everyone's side (Gareth, 2026-10-29)", () => {
+  const g = castle(3);
+  const left = stillIn(g).filter((id) => id !== "dot");
+  assert.ok(whosWho(g).some((p) => !p.you && p.side === null), "in the game: secrets kept");
+  g.players.find((p) => p.id === "dot").inGame = false;
+  const w = Object.fromEntries(whosWho(g).map((p) => [p.id, p]));
+  for (const id of left) assert.eq(w[id].side, g.players.find((p) => p.id === id).side, `${id} shown`);
+});

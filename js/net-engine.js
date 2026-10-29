@@ -54,6 +54,8 @@ export function resumePoint(types, ended, days = 12) {
   return pos;
 }
 
+export const CHECK_EVERY = 3000;   // ms
+
 export function netEngine(net, roomName, game, isHost, onWaiting = () => {}) {
   let next = 0;                  // the next decision this device will ask for
   let applied = 0;               // decisions applied from the log
@@ -85,7 +87,22 @@ export function netEngine(net, roomName, game, isHost, onWaiting = () => {}) {
       }
     }
   }
-  const stop = net.watchRoom(roomName, onRoom);
+  const stopWatch = net.watchRoom(roomName, onRoom);
+  // While this device waits for a decision, check the room itself every few
+  // seconds too, and when the page wakes up: a live stream that's gone quiet
+  // (a sleepy iPad, a dropped connection) left everyone waiting (Gareth, a
+  // long wait at breakfast, 2026-10-29). Applying the log is safe to repeat.
+  let checking = false;
+  async function check() {
+    if (checking || (!waiting.size && !isHost)) return;
+    checking = true;
+    try { onRoom(await net.readRoom(roomName)); } catch (err) { console.error(err); }
+    checking = false;
+  }
+  const timer = setInterval(check, CHECK_EVERY);
+  const onWake = () => { if (document.visibilityState === "visible") check(); };
+  document.addEventListener("visibilitychange", onWake);
+  const stop = () => { stopWatch(); clearInterval(timer); document.removeEventListener("visibilitychange", onWake); };
 
   return {
     kind: "net",

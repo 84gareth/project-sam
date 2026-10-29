@@ -8,7 +8,7 @@ import {
 import { PLAY } from "./mission-more.js";
 import { soloEngine } from "./engine.js";
 import { stillIn } from "./castle.js";
-import { $, show, character, wait, badge, FAST } from "./ui.js";
+import { $, show, character, wait, badge, FAST, isMe, isRealPlayer, nameInto } from "./ui.js";
 import { narrate, say } from "./voice.js";
 import { bell } from "./sound.js";
 
@@ -105,6 +105,27 @@ function shieldLine(r) {
   return `${two}${others.join(" and ")} ${others.length === 2 ? "win shields" : "wins the shield"}!`;
 }
 
+// The leaderboard (Gareth, 2026-10-29): the top 5, plus you and every real
+// player wherever they came. `scores`: [[id, score 0 to 1], ...], best first.
+export const LEADERS = 5;
+function drawLeaders(scores) {
+  const rows = scores.map(([id, s], i) => ({ id, s, place: i + 1 }))
+    .filter((row) => row.place <= LEADERS || isMe(row.id) || isRealPlayer(row.id));
+  $("mission-leaders").replaceChildren(...rows.map(({ id, s, place }) => {
+    const row = document.createElement("div");
+    row.className = "leader" + (isMe(id) ? " leader-you" : "") + (isRealPlayer(id) && !isMe(id) ? " leader-player" : "");
+    row.dataset.id = id;
+    const name = document.createElement("span");
+    name.className = "leader-name";
+    nameInto(name, id, character(id).name + (isMe(id) ? " (you)" : ""));
+    const bar = document.createElement("span");
+    bar.className = "leader-bar";
+    bar.append(Object.assign(document.createElement("span"), { style: `width: ${Math.round(s * 100)}%` }));
+    row.append(Object.assign(document.createElement("span"), { className: "leader-place", textContent: place }), badge(character(id)), name, bar);
+    return row;
+  }));
+}
+
 // `done`: a result already worked out (Catapults, Cooking); `extra`: one
 // more line to show. Only the first finish counts.
 async function finish(score, line, done = null, extra = "") {
@@ -122,6 +143,7 @@ async function finish(score, line, done = null, extra = "") {
   $("mission-extra").textContent = extra;
   $("mission-extra").hidden = !extra;
   $("mission-shield").textContent = shieldLine(r);
+  drawLeaders(r.scores ?? []);
   for (const id of CONTAINERS) $(id).hidden = true;
   $("mission-status").textContent = "";
   $("mission-result").hidden = false;

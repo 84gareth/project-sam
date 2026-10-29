@@ -38,6 +38,15 @@ export function pick(room, uid, character) {
   if (taken) return { error: "taken" };
   return { room: { ...room, seats: { ...room.seats, [uid]: { ...room.seats[uid], character } } } };
 }
+// Your real name (Gareth, 2026-10-29): first names only, as it's shared
+// with the other players. Tidied: letters, spaces and dashes, up to 12.
+export const NAME_LENGTH = 12;
+export const cleanName = (text) => String(text ?? "").replace(/[^\p{L}\p{M} '-]/gu, "")
+  .replace(/\s+/g, " ").trim().slice(0, NAME_LENGTH).trim();
+export function setName(room, uid, text) {
+  if (!room.seats[uid]) return { error: "no" };
+  return { room: { ...room, seats: { ...room.seats, [uid]: { ...room.seats[uid], name: cleanName(text) } } } };
+}
 export const takenBy = (room, character) =>
   Object.entries(room.seats).find(([, s]) => s.character === character)?.[0] ?? null;
 // The host can start once everyone has picked.

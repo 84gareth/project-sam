@@ -68,3 +68,16 @@ test("a multi-place patch ('log/3') lands in the right place", () => {
   room = applyEvent(room, "patch", "/seats", { "p2/act": { k: 0 } });
   assert.eq(room.seats.p2.act, { k: 0 });
 });
+
+import { setName, cleanName } from "../../js/lobby.js";
+test("real names: tidied, kept with your seat, and kept when you pick", () => {
+  assert.eq(cleanName("  sam  "), "sam");
+  assert.eq(cleanName("Zoë-Mae O'Neil 123!"), "Zoë-Mae O'Ne");
+  assert.eq(cleanName("<b>Hi</b>"), "bHib");
+  let room = newRoom(["a", "b", "c", "d"], "u1", 1);
+  room = setName(room, "u1", " Sam ").room;
+  assert.eq(room.seats.u1.name, "Sam");
+  room = pick(room, "u1", "dot").room;
+  assert.eq(room.seats.u1, { character: "dot", joined: 1, name: "Sam" });
+  assert.eq(setName(room, "nobody", "x").error, "no");
+});

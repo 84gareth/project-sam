@@ -115,3 +115,17 @@ test("rejoining: back at the right part of the day", () => {
   assert.eq(resumePoint([...twelveDays, "final"], false), "table", "a red flame: vote again");
   assert.eq(resumePoint([...twelveDays, "final"], true), "ending");
 });
+
+import { readyToDecide, waitingFor } from "../../js/net-engine.js";
+test("a player who's out isn't waited for (Gareth, 2026-10-29)", () => {
+  const g = arriveAtCastle(newGame("dot", 4, HUMANS));
+  const room = {
+    play: { uids: { dot: "u1", puddle: "u2", fizz: "u3" } },
+    seats: { u1: { act: { k: 5, t: "go" } }, u3: { act: { k: 5, t: "go" } } },
+  };
+  assert.eq(readyToDecide(g, room, 5), null, "puddle still in: wait");
+  assert.eq(waitingFor(g, room, 5), ["puddle"]);
+  g.players.find((p) => p.id === "puddle").inGame = false;
+  assert.eq(readyToDecide(g, room, 5), { t: "go", parts: { dot: null, fizz: null } }, "puddle out: go on");
+  assert.eq(waitingFor(g, room, 5), []);
+});

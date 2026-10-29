@@ -10,7 +10,7 @@ import {
   computerChoice, canMurderTonight, noMurderToday,
 } from "./castle.js";
 import { DAYS } from "./game.js";
-import { $, show, badge, card, character, wait, FAST, setTeam, isFellow } from "./ui.js";
+import { $, show, badge, card, character, wait, FAST, setTeam, isFellow, setPlayers, isRealPlayer, realName, nameInto } from "./ui.js";
 import {
   ROOMS, FLOOR, createWorld, step, tapTo, walkUpTo, nextTo, neighbour, peopleIn,
 } from "./puppets.js";
@@ -27,6 +27,8 @@ let tableVote = null;
 // Everyone's name as shown on screen; Sam's own character says "(you)" too
 // (Gareth: show your character's name, not just "You").
 const label = (id) => (id === game.playerId ? `${character(id).name} (you)` : character(id).name);
+// The same in one line, with a real player's name first (talk lines).
+const fullLabel = (id) => (realName(id) ? `${realName(id)} (${label(id)})` : label(id));
 
 let world = null;
 let chatTarget = null;
@@ -39,6 +41,7 @@ let engine = null;
 export function goToCastle(g, { resume = false, engine: e = null } = {}) {
   game = resume ? g : arriveAtCastle(g);
   engine = e ?? soloEngine(game);
+  setPlayers(game.humans ?? [], game.names);
   // Fellow Traitors, marked in red, but only if Sam is a Traitor himself.
   setTeam((id) => game.playerSide === TRAITOR && id !== game.playerId && isTraitor(game, id));
   window.game = game;
@@ -54,6 +57,7 @@ export function goToCastle(g, { resume = false, engine: e = null } = {}) {
 export function rejoinCastle(g, e, pos, results) {
   game = g;
   engine = e;
+  setPlayers(game.humans ?? [], game.names);
   setTeam((id) => game.playerSide === TRAITOR && id !== game.playerId && isTraitor(game, id));
   window.game = game;
   world = createWorld(game, Math.random);
@@ -267,11 +271,12 @@ function placeNames(ids) {
       tag = document.createElement("button");
       tag.className = "name-tag" + (id === game.playerId ? " me" : "");
       tag.dataset.id = id;
-      tag.textContent = label(id);
+      nameInto(tag, id, label(id));
       if (id !== game.playerId) tag.addEventListener("click", (e) => { e.stopPropagation(); tapPerson(id); });
       layer.append(tag);
     }
     tag.classList.toggle("fellow", isFellow(id));
+    tag.classList.toggle("real-player", isRealPlayer(id) && id !== game.playerId);
     const p = pos(id);
     const w = tag.offsetWidth || 90;
     const h = tag.offsetHeight || 26;
@@ -331,6 +336,7 @@ function render() {
     el.classList.toggle("has-shield", hasShield(game, id));
     el.classList.toggle("has-dagger", hasDagger(game, id));
     el.classList.toggle("fellow", isFellow(id));
+    el.classList.toggle("real-player", isRealPlayer(id) && id !== game.playerId);
     el.classList.toggle("flip", p.facing === "left");
     el.classList.toggle("chatting", p.mode === "chat" && id !== chatTarget);
   }
@@ -485,7 +491,7 @@ async function roundTableTalk() {
       const { lines: said } = await engine.decide("says", o);
       for (const { id, option, reply } of said) {
         if (option.kind !== "quiet") {
-          addLine(lines, talkLine(id, option.text, label(id)));
+          addLine(lines, talkLine(id, option.text, fullLabel(id)));
           await say(option.text, id);
         }
         if (reply) {
@@ -559,7 +565,7 @@ async function castVote() {
     b.className = "chalkboard";
     const who = document.createElement("span");
     who.className = "board-voter";
-    who.textContent = label(voter);
+    nameInto(who, voter, label(voter));
     if (voter === game.playerId) b.classList.add("me-board");
     if (voter === result.dagger) {
       const x2 = document.createElement("span");
@@ -622,8 +628,7 @@ async function reveal(result) {
 
   const won = winner(game);
   if (result.banished === game.playerId) {
-    const traitors = game.players.filter((p) => p.side === TRAITOR).map((p) => character(p.id).name);
-    gameOver(`You've been banished! The Traitors were ${traitors.join(", ")}.`);
+    gameOver(`You've been banished! The Traitors are: ${traitorNames()}.`);
     return;
   }
   // What comes next: the night, the final (after day 12), or the end.
@@ -679,7 +684,7 @@ async function finalChoice(option) {
     const bubble = document.createElement("p");
     bubble.className = "talk-bubble";
     const who = document.createElement("b");
-    who.textContent = label(id) + ": ";
+    who.textContent = fullLabel(id) + ": ";
     bubble.append(who, line);
     speaker.replaceChildren(badge(character(id), true), bubble);
     speaker.dataset.id = id;
@@ -701,7 +706,7 @@ async function finalChoice(option) {
     mini.alt = v === "end" ? "End" : "Banish";
     const name = document.createElement("span");
     name.className = "who-name";
-    name.textContent = label(id);
+    nameInto(name, id, label(id));
     tile.append(mini, name);
     box.append(tile);
     await wait(1400);
@@ -741,7 +746,7 @@ async function ending() {
     tile.append(badge(character(id)));
     const name = document.createElement("span");
     name.className = "who-name";
-    name.textContent = label(id);
+    nameInto(name, id, label(id));
     const tag = document.createElement("span");
     tag.className = "who-tag " + side;
     tag.textContent = side === TRAITOR ? "TRAITOR!" : "FAITHFUL!";
@@ -769,7 +774,7 @@ async function ending() {
     tile.append(badge(character(t.id)));
     const name = document.createElement("span");
     name.className = "who-name";
-    name.textContent = label(t.id);
+    nameInto(name, t.id, label(t.id));
     tile.append(name);
     const notes = [];
     if (t.recruited) notes.push("Recruited");
@@ -810,6 +815,9 @@ function party() {
 
 // Tests (?fast=1) can jump straight to the final or the end.
 if (FAST) window.castleJump = { finalScreen, ending, showRoster: () => showRoster(), enterCastle: () => enterCastle() };
+
+// Everyone who's a Traitor now (still in), for players who are out.
+const traitorNames = () => stillIn(game).filter((id) => isTraitor(game, id)).map(fullLabel).join(", ") || "all caught!";
 
 function gameOver(text) {
   clearSave();
@@ -854,6 +862,8 @@ async function goNight() {
   if (result.victim === me) {
     clearSave();
     await sealedLetter("you have been murdered.");
+    // Out, and a Faithful: now you may know who the Traitors are (Gareth).
+    $("night-text").textContent = `The Traitors are: ${traitorNames()}.`;
     $("night-over").hidden = false;
     return;
   }
@@ -1035,7 +1045,7 @@ async function breakfast(victim) {
       who.className = "arrival-person";
       who.append(badge(character(id)));
       const name = document.createElement("span");
-      name.textContent = label(id);
+      nameInto(name, id, label(id));
       who.append(name);
       row.append(who);
     }
@@ -1083,7 +1093,7 @@ function showRoster() {
     who.dataset.id = p.id;
     who.append(badge(character(p.id)));
     const name = document.createElement("span");
-    name.textContent = label(p.id);
+    nameInto(name, p.id, label(p.id));
     who.append(name);
     gone.append(who);
   }
@@ -1125,7 +1135,7 @@ function openOverview() {
     tile.append(badge(character(p.id)));
     const name = document.createElement("span");
     name.className = "who-name";
-    name.textContent = label(p.id);
+    nameInto(name, p.id, label(p.id));
     tile.append(name);
     const lines = [];
     if (p.gone === "banished") lines.push(["Banished", ""]);
