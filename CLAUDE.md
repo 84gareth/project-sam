@@ -224,7 +224,7 @@ so, kindly.
   crashes partway can look like a pass (learned in Project 2126).
 
 ## Current status
-Updated 2026-10-25 (v0.14.0).
+Updated 2026-10-29 (v0.25.0).
 - **Phase 0 (web setup) done.** Tests in headless Chrome; GitHub Pages;
   Turbo Town archived.
 - **Phase 1 done.** The game: like The Traitors, starting at Havenbrook
@@ -266,6 +266,11 @@ Updated 2026-10-25 (v0.14.0).
   (`js/save.js`, "Carry on" at the station); the final and the big ending
   (`finalRound`, `prizeShare`, `allTraitors` in `js/castle.js`). Tests can
   jump to them with `page.castleJump` (?fast=1).
+- **Phase 8 (multiplayer) built (v0.25.0)**: host/join with a symbol code,
+  Firebase (Gareth's project, `js/firebase-net.js`, no library); every
+  change is an engine decision (`js/engine.js`, `js/net-engine.js`), so all
+  devices play the same game; waiting sign, Don't wait, rejoin. Tests use
+  the local connector (`js/net.js`), never the internet.
 - **Roadmap OK'd by Gareth.** All 22 of Sam's drawings are in (
   how to add one: how to add one is in `docs/characters.md`); voices
   are the iPad's own (Web Speech), arriving with Phase 3.

@@ -118,6 +118,7 @@ lobby, working between real devices through Firebase (v0.21.0; Gareth's
 project set up 2026-10-29); every change to the game is an engine
 decision (v0.22.0); multiplayer games play in step on every device:
 missions, castle, Round Table, nights, the final (v0.23.x; tried for real
-in two tabs through Firebase). Next: rejoining after a reload or sleep, a
-host "don't wait" button for stuck players, and watching after you're out.
+in two tabs through Firebase). Then: the waiting sign and
+"Don't wait" (v0.24.0), rejoining (v0.25.0). Next: Sam and Gareth play it
+for real on several devices.
 

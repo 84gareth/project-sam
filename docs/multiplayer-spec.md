@@ -14,28 +14,44 @@ Decisions (their answers):
 - Players: **up to all 22** real players; computer players fill the rest.
 - Built **all at once**, over several sessions, before Sam plays it.
 
-## How it works
+## How it works (as built, v0.25)
 
-**The host's device runs the real game.** It holds the whole `game` (the
-same object single player uses) and makes every decision with the same pure
-rules (castle.js, missions.js). Every other device is a window onto it: it
-shows what its player is allowed to see and sends that player's taps to the
-host. Nothing else changes the game.
+**Every change to the game is a numbered decision** (`js/engine.js`):
+the mission result, what each player says, the vote, the whole night, the
+final, and "ready" points (to the table, after the reveal, start of day).
+Each device writes its player's part of decision k to its own seat; the
+host, once every real player still in has answered k, writes decision k to
+the room's log (`js/net-engine.js`); every device, the host too, applies
+the log in order with the same rules. So every device has the same game.
+Single player is the same engine with one player, decided at once.
 
-**Secrets stay secret.** The host sends each player only what they may know:
-their own side, their fellow Traitors if they are one, their own letters.
-Other players' sides are never sent to a device that shouldn't have them, so
-you can't peek by reading the data.
+**Secrets (changed from the first plan; told to Gareth 2026-10-29).** Every
+device works the whole game out, so every device holds everyone's sides in
+memory. Each screen only ever shows its own player's side, fellow Traitors
+and letters, and secret lines (your side, Traitor talk, the recruiting
+letter) are shown but never spoken aloud. Someone with developer tools
+could dig the sides out; fine for a family game in one house, and far
+simpler than the host sending each device its own view.
+
+**Waiting, stuck players, rejoining.** A sign says who everyone's waiting
+for; the host can tap "Don't wait" (their part is left out). A device that
+reloads or sleeps can "Rejoin your game" from the station: it catches up
+from the log and carries on at the right screen (`resumePoint`).
+
+**Real players in the castle** walk about like everyone else; tapping one
+says to talk to them for real.
 
 **The code.** Four symbols from a set of eight drawn icons (8^4 = 4,096
-codes). It names the room in Firebase. Codes are thrown away after a game.
+codes). It names the room in Firebase.
 
 ## Firebase layout (Realtime Database)
 
     rooms/<code>/                  everyone in the room can read
       host: <uid>                  only the host writes the room
-      seats/<uid>: { character, joined }   each player writes their own
-      public: { phase, day, ... }  what everyone may see
+      seats/<uid>: { character, joined, act: { k, t, data } }
+                                   each player writes their own
+      play: { seed, humans, uids } the deal (host, at Start)
+      log: [ { t, parts } ... ]    the decisions, in order (host)
     secrets/<code>/<uid>: { side, fellows, letter, ... }
                                    only that player and the host can read;
                                    only the host writes
