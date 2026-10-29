@@ -924,4 +924,3 @@ button.small:active, .door:active { transform: translateY(3px); box-shadow: 0 1p
 .quiet-news { max-width: 640px; text-align: center; background: linear-gradient(#2f9e4b, #1f6e35); color: #fff; border: 4px solid var(--ink); border-radius: 20px; box-shadow: 0 6px 0 var(--ink); padding: 10px 20px; animation: pop 0.4s ease-out; }
 .quiet-news p { margin: 4px 0; font-size: 20px; font-weight: 600; }
 .quiet-news .quiet-title { font-family: var(--title-font); font-size: 26px; letter-spacing: 1px; }
-.no-murder::before { content: "Tonight: "; }
