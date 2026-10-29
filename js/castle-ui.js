@@ -26,6 +26,8 @@ let tableVote = null;
 
 // Everyone's name as shown on screen; Sam's own character says "(you)" too
 // (Gareth: show your character's name, not just "You").
+// "A, B and C" (Gareth: "A and B and C" read badly).
+const andList = (names) => (names.length < 2 ? names.join("") : `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`);
 const label = (id) => (id === game.playerId ? `${character(id).name} (you)` : character(id).name);
 // The same in one line, with a real player's name first (talk lines).
 const fullLabel = (id) => (realName(id) ? `${realName(id)} (${label(id)})` : label(id));
@@ -101,7 +103,7 @@ function enterCastle() {
   if (game.playerSide === TRAITOR) {
     const fellows = stillIn(game).filter((id) => id !== me && isTraitor(game, id));
     $("fellows").textContent = fellows.length
-      ? `Shh! The other Traitors are ${fellows.map((id) => character(id).name).join(" and ")}.`
+      ? `Shh! The other Traitors are ${andList(fellows.map((id) => character(id).name))}.`
       : "Shh! You're the last Traitor left.";
     $("fellows").hidden = false;
   } else {

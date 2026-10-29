@@ -985,3 +985,14 @@ button.small:active, .door:active { transform: translateY(3px); box-shadow: 0 1p
 .leader-bar { height: 10px; }
 .leader .real-name { color: #ffe57a; }
 #mission-done { flex-shrink: 0; }
+/* Text that was cut off on phones (Gareth's screenshots, 2026-10-29). */
+.name-tag.me .real-name { color: #1d4fa8; }
+.leader-name { padding-left: 10px; }
+.castle .cards, .table .cards, .traitors-room .cards { padding: 12px 4px; }
+.castle .card, .table .card, .traitors-room .card { flex-basis: 132px; }
+.castle .card-name, .table .card-name, .traitors-room .card-name { font-size: 15px; overflow-wrap: break-word; }
+.card.player-card { padding-bottom: 18px; }
+.card.fellow-card.picked { background: linear-gradient(#ffe57a, #f5b02a); color: #3a1d00; box-shadow: 0 0 0 4px #e2453c, 0 5px 0 var(--ink); }
+.waiting { top: auto; bottom: 10px; left: auto; right: 10px; transform: none; max-width: 34cqw; font-size: 15px; padding: 6px 10px; gap: 8px; }
+.waiting button { flex-shrink: 0; }
+.card.picked .real-name, .card.me-card .real-name, .card.fellow-card.picked .real-name { color: #1d4fa8; }
