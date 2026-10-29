@@ -82,3 +82,14 @@ test("the dagger comes out the night it gets down to 8", () => {
   assert.ok(daggerTonight(g, true), "a murder tonight makes it 8");
   assert.notOk(daggerTonight(g, false));
 });
+
+test("not waiting for someone: their part is left out, the rest goes on", () => {
+  const g = arriveAtCastle(newGame("dot", 6, HUMANS));
+  g.day = DAYS + 1;
+  const r = applyDecision(g, "final", { dot: { vote: "end", line: "End!" } });   // puddle and fizz didn't answer
+  for (const [id, v] of r.votes) assert.ok(v === "end" || v === "banish", `${id}: ${v}`);
+  assert.eq(r.votes.find(([id]) => id === "puddle")[1], "end", "a missing vote counts as end");
+  const g2 = arriveAtCastle(newGame("dot", 6, HUMANS));
+  const v = applyDecision(g2, "votes", { dot: "ruby" });
+  assert.ok(v.banished, "the vote still happens");
+});

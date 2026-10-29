@@ -24,10 +24,12 @@ export function localNet(store = window.localStorage) {
   const key = (name) => `project-sam-room:${name}`;
   const channel = typeof BroadcastChannel !== "undefined" ? new BroadcastChannel("project-sam-net") : null;
   const listeners = new Map();   // name -> Set of callbacks
-  const tell = (name) => {
-    const room = readRoom(name);
-    for (const cb of listeners.get(name) ?? []) cb(room);
-  };
+  // Tell listeners a moment later, always with the newest room, like a real
+  // network: telling them straight away, from inside another listener, could
+  // hand some of them an older copy after a newer one (a stuck test, 2026-10-29).
+  const tell = (name) => queueMicrotask(() => {
+    for (const cb of [...(listeners.get(name) ?? [])]) cb(readRoom(name));
+  });
   if (channel) channel.onmessage = (e) => tell(e.data);
   function readRoom(name) {
     try { return JSON.parse(store.getItem(key(name))); } catch { return null; }

@@ -214,8 +214,26 @@ function begin(room) {
   begun = true;
   const me = room.seats[net.uid].character;
   const game = newGame(me, room.play.seed, room.play.humans);
-  const engine = netEngine(net, roomName, game, room.host === net.uid);
+  const engine = netEngine(net, roomName, game, room.host === net.uid, showWaiting);
+  engineRef = engine;
   document.dispatchEvent(new CustomEvent("multiplayer-start", { detail: { game, engine } }));
+}
+
+// ─── Waiting for the others ─────────────────────────────────────────────────
+// A sign at the top while this device waits for other players; after a
+// while the host can choose not to wait (a sleeping iPad, say).
+let waitTimer = null;
+let engineRef = null;
+function showWaiting(who) {
+  const sign = $("waiting");
+  clearTimeout(waitTimer);
+  const others = who.filter((id) => id !== (window.game && window.game.playerId));
+  if (others.length === 0) { sign.hidden = true; return; }
+  waitTimer = setTimeout(() => {
+    $("waiting-text").textContent = `Waiting for ${others.map((id) => character(id).name).join(", ")}...`;
+    sign.hidden = false;
+    $("dont-wait").hidden = !(engineRef && engineRef.isHost);
+  }, FAST ? 0 : 1500);
 }
 
 // ─── Buttons ────────────────────────────────────────────────────────────────
@@ -228,6 +246,7 @@ $("mp-join-back").addEventListener("click", () => show("screen-multi"));
 $("mp-join-clear").addEventListener("click", openJoin);
 $("mp-join-go").addEventListener("click", tryJoin);
 $("lobby-start").addEventListener("click", startGame);
+$("dont-wait").addEventListener("click", () => { engineRef?.dontWait(); $("waiting").hidden = true; });
 $("lobby-leave").addEventListener("click", () => { stopWatching?.(); location.reload(); });
 
 // For the tests: which tab this is, and its room.

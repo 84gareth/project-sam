@@ -139,3 +139,26 @@ test("join: tap the host's four symbols", async () => {
   assert.eq(Object.keys((await net.readRoom(codeName(code))).seats).length, 2, "the host sees them join");
   assert.notOk(visible(doc, "lobby-start"), "only the host can start");
 });
+
+test("waiting for someone: the sign says who, and the host can stop waiting", async () => {
+  const { page, doc } = await toMulti();
+  doc.getElementById("multi-host").click();
+  await until(() => visible(doc, "screen-lobby"), "the lobby");
+  const name = page.multiplayer.room;
+  const net = other();
+  net.updateRoom(name, (r) => join(r, net.uid, Date.now()).room);
+  net.updateRoom(name, (r) => pick(r, net.uid, "puddle").room);
+  await until(() => doc.querySelector('#lobby-cards .card[data-id="pepper"]'), "cards");
+  doc.querySelector('#lobby-cards .card[data-id="pepper"]').click();
+  await until(() => !doc.getElementById("lobby-start").disabled, "ready to start");
+  doc.getElementById("lobby-start").click();   // Puddle's device never answers
+  await until(() => visible(doc, "screen-ready"), "your side");
+  doc.getElementById("to-castle").click();
+  await until(() => visible(doc, "screen-castle"), "the castle", 8000);
+  doc.getElementById("to-table").click();
+  await until(() => visible(doc, "waiting"), "the waiting sign");
+  assert.ok(doc.getElementById("waiting-text").textContent.includes("Captain Puddle"));
+  assert.ok(visible(doc, "dont-wait"), "the host can stop waiting");
+  doc.getElementById("dont-wait").click();
+  await until(() => visible(doc, "screen-walk") || visible(doc, "screen-talk"), "on without them", 8000);
+});

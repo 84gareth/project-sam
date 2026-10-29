@@ -446,7 +446,7 @@ export function finalRound(game, samVote = null, samLine = null) {
   const many = samVote && typeof samVote === "object" ? samVote : null;
   const votes = stillIn(game).map((id) => {
     const h = many ? many[id] : null;
-    const v = game.scores[id] ? finalVote(game, id) : h ? h.vote : samVote ?? "end";
+    const v = game.scores[id] ? finalVote(game, id) : h ? h.vote : many ? "end" : samVote ?? "end";   // not waited for: "end"
     const line = h?.line ?? (id === game.playerId && samLine ? samLine : null);
     return [id, v, line ?? finalLine(game, id, v)];
   });

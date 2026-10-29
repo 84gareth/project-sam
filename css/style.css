@@ -937,3 +937,8 @@ button.small:active, .door:active { transform: translateY(3px); box-shadow: 0 1p
 .card.taken { opacity: 0.35; filter: grayscale(1); }
 #screen-lobby { justify-content: flex-start; }
 #screen-lobby .cards { flex: 1 1 0; min-height: 0; }
+
+/* Multiplayer: waiting for the others */
+.waiting[hidden] { display: none; }
+.waiting { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); z-index: 3500; display: flex; align-items: center; gap: 12px;
+  background: #fffaf0; color: var(--ink); border: 3px solid var(--ink); border-radius: 18px; box-shadow: 0 4px 0 var(--ink); padding: 6px 14px; font-weight: 700; max-width: 90cqw; }
