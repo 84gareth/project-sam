@@ -116,7 +116,7 @@ test("rejoining: back at the right part of the day", () => {
   assert.eq(resumePoint([...twelveDays, "final"], true), "ending");
 });
 
-import { readyToDecide, waitingFor } from "../../js/net-engine.js";
+import { readyToDecide, waitingFor, waitingLine } from "../../js/net-engine.js";
 test("a player who's out isn't waited for (Gareth, 2026-10-29)", () => {
   const g = arriveAtCastle(newGame("dot", 4, HUMANS));
   const room = {
@@ -128,4 +128,9 @@ test("a player who's out isn't waited for (Gareth, 2026-10-29)", () => {
   g.players.find((p) => p.id === "puddle").inGame = false;
   assert.eq(readyToDecide(g, room, 5), { t: "go", parts: { dot: null, fizz: null } }, "puddle out: go on");
   assert.eq(waitingFor(g, room, 5), []);
+});
+
+test("the waiting sign names nobody at night: it would give the Traitors away", () => {
+  assert.eq(waitingLine(["Olive Oddsocks", "Madame Mystic"], "votes"), "Waiting for Olive Oddsocks, Madame Mystic...");
+  assert.eq(waitingLine(["Olive Oddsocks", "Madame Mystic"], "night"), "Waiting for the night to end...");
 });

@@ -951,11 +951,11 @@ button.small:active, .door:active { transform: translateY(3px); box-shadow: 0 1p
   font: 400 13px var(--title-font); letter-spacing: 1px; padding: 1px 10px; border-radius: 8px; border: 2px solid var(--ink); }
 .puppet.real-player .puppet-body img { filter: drop-shadow(0 0 6px #3b9dff) drop-shadow(0 0 3px #3b9dff); }
 .name-tag.real-player { background: #2c63c4 !important; color: #fff; }
-.real-name { font-family: var(--title-font); font-weight: 400; letter-spacing: 0.5px; color: #9fd0ff; font-size: 0.95em; }
+.real-name { font-family: var(--title-font); font-weight: 400; letter-spacing: 0.5px; color: #ffe57a; font-size: 0.95em; }
 .name-tag .real-name, .chalkboard .real-name { color: #ffe57a; }
 .name-row { display: flex; align-items: center; justify-content: center; gap: 10px; font: 400 20px var(--title-font); margin: 6px 0; }
 .name-row input { font: inherit; font-size: 20px; width: 220px; min-height: 48px; padding: 4px 12px; border: 3px solid var(--ink); border-radius: 12px; background: #fffaf0; color: var(--ink); }
-.who-name .real-name { color: #2c63c4; }
+.who-name .real-name { color: #ffe57a; }
 /* The mission leaderboard (Gareth). */
 .leaders { display: flex; flex-direction: column; gap: 4px; margin: 8px auto; max-width: 520px; width: 100%; }
 .leader { display: grid; grid-template-columns: 30px 44px 1fr 120px; align-items: center; gap: 8px; padding: 2px 8px; border-radius: 10px; text-align: left; }
@@ -967,3 +967,21 @@ button.small:active, .door:active { transform: translateY(3px); box-shadow: 0 1p
 .leader-you { background: rgba(242, 193, 78, 0.35); }
 .leader-player { background: rgba(59, 157, 255, 0.25); }
 .leader .real-name { color: #2c63c4; }
+/* Round Table talk: bubbles left and right, the newest two (Gareth). */
+#screen-talk .talk-lines { overflow: hidden; justify-content: center; }
+.talk-line.talk-left { align-self: flex-start; max-width: 85%; }
+.talk-line.talk-right { align-self: flex-end; flex-direction: row-reverse; max-width: 85%; }
+.talk-line.talk-fading { opacity: 0; transition: opacity 0.6s; }
+.talk-line.talk-gone { display: none; }
+/* The leaderboard fits small screens: two columns, small rows, and it
+   scrolls if there are lots of real players; the button stays on screen. */
+#mission-result { max-height: 96cqh; overflow-y: auto; touch-action: pan-y; }
+#mission-result p { font-size: 20px; }
+.leaders { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 10px; max-width: 700px; max-height: 40cqh; overflow-y: auto; touch-action: pan-y; }
+.leader { grid-template-columns: 26px 46px 1fr 60px; gap: 6px; padding: 2px 6px; }
+.leader .badge, .leader .portrait { width: 32px; height: 32px; }
+.leader-place { font-size: 17px; }
+.leader-name { font-size: 14px; }
+.leader-bar { height: 10px; }
+.leader .real-name { color: #ffe57a; }
+#mission-done { flex-shrink: 0; }

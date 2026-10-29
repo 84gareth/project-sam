@@ -119,7 +119,9 @@ test("two real players play a whole day together", async () => {
     const rows = [...doc.querySelectorAll("#mission-leaders .leader")];
     assert.gt(rows.length, 4, "a leaderboard");
     assert.eq(rows.filter((r) => r.classList.contains("leader-you")).length, 1, "you're on it");
-    assert.eq(rows.filter((r) => r.classList.contains("leader-player")).length, 1, "the other real player too");
+    // (unless they were banished or murdered on day 1: the deal is random)
+    const puddleIn = page.game.players.find((p) => p.id === "puddle").inGame;
+    assert.eq(rows.filter((r) => r.classList.contains("leader-player")).length, puddleIn ? 1 : 0, "the other real player too");
   }
   const room = await net.readRoom(name);
   assert.gt(Object.keys(room.log).length, 5, "decisions in the shared log");

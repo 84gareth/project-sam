@@ -7,7 +7,7 @@ import {
   setName,
 } from "./lobby.js";
 import { localNet } from "./net.js";
-import { netEngine, resumePoint } from "./net-engine.js";
+import { netEngine, resumePoint, waitingLine } from "./net-engine.js";
 import { arriveAtCastle, winner } from "./castle.js";
 import { newGame } from "./game.js";
 import { firebaseNet } from "./firebase-net.js";
@@ -282,13 +282,13 @@ if (!FAST || new URLSearchParams(location.search).has("rejoin")) offerRejoin().c
 // while the host can choose not to wait (a sleeping iPad, say).
 let waitTimer = null;
 let engineRef = null;
-function showWaiting(who) {
+function showWaiting(who, type) {
   const sign = $("waiting");
   clearTimeout(waitTimer);
   const others = who.filter((id) => id !== (window.game && window.game.playerId));
   if (others.length === 0) { sign.hidden = true; return; }
   waitTimer = setTimeout(() => {
-    $("waiting-text").textContent = `Waiting for ${others.map((id) => character(id).name).join(", ")}...`;
+    $("waiting-text").textContent = waitingLine(others.map((id) => character(id).name), type);
     sign.hidden = false;
     $("dont-wait").hidden = !(engineRef && engineRef.isHost);
   }, FAST ? 0 : 1500);

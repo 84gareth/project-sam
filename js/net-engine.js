@@ -54,6 +54,11 @@ export function resumePoint(types, ended, days = 12) {
   return pos;
 }
 
+// At night only the Traitors have choices to make, so naming who's slow
+// would give them away (Gareth, 2026-10-29): no names then.
+export const waitingLine = (names, type) =>
+  (type === "night" ? "Waiting for the night to end..." : `Waiting for ${names.join(", ")}...`);
+
 export const CHECK_EVERY = 3000;   // ms
 
 export function netEngine(net, roomName, game, isHost, onWaiting = () => {}) {
@@ -61,6 +66,7 @@ export function netEngine(net, roomName, game, isHost, onWaiting = () => {}) {
   let applied = 0;               // decisions applied from the log
   const results = [];
   const waiting = new Map();     // k -> resolve
+  const types = new Map();       // k -> what kind of decision (for the sign)
   let writing = -1;              // the host's last decision written
 
   let lastRoom = null;
@@ -78,7 +84,7 @@ export function netEngine(net, roomName, game, isHost, onWaiting = () => {}) {
     }
     // The host: once everyone's part for the next decision is in, decide.
     // Who we're still waiting for, while this device waits (for the sign).
-    onWaiting(waiting.has(applied) ? waitingFor(game, room, applied) : []);
+    onWaiting(waiting.has(applied) ? waitingFor(game, room, applied) : [], types.get(applied));
     if (isHost && applied === log.length && writing < applied) {
       const d = readyToDecide(game, room, applied, skip === applied);
       if (d) {
@@ -131,6 +137,7 @@ export function netEngine(net, roomName, game, isHost, onWaiting = () => {}) {
     decide(type, data) {
       const k = next++;
       if (k < applied) return Promise.resolve(results[k]);
+      types.set(k, type);
       const done = new Promise((resolve) => waiting.set(k, resolve));
       net.setAct(roomName, net.uid, { k, t: type, data: data ?? null }).catch((err) => console.error(err));
       return done;

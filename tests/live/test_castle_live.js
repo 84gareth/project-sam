@@ -414,8 +414,8 @@ test("All aboard! plays the train ride before the castle", async () => {
 });
 
 // Straight to one mission, through the debug menu.
-async function toMission(id, seed = 3) {
-  const page = await openPage(`../index.html?debug&seed=${seed}&fast=1`);
+async function toMission(id, seed = 3, width = 1024, height = 768) {
+  const page = await openPage(`../index.html?debug&seed=${seed}&fast=1`, width, height);
   const doc = page.document;
   await until(() => visible(doc, "debug"), "the Test a mission button");
   doc.getElementById("debug").click();
@@ -680,6 +680,19 @@ test("Letter Jumble: a wrong try's clear-up can't wipe letters typed since (Sam 
   assert.eq(slots(), w.word.slice(0, 2), "the two letters are still there");
   for (const letter of w.word.slice(2)) tap(`.jumble-tile[data-letter="${letter}"]:not(:disabled)`);
   await until(() => box.dataset.word === "1", "on to word 2", 8000);
+});
+
+test("the leaderboard fits a phone: the button stays on screen, even with lots of players", async () => {
+  const { page, doc } = await toMission("jumble", 3, 750, 340);
+  doc.getElementById("mission-go").click();
+  page.missionGiveUp();
+  await until(() => visible(doc, "mission-result"), "the result", 15000);
+  const board = doc.getElementById("mission-leaders");
+  assert.gt(board.children.length, 4, "a leaderboard");
+  for (let i = 0; i < 16; i++) board.append(board.firstElementChild.cloneNode(true));   // lots of real players
+  const app = doc.getElementById("app").getBoundingClientRect();
+  const done = doc.getElementById("mission-done").getBoundingClientRect();
+  assert.ok(done.bottom <= app.bottom + 1 && done.top >= app.top, `the button is on screen (${Math.round(done.bottom)} <= ${Math.round(app.bottom)})`);
 });
 
 test("Secret Code: crack all three words", async () => {
@@ -1005,6 +1018,18 @@ test("a Traitor Sam chooses who gets the dagger when it's down to 8", async () =
   assert.ok(doc.getElementById("dagger-news").textContent.includes("gave YOU the dagger"));
 });
 
+
+test("Round Table talk: bubbles take turns left and right; only the newest two show (Gareth)", async () => {
+  const { doc } = await toCastle(seedFor("pepper", FAITHFUL));
+  await clickTable(doc);
+  await until(() => visible(doc, "talk-options"), "Sam's turn", 15000);
+  await new Promise((r) => setTimeout(r, 50));
+  const all = [...doc.querySelectorAll("#talk-lines .talk-line")];
+  assert.gt(all.length, 2, "several lines");
+  const showing = all.filter((l) => l.offsetParent !== null);
+  assert.eq(showing.length, 2, "two showing");
+  assert.eq(showing.map((l) => l.classList.contains("talk-left")).filter(Boolean).length, 1, "one each side");
+});
 
 test("Round Table talk: lots of lines, and the buttons stay on the screen", async () => {
   const { doc } = await toCastle(seedFor("pepper", FAITHFUL));

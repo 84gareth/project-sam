@@ -500,7 +500,6 @@ async function roundTableTalk() {
         }
       }
       $("to-vote").hidden = false;
-      lines.scrollTop = lines.scrollHeight;
     });
     opts.append(b);
   }
@@ -509,9 +508,18 @@ async function roundTableTalk() {
 
 // Add a line and keep the newest in view (the list scrolls; the buttons
 // below it stay on the screen).
+// Speech bubbles take turns on the left and right; only the newest two
+// show, and older ones fade away, so nothing goes off the bottom (Gareth,
+// 2026-10-29). Old lines stay in the page, hidden.
+export const TALK_SHOWN = 2;
 function addLine(lines, row) {
+  row.classList.add(lines.children.length % 2 ? "talk-right" : "talk-left");
   lines.append(row);
-  lines.scrollTop = lines.scrollHeight;
+  const showing = [...lines.querySelectorAll(".talk-line:not(.talk-gone)")];
+  for (const old of showing.slice(0, -TALK_SHOWN)) {
+    old.classList.add("talk-fading");
+    setTimeout(() => old.classList.add("talk-gone"), FAST ? 0 : 600);
+  }
 }
 
 function talkLine(id, text, label = character(id).name) {
