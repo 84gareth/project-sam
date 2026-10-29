@@ -1,0 +1,185 @@
+// Multiplayer screens (Phase 8, docs/multiplayer-spec.md): Host or Join,
+// the symbol code, and the lobby where everyone picks a character. Rules
+// come from lobby.js; rooms are shared through net.js.
+import { CHARACTERS } from "./characters.js";
+import {
+  SYMBOLS, CODE_LENGTH, newCode, codeName, newRoom, join, pick, takenBy, canStart, seatOrder,
+} from "./lobby.js";
+import { localNet } from "./net.js";
+import { $, show, badge, card, character } from "./ui.js";
+import { narrate } from "./voice.js";
+
+// Drawn icons: the code symbols, and the buttons' pictures. Sam's own
+// shield and dagger drawings are two of the symbols.
+const INK = 'stroke="#241238" stroke-width="3" stroke-linejoin="round"';
+const SVGS = {
+  one: `<circle cx="32" cy="18" r="10" fill="#ffd447" ${INK}/><path d="M14 58c0-14 8-22 18-22s18 8 18 22z" fill="#6fb6ff" ${INK}/>`,
+  many: `<circle cx="18" cy="24" r="8" fill="#ff8a7a" ${INK}/><path d="M4 58c0-12 6-18 14-18s14 6 14 18z" fill="#ff8a7a" ${INK}/>`
+    + `<circle cx="46" cy="24" r="8" fill="#7be08f" ${INK}/><path d="M32 58c0-12 6-18 14-18s14 6 14 18z" fill="#7be08f" ${INK}/>`
+    + `<circle cx="32" cy="16" r="9" fill="#ffd447" ${INK}/><path d="M17 58c0-14 7-20 15-20s15 6 15 20z" fill="#6fb6ff" ${INK}/>`,
+  crown: `<path d="M8 50 L12 18 L24 34 L32 12 L40 34 L52 18 L56 50 Z" fill="#ffd447" ${INK}/><rect x="8" y="48" width="48" height="8" fill="#f5a623" ${INK}/>`,
+  key: `<circle cx="18" cy="32" r="11" fill="#ffd447" ${INK}/><circle cx="18" cy="32" r="4" fill="#fff8e0" ${INK}/><path d="M29 29h28v7h-5v7h-6v-7h-4v5h-6v-5h-7z" fill="#ffd447" ${INK}/>`,
+  star: `<polygon points="32,5 40,24 60,25 44,38 50,58 32,46 14,58 20,38 4,25 24,24" fill="#ffd447" ${INK}/>`,
+  moon: `<path d="M40 6a26 26 0 1 0 18 40A21 21 0 0 1 40 6z" fill="#cfd8ff" ${INK}/>`,
+  sun: `<g fill="#f5a623" ${INK}><circle cx="32" cy="32" r="13"/></g><g stroke="#f5a623" stroke-width="5" stroke-linecap="round"><path d="M32 4v9M32 51v9M4 32h9M51 32h9M12 12l6 6M46 46l6 6M12 52l6-6M46 18l6-6"/></g>`,
+  bell: `<path d="M32 8c-11 0-16 9-16 20v12l-6 8h44l-6-8V28c0-11-5-20-16-20z" fill="#ffd447" ${INK}/><circle cx="32" cy="54" r="5" fill="#f5a623" ${INK}/>`,
+};
+const PICTURES = { shield: "assets/shield.png", dagger: "assets/dagger.png" };
+
+export function icon(name, size = 56) {
+  if (PICTURES[name]) {
+    const img = document.createElement("img");
+    img.src = PICTURES[name];
+    img.alt = name;
+    img.className = "symbol-icon";
+    img.style.height = `${size}px`;
+    return img;
+  }
+  const span = document.createElement("span");
+  span.className = "symbol-icon";
+  span.innerHTML = `<svg viewBox="0 0 64 64" width="${size}" height="${size}">${SVGS[name]}</svg>`;
+  return span;
+}
+
+// Fill the [data-icon] spots in the page's buttons.
+for (const spot of document.querySelectorAll("[data-icon]")) spot.replaceChildren(icon(spot.dataset.icon, 72));
+
+const net = localNet();   // Firebase replaces this once Gareth's project exists
+let roomName = null;
+let stopWatching = null;
+
+// ─── Host ───────────────────────────────────────────────────────────────────
+
+function host() {
+  const code = newCode();
+  roomName = codeName(code);
+  net.updateRoom(roomName, () => newRoom(code, net.uid, Date.now()));
+  openLobby();
+  narrate("You're the host! Show everyone the four symbols so they can join.");
+}
+
+// ─── Join: tap the four symbols ─────────────────────────────────────────────
+
+let typed = [];
+function drawSlots(box, code) {
+  box.replaceChildren(...Array.from({ length: CODE_LENGTH }, (_, i) => {
+    const slot = document.createElement("span");
+    slot.className = "code-slot";
+    if (code[i]) slot.append(icon(code[i]));
+    return slot;
+  }));
+}
+function openJoin() {
+  typed = [];
+  drawSlots($("mp-join-slots"), typed);
+  $("mp-join-error").hidden = true;
+  $("mp-join-go").disabled = true;
+  const box = $("mp-join-symbols");
+  box.replaceChildren(...SYMBOLS.map((name) => {
+    const b = document.createElement("button");
+    b.className = "symbol-button";
+    b.dataset.symbol = name;
+    b.append(icon(name));
+    b.addEventListener("click", () => {
+      if (typed.length >= CODE_LENGTH) return;
+      typed.push(name);
+      drawSlots($("mp-join-slots"), typed);
+      $("mp-join-go").disabled = typed.length < CODE_LENGTH;
+    });
+    return b;
+  }));
+  show("screen-mp-join");
+}
+function tryJoin() {
+  const name = codeName(typed);
+  let problem = null;
+  net.updateRoom(name, (room) => {
+    if (!room) { problem = "There's no game with that code. Check the symbols!"; return null; }
+    const r = join(room, net.uid, Date.now());
+    if (r.error) { problem = r.error === "full" ? "That game is full." : "That game has already started."; return null; }
+    return r.room;
+  });
+  if (problem) {
+    $("mp-join-error").textContent = problem;
+    $("mp-join-error").hidden = false;
+    return;
+  }
+  roomName = name;
+  openLobby();
+}
+
+// ─── The lobby: who's in, pick characters, start ────────────────────────────
+
+function openLobby() {
+  stopWatching?.();
+  show("screen-lobby");
+  stopWatching = net.watchRoom(roomName, drawLobby);
+}
+
+function drawLobby(room) {
+  if (!room) return;
+  const me = net.uid;
+  const isHost = room.host === me;
+  $("lobby-title").textContent = isHost ? "You're the host!" : "You're in!";
+  drawSlots($("lobby-code"), room.code.split("-"));
+  const mine = room.seats[me]?.character;
+  $("lobby-hint").textContent = mine
+    ? (isHost ? "Start when everyone has picked. Remember: keep your role secret!" : "Waiting for the host to start...")
+    : "Pick who you want to be. Others can't pick the same one.";
+  // Who's in.
+  $("lobby-players").replaceChildren(...seatOrder(room).map((uid) => {
+    const tile = document.createElement("div");
+    tile.className = "who" + (uid === me ? " who-you" : "");
+    tile.dataset.uid = uid;
+    const c = room.seats[uid].character;
+    if (c) tile.append(badge(character(c)));
+    const name = document.createElement("span");
+    name.className = "who-name";
+    name.textContent = (c ? character(c).name : "Choosing...") + (uid === me ? " (you)" : "") + (uid === room.host ? " (host)" : "");
+    tile.append(name);
+    return tile;
+  }));
+  // Characters to pick.
+  const cards = $("lobby-cards");
+  if (cards.children.length !== CHARACTERS.length) {
+    cards.replaceChildren(...CHARACTERS.map((c) => {
+      const el = card(c, null);
+      el.addEventListener("click", () => {
+        net.updateRoom(roomName, (r) => {
+          const p = pick(r, net.uid, c.id);
+          return p.error ? null : p.room;
+        });
+      });
+      return el;
+    }));
+  }
+  for (const el of cards.children) {
+    const owner = takenBy(room, el.dataset.id);
+    el.classList.toggle("picked", owner === me);
+    el.classList.toggle("taken", !!owner && owner !== me);
+    el.disabled = !!owner && owner !== me;
+  }
+  $("lobby-start").hidden = !isHost || room.started;
+  $("lobby-start").disabled = !canStart(room);
+  $("lobby-cards").hidden = room.started;
+  $("lobby-soon").hidden = !room.started;
+}
+
+function startGame() {
+  net.updateRoom(roomName, (room) => (room && canStart(room) ? { ...room, started: true } : null));
+}
+
+// ─── Buttons ────────────────────────────────────────────────────────────────
+
+$("mode-multi").addEventListener("click", () => show("screen-multi"));
+$("multi-back").addEventListener("click", () => show("screen-mode"));
+$("multi-host").addEventListener("click", host);
+$("multi-join").addEventListener("click", openJoin);
+$("mp-join-back").addEventListener("click", () => show("screen-multi"));
+$("mp-join-clear").addEventListener("click", openJoin);
+$("mp-join-go").addEventListener("click", tryJoin);
+$("lobby-start").addEventListener("click", startGame);
+$("lobby-leave").addEventListener("click", () => { stopWatching?.(); location.reload(); });
+
+// For the tests: which tab this is, and its room.
+window.multiplayer = { get uid() { return net.uid; }, get room() { return roomName; } };

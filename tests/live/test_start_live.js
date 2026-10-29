@@ -16,6 +16,7 @@ async function tapThrough(characterIndex, seed) {
   const doc = page.document;
   await until(() => doc.querySelectorAll(".card").length === 22, "22 cards built");
   doc.getElementById("start").click();
+  doc.getElementById("mode-single").click();
   doc.querySelectorAll(".card")[characterIndex].click();
   doc.getElementById("choose").click();
   return { page, doc };
@@ -35,6 +36,7 @@ test("all 22 characters are on the picker", async () => {
   const page = await openPage();
   const doc = page.document;
   doc.getElementById("start").click();
+  doc.getElementById("mode-single").click();
   await until(() => doc.querySelectorAll(".card").length === 22, "22 cards");
   assert.ok(visible(doc, "screen-pick"));
   const names = [...doc.querySelectorAll(".card-name")].map((n) => n.textContent);
@@ -45,6 +47,7 @@ test("you can't choose until you've picked someone", async () => {
   const page = await openPage();
   const doc = page.document;
   doc.getElementById("start").click();
+  doc.getElementById("mode-single").click();
   assert.ok(doc.getElementById("choose").disabled, "Choose starts greyed out");
   doc.querySelectorAll(".card")[4].click();
   assert.notOk(doc.getElementById("choose").disabled, "then it works");
@@ -75,6 +78,7 @@ test("Sam's drawings show on the picker; the rest show their initials", async ()
   const page = await openPage();
   const doc = page.document;
   doc.getElementById("start").click();
+  doc.getElementById("mode-single").click();
   const cards = doc.querySelectorAll(".card");
   const img = cards[0].querySelector("img.portrait");
   assert.ok(img, "Captain Puddle's card has a picture");

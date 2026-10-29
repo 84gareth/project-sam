@@ -107,3 +107,12 @@ v0.15.0).
 
 ## Sam's character drawings ✅ all 22 (2026-10-24)
 Added as they come in. Done: 22 of 22 (Captain Puddle, Granny Gumdrop, Professor Fizz, Ruby Rails, Chef Pepper, Sir Reginald Waffle, Doctor Plaster, Lola Loud, Farmer Fern, Detective Dot, Benny Biscuit, Madame Mystic, Tiny Tom, Zara Zoom, Mr Grumble, Penny Pockets, Coach Kick, Stationmaster Stan, Ivy Inkwell, Max Muddle, Olive Oddsocks, Barry Banjo).
+
+## Phase 8: Multiplayer (OK'd by Gareth 2026-10-29)
+Single player or multiplayer at the start; host or join with a 4-symbol
+code; up to all 22 real players, everything together, roles kept secret;
+through Gareth's own Firebase project. Built all at once over several
+sessions (Sam and Gareth's choice): see `docs/multiplayer-spec.md`.
+Done so far: the start screens, host and join with the code, and the
+lobby (working between browser tabs; Firebase next, once it's set up).
+

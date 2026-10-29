@@ -2,6 +2,7 @@
 // castle (castle-ui.js). The rules live in game.js and castle.js; page
 // files only draw and listen.
 import "./fit.js";
+import "./multiplayer-ui.js";
 import { GAME_NAME, VERSION } from "./version.js";
 import { CHARACTERS } from "./characters.js";
 import { newGame, TRAITOR } from "./game.js";
@@ -51,7 +52,10 @@ document.title = GAME_NAME;
 $("title").textContent = GAME_NAME;
 $("version").textContent = "v" + VERSION;
 buildCards();
-$("start").addEventListener("click", () => show("screen-pick"));
+// Single player or multiplayer (Phase 8).
+$("start").addEventListener("click", () => show("screen-mode"));
+$("mode-single").addEventListener("click", () => show("screen-pick"));
+$("mode-back").addEventListener("click", () => show("screen-station"));
 // A saved game: carry on from the start of the day you got to.
 const saved = new URLSearchParams(location.search).has("seed") ? null : loadGame();
 if (saved) {

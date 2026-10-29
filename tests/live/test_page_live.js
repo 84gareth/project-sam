@@ -67,10 +67,18 @@ test("character cards: rows centred, and no words spill out of a card", async ()
   const doc = page.document;
   await until(() => doc.querySelectorAll(".card").length === 22, "cards built");
   doc.getElementById("start").click();
+  doc.getElementById("mode-single").click();
   const cards = [...doc.querySelectorAll("#cards .card")];
   for (const c of cards) assert.ok(c.scrollHeight <= c.clientHeight + 1, `${c.dataset.id}'s words fit`);
   const box = doc.getElementById("cards").getBoundingClientRect();
   const last = cards[cards.length - 1].getBoundingClientRect();
   const rowStart = cards.filter((c) => Math.abs(c.getBoundingClientRect().top - last.top) < 2)[0].getBoundingClientRect();
   assert.near(rowStart.left - box.left, box.right - last.right, 12, "the last row is centred");
+});
+
+test("no two things on the page share an id", async () => {
+  const page = await openPage("../index.html?fast=1");
+  const ids = [...page.document.querySelectorAll("[id]")].map((e) => e.id);
+  const twice = ids.filter((id, i) => ids.indexOf(id) !== i);
+  assert.eq(twice, [], "ids used twice");
 });

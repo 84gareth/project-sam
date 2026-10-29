@@ -924,3 +924,16 @@ button.small:active, .door:active { transform: translateY(3px); box-shadow: 0 1p
 .quiet-news { max-width: 640px; text-align: center; background: linear-gradient(#2f9e4b, #1f6e35); color: #fff; border: 4px solid var(--ink); border-radius: 20px; box-shadow: 0 6px 0 var(--ink); padding: 10px 20px; animation: pop 0.4s ease-out; }
 .quiet-news p { margin: 4px 0; font-size: 20px; font-weight: 600; }
 .quiet-news .quiet-title { font-family: var(--title-font); font-size: 26px; letter-spacing: 1px; }
+
+/* Phase 8: single or multiplayer, host or join, the symbol code, the lobby */
+.mode-buttons { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
+.mode-button { display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 240px; padding: 16px 28px; }
+.symbol-icon { display: inline-flex; align-items: center; justify-content: center; }
+.code-slots { display: flex; gap: 12px; }
+.code-slot { width: 84px; height: 84px; display: flex; align-items: center; justify-content: center; border-radius: 18px; background: #fffaf0; border: 4px solid var(--ink); box-shadow: 0 4px 0 var(--ink); }
+.symbol-buttons { display: grid; grid-template-columns: repeat(4, 90px); gap: 12px; }
+.symbol-button { width: 90px; height: 90px; border-radius: 18px; background: linear-gradient(#ffffff, #e4e0f5); border: 3px solid var(--ink); box-shadow: 0 5px 0 var(--ink); display: flex; align-items: center; justify-content: center; }
+.symbol-button:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--ink); }
+.card.taken { opacity: 0.35; filter: grayscale(1); }
+#screen-lobby { justify-content: flex-start; }
+#screen-lobby .cards { flex: 1 1 0; min-height: 0; }

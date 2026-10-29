@@ -29,6 +29,7 @@ async function toCastle(seed) {
   const doc = page.document;
   await until(() => doc.querySelectorAll(".card").length === 22, "cards built");
   doc.getElementById("start").click();
+  doc.getElementById("mode-single").click();
   doc.querySelectorAll("#cards .card")[4].click();
   doc.getElementById("choose").click();
   doc.getElementById("to-castle").click();
@@ -393,6 +394,7 @@ test("All aboard! plays the train ride before the castle", async () => {
   const doc = page.document;
   await until(() => doc.querySelectorAll(".card").length === 22, "cards built");
   doc.getElementById("start").click();
+  doc.getElementById("mode-single").click();
   doc.querySelectorAll("#cards .card")[4].click();
   doc.getElementById("choose").click();
   doc.getElementById("to-castle").click();

@@ -22,7 +22,7 @@ export const setTeam = (fn) => { teamCheck = fn; };
 export const isFellow = (id) => teamCheck(id);
 
 // Screens with no pause button: before the game, and during missions.
-const NO_PAUSE = ["screen-station", "screen-pick", "screen-ready", "screen-train", "screen-mission", "screen-debug"];
+const NO_PAUSE = ["screen-station", "screen-mode", "screen-multi", "screen-mp-join", "screen-lobby", "screen-pick", "screen-ready", "screen-train", "screen-mission", "screen-debug"];
 
 export function show(screenId) {
   for (const s of document.querySelectorAll(".screen")) s.hidden = s.id !== screenId;
