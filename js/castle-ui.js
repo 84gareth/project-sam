@@ -17,6 +17,7 @@ import {
 import { say, narrate, voicesOn, setVoices } from "./voice.js";
 import { drumRoll, play, setRoomSound, setMusic } from "./sound.js";
 import { startMission } from "./mission-ui.js";
+import { todaysMission } from "./missions.js";
 import { saveGame, clearSave } from "./save.js";
 
 let game = null;
@@ -55,7 +56,7 @@ function startDay() {
 
 function enterCastle() {
   $("castle-day").textContent = `Day ${game.day} of ${DAYS}`;
-  $("no-murder").hidden = !noMurderToday(game);
+  $("no-murder").hidden = !noMurderToday(game, todaysMission(game)?.id);
   narrate(game.day === DAYS ? "The last day at the castle!" : `Day ${game.day} at the castle.`);
   const me = game.playerId;
   if (game.playerSide === TRAITOR) {
@@ -1065,8 +1066,9 @@ function showRoster() {
   }
   $("gone-box").hidden = false;
   // A no-murder night is announced at breakfast, so everyone knows (Sam).
-  $("quiet-news").hidden = !noMurderToday(game);
-  if (noMurderToday(game)) narrate($("quiet-news").textContent, { queue: true });
+  const quiet = noMurderToday(game, todaysMission(game)?.id);
+  $("quiet-news").hidden = !quiet;
+  if (quiet) narrate($("quiet-news").textContent, { queue: true });
   const holder = daggerHolder(game);
   $("dagger-news").hidden = !holder;
   if (holder) {

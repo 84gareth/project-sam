@@ -740,7 +740,11 @@ export function quietTonight(game, n, left) {
   return tooFew || randomQuiet(game).includes(n);
 }
 // For breakfast: will tonight (after today's banishing) be murder-free?
-export const noMurderToday = (game) => quietTonight(game, game.day, stillIn(game).length - 1);
+// `missionId`: today's mission; Catapults always brings a murder (Sam), so
+// it's never a no-murder day (the morning used to say so, then the castle
+// changed its mind after the mission: Sam's bug report, 2026-10-29).
+export const noMurderToday = (game, missionId = null) =>
+  missionId !== "catapults" && quietTonight(game, game.day, stillIn(game).length - 1);
 export function nightKind(game) {
   const last = game.history[game.history.length - 1];
   if (last.recruited || last.murdered || last.quiet) return "done";

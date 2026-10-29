@@ -1037,3 +1037,21 @@ test("only 2 Traitors left: a Traitor Sam chooses recruit or murder", async () =
   assert.ok(doc.getElementById("murder").textContent.includes("Recruit"), "on to recruiting");
   assert.ok(doc.querySelectorAll("#victim-cards .card").length > 0);
 });
+
+
+test("Catapults day is never announced as a no-murder day (Sam's bug)", async () => {
+  const { page, doc } = await toCastle(seedFor("pepper", FAITHFUL));
+  const g = page.game;
+  const { missionOrder } = await import("../../js/missions.js");
+  // Find a day in this game whose mission is Catapults, and make it a day
+  // that would otherwise be quiet (12 left on that day).
+  const day = missionOrder(g).findIndex((m) => m.id === "catapults") + 2;
+  if (day < 2) return;
+  g.day = day;
+  for (const p of g.players.filter((x) => x.inGame && x.side !== TRAITOR && x.id !== "pepper")) {
+    if (stillIn(g).length <= 4 + (12 - day)) break;
+    p.inGame = false;
+  }
+  page.castleJump.showRoster();
+  assert.notOk(visible(doc, "quiet-news"), "no promise of a quiet night on Catapults day");
+});

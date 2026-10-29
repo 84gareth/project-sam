@@ -15,25 +15,25 @@
   <!-- STAMP (tools/stamp.py writes this; don't edit by hand) -->
   <script type="importmap">{
   "imports": {
-    "./js/castle-ui.js": "./js/castle-ui.js?v=0.19.0",
-    "./js/castle.js": "./js/castle.js?v=0.19.0",
-    "./js/characters.js": "./js/characters.js?v=0.19.0",
-    "./js/dialogue.js": "./js/dialogue.js?v=0.19.0",
-    "./js/fit.js": "./js/fit.js?v=0.19.0",
-    "./js/game.js": "./js/game.js?v=0.19.0",
-    "./js/main.js": "./js/main.js?v=0.19.0",
-    "./js/mission-more.js": "./js/mission-more.js?v=0.19.0",
-    "./js/mission-ui.js": "./js/mission-ui.js?v=0.19.0",
-    "./js/missions.js": "./js/missions.js?v=0.19.0",
-    "./js/puppets.js": "./js/puppets.js?v=0.19.0",
-    "./js/save.js": "./js/save.js?v=0.19.0",
-    "./js/sound.js": "./js/sound.js?v=0.19.0",
-    "./js/ui.js": "./js/ui.js?v=0.19.0",
-    "./js/version.js": "./js/version.js?v=0.19.0",
-    "./js/voice.js": "./js/voice.js?v=0.19.0"
+    "./js/castle-ui.js": "./js/castle-ui.js?v=0.19.1",
+    "./js/castle.js": "./js/castle.js?v=0.19.1",
+    "./js/characters.js": "./js/characters.js?v=0.19.1",
+    "./js/dialogue.js": "./js/dialogue.js?v=0.19.1",
+    "./js/fit.js": "./js/fit.js?v=0.19.1",
+    "./js/game.js": "./js/game.js?v=0.19.1",
+    "./js/main.js": "./js/main.js?v=0.19.1",
+    "./js/mission-more.js": "./js/mission-more.js?v=0.19.1",
+    "./js/mission-ui.js": "./js/mission-ui.js?v=0.19.1",
+    "./js/missions.js": "./js/missions.js?v=0.19.1",
+    "./js/puppets.js": "./js/puppets.js?v=0.19.1",
+    "./js/save.js": "./js/save.js?v=0.19.1",
+    "./js/sound.js": "./js/sound.js?v=0.19.1",
+    "./js/ui.js": "./js/ui.js?v=0.19.1",
+    "./js/version.js": "./js/version.js?v=0.19.1",
+    "./js/voice.js": "./js/voice.js?v=0.19.1"
   }
 }</script>
-  <link rel="stylesheet" href="css/style.css?v=0.19.0">
+  <link rel="stylesheet" href="css/style.css?v=0.19.1">
   <!-- /STAMP -->
 </head>
 <body>
@@ -275,7 +275,10 @@
         <p class="gone-title">Everyone at the castle</p>
         <div id="gone" class="gone-row"></div>
       </div>
-      <p id="quiet-news" class="most-votes quiet-news" hidden>Announcement: tonight there will be NO murder!</p>
+      <div id="quiet-news" class="quiet-news" hidden>
+        <p class="quiet-title">Announcement for TONIGHT</p>
+        <p>After today's Round Table, the Traitors will NOT murder anyone tonight.</p>
+      </div>
       <p id="dagger-news" class="most-votes dagger-news" hidden></p>
       <button id="start-day" class="big" hidden>Start the day</button>
       <div id="breakfast-over" class="game-over" hidden>
@@ -298,6 +301,6 @@
     <p>Turn your phone sideways to play!</p>
   </div>
 
-  <script type="module" src="js/main.js?v=0.19.0"></script>
+  <script type="module" src="js/main.js?v=0.19.1"></script>
 </body>
 </html>
