@@ -327,27 +327,126 @@ export function computerVote(game, id) {
 }
 
 // The Round Table. `playerVote`: who Sam tapped (ignored if Sam is played
-// by the computer). Everyone votes in seat order; the most votes leaves;
-// a tie is settled by a seeded coin. Then everyone learns from the votes.
+// by the computer). Everyone votes in seat order; the most votes leaves.
+// A draw (Gareth, 2026-10-29): the tied people each say something, then
+// everyone else votes again between just them; still a draw, and each
+// tied person picks a chest: one is empty, and whoever gets it leaves (the
+// rest hold shields). Then everyone learns from the votes.
 // `playerVote`: the one real player's vote, or { player: vote } for several.
+//
+// The screens take it a step at a time (firstVote, tiePleas, revote,
+// chests); roundTable does the lot at once, with the real players' default
+// choices after the first vote (for the rules' own tests and balance runs).
 export function roundTable(game, playerVote) {
+  let r = firstVote(game, playerVote);
+  if (r.tie) r = revote(game, null);
+  if (r.tie) r = chests(game, {});
+  return r;
+}
+const humanPart = (part, v) => (part && typeof part === "object" ? part[v] : part);
+// Most votes: the ids with the top count, in order.
+const topOf = (counts) => {
+  const top = Math.max(...Object.values(counts));
+  return Object.keys(counts).filter((id) => counts[id] === top).sort();
+};
+export function firstVote(game, playerVote) {
   const voters = stillIn(game);
-  const humanVote = (v) => (playerVote && typeof playerVote === "object" ? playerVote[v] : playerVote);
   const votes = voters.map((v) => [v, game.scores[v] ? computerVote(game, v)
-    : humanVote(v) ?? voters.find((o) => o !== v)]);
+    : humanPart(playerVote, v) ?? voters.find((o) => o !== v)]);
   // The dagger: its holder's vote counts twice today (Sam).
   const counts = {};
   for (const [v, t] of votes) counts[t] = (counts[t] || 0) + (hasDagger(game, v) ? 2 : 1);
-  const top = Math.max(...Object.values(counts));
-  const tied = Object.keys(counts).filter((id) => counts[id] === top).sort();
-  const banished = tied[Math.floor(rng(game, "tie", game.day)() * tied.length)];
+  const tied = topOf(counts);
+  if (tied.length > 1) {
+    game.tie = { day: game.day, votes, counts, tied };
+    return { day: game.day, votes, counts, tie: tied, dagger: daggerHolder(game) };
+  }
+  return banish(game, tied[0], votes, counts);
+}
+// Out they go: the end of the Round Table, however it was settled.
+// History keeps the first vote (who accused whom); the screens get the
+// votes that settled it (`shown`), for the chalkboards.
+function banish(game, banished, votes, counts, extra = {}, shown = null) {
   const side = player(game, banished).side;
   player(game, banished).inGame = false;
-  const result = { day: game.day, votes, counts, banished, side, dagger: daggerHolder(game) };
+  const result = { day: game.day, votes, counts, banished, side, dagger: daggerHolder(game), ...extra };
+  delete game.tie;
   game.history.push(result);
   learn(game, result);
   game.day += 1;
-  return result;
+  return shown ? { ...result, ...shown } : result;
+}
+
+// What the tied people say before the new vote. `said`: { realPlayer: text }.
+export const PLEAS = [
+  "Please! I'm a Faithful, I promise!",
+  "Think about it. Would a Traitor work this hard?",
+  "You're making a big mistake. It's not me!",
+  "I've been on your side all along!",
+  "Vote for me and the Traitors will be laughing!",
+  "Look at who started this. That's your Traitor!",
+];
+export function pleaOptions(game, me) {
+  const r = rng(game, "plea-options", game.day, me);
+  const pool = [...PLEAS];
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(r() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  return pool.slice(0, 3);
+}
+export function tiePleas(game, said = {}) {
+  const tied = game.tie?.tied ?? [];
+  return { pleas: tied.map((id) => {
+    if (!game.scores[id]) return { speaker: id, text: said?.[id] ?? pleaOptions(game, id)[0] };
+    const r = rng(game, "plea", game.day, id);
+    return { speaker: id, text: inCharacter(id, pickOne(PLEAS, r), r) };
+  }) };
+}
+
+// The new vote: everyone but the tied people, choosing between them.
+export function revote(game, playerVote) {
+  const { tied } = game.tie;
+  const voters = stillIn(game).filter((v) => !tied.includes(v));
+  const computerPick = (v) => {
+    const s = game.scores[v];
+    // A Traitor saves a fellow Traitor if they can; everyone else goes for
+    // whoever they suspect most.
+    const options = isTraitor(game, v) && tied.some((t) => !isTraitor(game, t)) ? tied.filter((t) => !isTraitor(game, t)) : tied;
+    return [...options].sort((a, b) => s[b] - s[a] || (a < b ? -1 : 1))[0];
+  };
+  const votes = voters.map((v) => {
+    const mine = humanPart(playerVote, v);
+    return [v, game.scores[v] ? computerPick(v) : tied.includes(mine) ? mine : tied[0]];
+  });
+  const counts = Object.fromEntries(tied.map((t) => [t, 0]));
+  for (const [v, t] of votes) counts[t] += hasDagger(game, v) ? 2 : 1;
+  const still = voters.length ? topOf(counts) : tied;
+  if (still.length > 1) {
+    game.tie = { ...game.tie, revotes: votes, recounts: counts, tied: still };
+    return { day: game.day, votes, counts, tie: still, revote: true, dagger: daggerHolder(game) };
+  }
+  return banish(game, still[0], game.tie.votes, game.tie.counts, { revotes: votes, recounts: counts }, { votes, counts });
+}
+
+// Still a draw: one chest each; one is empty. `picks`: { realPlayer: chest
+// number }. The tied people pick in turn (the order they're listed); a real
+// player whose chest was taken, and the computer, get a free one at
+// random.
+export function chests(game, picks = {}) {
+  const { tied } = game.tie;
+  const r = rng(game, "chests", game.day);
+  const empty = Math.floor(r() * tied.length);
+  const free = tied.map((_, i) => i);
+  const chosen = tied.map((id) => {
+    const want = picks?.[id];
+    const i = !game.scores[id] && free.includes(want) ? want : free[Math.floor(r() * free.length)];
+    free.splice(free.indexOf(i), 1);
+    return { id, chest: i };
+  });
+  const out = chosen.find((c) => c.chest === empty).id;
+  return banish(game, out, game.tie.votes, game.tie.counts,
+    { revotes: game.tie.revotes, recounts: game.tie.recounts, chests: chosen, empty });
 }
 
 // After the reveal, honest players change their minds:

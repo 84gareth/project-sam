@@ -7,7 +7,7 @@ import {
   isRecruitNight, recruit, recruitIdeas, joinChat, nightKind, quietNight, whosWho,
   finalRound, finalChoices, prizeShare, allTraitors, hasShield, isHuman,
   isDaggerNight, giveDagger, daggerIdeas, daggerHolder, hasDagger,
-  computerChoice, canMurderTonight, noMurderToday,
+  computerChoice, canMurderTonight, noMurderToday, pleaOptions,
 } from "./castle.js";
 import { DAYS } from "./game.js";
 import { $, show, badge, card, character, wait, FAST, setTeam, isFellow, setPlayers, isRealPlayer, realName, nameInto } from "./ui.js";
@@ -78,6 +78,11 @@ export function rejoinCastle(g, e, pos, results) {
   if (pos === "talk") return roundTableTalk();
   if (pos === "table") return goToTable();
   if (pos === "reveal") return reveal(last((r) => r.banished));
+  // A draw part-way through (resumePoint): what the last decision says.
+  const latest = results[results.length - 1] ?? {};
+  if (pos === "voted") return latest.tie ? tieTalk(latest) : reveal(latest);
+  if (pos === "pleaded") { tieOnly = game.tie?.tied ?? null; return goToTable(); }
+  if (pos === "revoted") return latest.tie ? chestScreen(latest) : reveal(latest);
   if (pos === "night") return goNight();
   if (pos === "breakfast") { nightResult = last((r) => r.kind); return breakfast(nightResult.victim ?? null); }
   if (pos === "final") return finalScreen();
@@ -468,6 +473,8 @@ async function roundTableTalk() {
   lines.replaceChildren();
   $("talk-options").hidden = true;
   $("to-vote").hidden = true;
+  $("to-vote").textContent = "Time to vote";
+  tieOnly = null;
   show("screen-talk");
   setRoomSound("table");   // a crackling fire (Gareth)
   setMusic("table");       // and tense music, for the whole Round Table (Gareth)
@@ -537,12 +544,18 @@ function talkLine(id, text, label = character(id).name) {
   return row;
 }
 
+// A draw (Gareth, 2026-10-29): the new vote is between just these people,
+// and they can't vote in it.
+let tieOnly = null;
+
 function goToTable() {
   tableVote = null;
   $("cast-vote").disabled = true;
+  if (tieOnly?.includes(game.playerId)) return sitOut();
+  $("table-title").textContent = tieOnly ? "Vote again! Who should leave?" : "Who do you think is a Traitor?";
   const cards = $("table-cards");
   cards.replaceChildren();
-  for (const id of stillIn(game).filter((id) => id !== game.playerId)) {
+  for (const id of (tieOnly ?? stillIn(game)).filter((id) => id !== game.playerId)) {
     const el = card(character(id), null);
     el.addEventListener("click", () => {
       tableVote = id;
@@ -559,7 +572,20 @@ function goToTable() {
 async function castVote() {
   if (!tableVote) return;
   $("cast-vote").disabled = true;
-  const result = await engine.decide("votes", tableVote);
+  showVotes(await engine.decide(tieOnly ? "revote" : "votes", tableVote));
+}
+// Tied in a draw: the others vote without you.
+async function sitOut() {
+  $("boards").replaceChildren();
+  $("most-votes").textContent = "You can't vote this time. The others are voting...";
+  $("most-votes").hidden = false;
+  $("to-reveal").hidden = true;
+  $("tally").hidden = true;
+  show("screen-votes");
+  showVotes(await engine.decide("revote", null));
+}
+
+async function showVotes(result) {
   const boards = $("boards");
   boards.replaceChildren();
   $("most-votes").hidden = true;
@@ -602,12 +628,115 @@ async function castVote() {
       $("tally").hidden = true;
     }
   }
+  if (result.tie) {
+    const names = andList(result.tie.map((id) => character(id).name));
+    $("most-votes").textContent = result.revote
+      ? `Still a draw! ${names} must each pick a chest.`
+      : `It's a draw! ${names} have ${result.counts[result.tie[0]]} votes each.`;
+    $("most-votes").hidden = false;
+    narrate($("most-votes").textContent);
+    $("to-reveal").textContent = result.revote ? "To the chests" : "Hear them out";
+    $("to-reveal").hidden = false;
+    $("to-reveal").onclick = () => (result.revote ? chestScreen(result) : tieTalk(result));
+    return;
+  }
+  tieOnly = null;
   const out = character(result.banished);
   $("most-votes").textContent = `${out.name} has the most votes: ${result.counts[result.banished]}.`;
   $("most-votes").hidden = false;
   narrate($("most-votes").textContent);
+  $("to-reveal").textContent = "Find out...";
   $("to-reveal").hidden = false;
   $("to-reveal").onclick = () => reveal(result);
+}
+
+// A draw: the tied people each say something, then the new vote.
+async function tieTalk(result) {
+  tieOnly = result.tie;
+  const me = game.playerId;
+  const lines = $("talk-lines");
+  lines.replaceChildren();
+  const opts = $("talk-options");
+  opts.hidden = true;
+  $("to-vote").hidden = true;
+  show("screen-talk");
+  await narrate(`It's a draw! ${andList(result.tie.map((id) => character(id).name))}, you each get to say something.`);
+  let part = null;
+  if (result.tie.includes(me)) {
+    part = await new Promise((resolve) => {
+      opts.replaceChildren(...pleaOptions(game, me).map((text) => {
+        const b = document.createElement("button");
+        b.className = "question";
+        b.textContent = text;
+        b.addEventListener("click", () => { opts.hidden = true; resolve(text); });
+        return b;
+      }));
+      opts.hidden = false;
+    });
+  }
+  const { pleas } = await engine.decide("pleas", part);
+  for (const p of pleas) {
+    addLine(lines, talkLine(p.speaker, p.text, fullLabel(p.speaker)));
+    await Promise.all([say(p.text, p.speaker), wait(900)]);
+  }
+  $("to-vote").textContent = result.tie.includes(me) ? "On to the vote" : "Vote again";
+  $("to-vote").hidden = false;
+}
+
+// Still a draw: one chest each. One is empty; whoever gets it leaves.
+const CHEST_SVG = `<svg viewBox="0 0 100 80" aria-hidden="true"><rect x="8" y="34" width="84" height="42" rx="6" fill="#9a5b2a" stroke="#2b1a10" stroke-width="5"/>`
+  + `<path class="lid" d="M8 36 Q8 8 50 8 Q92 8 92 36 Z" fill="#b8733a" stroke="#2b1a10" stroke-width="5"/>`
+  + `<rect x="42" y="30" width="16" height="16" rx="3" fill="#f2c14e" stroke="#2b1a10" stroke-width="4"/></svg>`;
+async function chestScreen(result) {
+  tieOnly = null;
+  const me = game.playerId;
+  const tied = result.tie;
+  const box = $("chests");
+  const buttons = tied.map((_, i) => {
+    const b = document.createElement("button");
+    b.className = "chest";
+    b.dataset.chest = i;
+    b.innerHTML = CHEST_SVG;
+    const who = document.createElement("span");
+    who.className = "chest-who";
+    b.append(who);
+    return b;
+  });
+  box.replaceChildren(...buttons);
+  $("chests-go").hidden = true;
+  show("screen-chests");
+  const mine = tied.includes(me);
+  $("chest-text").textContent = "One chest is empty. The others hold a shield. Whoever gets the empty chest leaves the castle."
+    + (mine ? " Pick a chest!" : "");
+  narrate($("chest-text").textContent);
+  let pick = null;
+  if (mine) {
+    pick = await new Promise((resolve) => {
+      for (const b of buttons) b.onclick = () => {
+        b.classList.add("picked");
+        for (const o of buttons) o.onclick = null;
+        resolve(Number(b.dataset.chest));
+      };
+    });
+  }
+  for (const b of buttons) { b.onclick = null; b.disabled = true; }
+  const r = await engine.decide("chests", pick);
+  for (const c of r.chests) {
+    const b = buttons[c.chest];
+    nameInto(b.querySelector(".chest-who"), c.id, label(c.id));
+    await wait(900);
+    b.classList.add("open", c.chest === r.empty ? "empty" : "safe");
+    if (c.chest === r.empty) {
+      b.append(Object.assign(document.createElement("span"), { className: "chest-inside", textContent: "Empty!" }));
+    } else {
+      b.append(Object.assign(document.createElement("img"), { className: "chest-inside", src: "assets/shield.png", alt: "Shield" }));
+    }
+  }
+  const out = r.banished === me ? "You got" : `${character(r.banished).name} got`;
+  $("chest-text").textContent = `${out} the empty chest!`;
+  narrate($("chest-text").textContent);
+  $("chests-go").hidden = false;
+  $("chests-go").onclick = () => reveal(r);
 }
 
 // ─── Banished: drum roll, then "I am a... FAITHFUL!" ─────────────────────────
@@ -824,7 +953,14 @@ function party() {
 }
 
 // Tests (?fast=1) can jump straight to the final or the end.
-if (FAST) window.castleJump = { finalScreen, ending, showRoster: () => showRoster(), enterCastle: () => enterCastle() };
+if (FAST) {
+  window.castleJump = { finalScreen, ending, showRoster: () => showRoster(), enterCastle: () => enterCastle(),
+    // A draw between `ids`, from its start or (chests) after a tied new vote.
+    tie: (ids, chestsNow = false) => {
+      game.tie = { day: game.day, votes: [], counts: Object.fromEntries(ids.map((id) => [id, 1])), tied: ids };
+      return chestsNow ? chestScreen({ tie: ids, revote: true }) : tieTalk({ tie: ids, counts: game.tie.counts });
+    } };
+}
 
 // Everyone who's a Traitor now (still in), for players who are out.
 const traitorNames = () => stillIn(game).filter((id) => isTraitor(game, id)).map(fullLabel).join(", ") || "all caught!";

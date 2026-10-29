@@ -45,13 +45,24 @@ export const waitingFor = (game, room, k) =>
 // table, says, votes, go on from the reveal, night, go from breakfast. After
 // day 12's vote comes the final: final, then votes again if not ended.
 // `ended`: is the game over (the final ended, or someone won)?
+// A draw adds "pleas", "revote" and maybe "chests" after the votes; whether
+// a vote was a draw shows in the next decision, so the screens decide what
+// "voted" and "revoted" mean from the last result.
 export function resumePoint(types, ended, days = 12) {
   let pos = "dayStart", day = 1;
   for (const t of types) {
+    if (pos === "voted") {
+      if (t === "pleas") { pos = "pleaded"; continue; }
+      pos = "reveal"; day += 1;
+    } else if (pos === "revoted") {
+      if (t === "chests") { pos = "reveal"; day += 1; continue; }
+      pos = "reveal"; day += 1;
+    }
+    if (pos === "pleaded") { pos = "revoted"; continue; }
     if (pos === "dayStart") pos = t === "mission" ? "castle" : "talk";
     else if (pos === "castle") pos = "talk";
     else if (pos === "talk") pos = "table";
-    else if (pos === "table") { pos = "reveal"; day += 1; }
+    else if (pos === "table") pos = "voted";
     else if (pos === "reveal") pos = day > days ? "final" : "night";
     else if (pos === "night") pos = "breakfast";
     else if (pos === "breakfast") pos = "dayStart";

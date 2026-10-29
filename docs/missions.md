@@ -206,3 +206,18 @@ Replaces "murders every other night" and "recruit at 2 up to night 5".
   traitors"): honest players grow more suspicious of every recruit each
   day (`RECRUIT_TELL` 0.25). 300 computer games: Faithfuls win ~57%; every
   game reaches day 12.
+
+## Round Table draws (Gareth, 2026-10-29)
+
+"If it's a draw ... make everyone vote again with just the people with the
+most votes as option - if it's a draw still they each pick a chest - one
+has a shield in, the others are eliminated." Then: "Only one person
+eliminated, the tied people can't vote", and "They should get a chance to
+say something before the new vote too".
+
+As built (v0.28.0): the tied people each say something (a real player
+picks from three lines); everyone else votes again between just them; if
+it's still a draw, one chest each: one is empty, the rest hold shields, and
+whoever gets the empty one leaves. Rules: `firstVote`, `tiePleas`,
+`revote`, `chests` in `js/castle.js`; engine decisions "pleas", "revote",
+"chests".

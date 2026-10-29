@@ -1122,3 +1122,51 @@ test("multiplayer: tapping another real player says to talk to them for real", a
   assert.ok(doc.getElementById("bubble-text").textContent.includes("real player"));
   assert.eq(doc.querySelectorAll("#questions .question").length, 0, "no computer questions");
 });
+
+
+// ─── A draw (Gareth, 2026-10-29) ────────────────────────────────────────────
+test("a draw: the tied pair speak, then everyone else votes between just them", async () => {
+  const { page, doc } = await toCastle(seedFor("pepper", FAITHFUL));
+  const [a, b] = stillIn(page.game).filter((id) => id !== "pepper");
+  const before = stillIn(page.game).length;
+  page.castleJump.tie([a, b]);
+  await until(() => visible(doc, "to-vote"), "they've had their say", 10000);
+  assert.eq(doc.querySelectorAll("#talk-lines .talk-line").length, 2, "one line each");
+  assert.eq(doc.getElementById("to-vote").textContent, "Vote again");
+  doc.getElementById("to-vote").click();
+  assert.eq([...doc.querySelectorAll("#table-cards .card")].map((c) => c.dataset.id).sort(), [a, b].sort(), "just the two");
+  doc.querySelector("#table-cards .card").click();
+  doc.getElementById("cast-vote").click();
+  await until(() => visible(doc, "to-reveal"), "the new votes", 15000);
+  assert.eq(doc.querySelectorAll("#boards .chalkboard").length, before - 2, "a chalkboard from everyone but the tied pair");
+});
+
+test("tied yourself: pick what to say, then sit out the new vote", async () => {
+  const { page, doc } = await toCastle(seedFor("pepper", FAITHFUL));
+  const other = stillIn(page.game).find((id) => id !== "pepper");
+  page.castleJump.tie(["pepper", other]);
+  await until(() => visible(doc, "talk-options"), "your turn to speak", 10000);
+  doc.querySelector("#talk-options .question").click();
+  await until(() => visible(doc, "to-vote"), "both have spoken", 10000);
+  assert.eq(doc.getElementById("to-vote").textContent, "On to the vote");
+  doc.getElementById("to-vote").click();
+  assert.ok(visible(doc, "screen-votes"), "no cards for you: you can't vote");
+  await until(() => visible(doc, "to-reveal"), "the others voted", 15000);
+  assert.notOk([...doc.querySelectorAll("#boards .chalkboard")].some((b) => b.classList.contains("me-board")), "no chalkboard from you");
+});
+
+test("still a draw: pick a chest; the empty chest's owner leaves", async () => {
+  const { page, doc } = await toCastle(seedFor("pepper", FAITHFUL));
+  const other = stillIn(page.game).find((id) => id !== "pepper");
+  const before = stillIn(page.game).length;
+  page.castleJump.tie(["pepper", other], true);
+  await until(() => visible(doc, "screen-chests"), "the chests");
+  assert.eq(doc.querySelectorAll("#chests .chest").length, 2, "a chest each");
+  doc.querySelector('#chests .chest[data-chest="1"]').click();
+  await until(() => visible(doc, "chests-go"), "the chests are opened", 10000);
+  assert.eq(doc.querySelectorAll("#chests .chest.empty").length, 1, "one empty");
+  assert.eq(doc.querySelectorAll("#chests .chest.safe").length, 1, "one shield");
+  assert.eq(stillIn(page.game).length, before - 1, "one person out");
+  doc.getElementById("chests-go").click();
+  assert.ok(visible(doc, "screen-banished"), "the reveal");
+});

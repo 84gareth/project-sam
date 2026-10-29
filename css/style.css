@@ -996,3 +996,19 @@ button.small:active, .door:active { transform: translateY(3px); box-shadow: 0 1p
 .waiting { top: auto; bottom: 10px; left: auto; right: 10px; transform: none; max-width: 34cqw; font-size: 15px; padding: 6px 10px; gap: 8px; }
 .waiting button { flex-shrink: 0; }
 .card.picked .real-name, .card.me-card .real-name, .card.fellow-card.picked .real-name { color: #1d4fa8; }
+/* A draw: the chests (Gareth). */
+.chests { display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; }
+.chest { position: relative; width: 150px; min-height: 150px; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px; border-radius: 18px;
+  background: rgba(30, 34, 46, 0.78); border: 3px solid var(--ink); color: var(--text); }
+.chest svg { width: 120px; height: 96px; }
+.chest.picked { background: rgba(242, 193, 78, 0.5); }
+.chest.open .lid { transform: translateY(-14px) rotate(-12deg); transform-origin: 8px 36px; transition: transform 0.4s; }
+.chest-inside { position: absolute; top: 34px; left: 50%; transform: translateX(-50%); }
+img.chest-inside { width: 56px; }
+span.chest-inside { font: 400 22px var(--title-font); color: #ff7b6b; text-shadow: 0 2px 0 var(--ink); }
+.chest.safe { box-shadow: 0 0 18px 4px rgba(155, 227, 138, 0.8); }
+.chest.empty { box-shadow: 0 0 18px 4px rgba(255, 123, 107, 0.9); }
+.chest-who { font-weight: 700; text-align: center; font-size: 15px; }
+.chest:disabled { opacity: 1; }
+.chest.open .lid { transform: translate(-4px, -10px) rotate(-28deg); transform-box: fill-box; transform-origin: left bottom; }
+.chest-inside { top: 46px; }

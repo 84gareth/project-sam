@@ -10,7 +10,7 @@
 
 import { DAYS } from "./game.js";
 import {
-  humansOf, isTraitor, stillIn, playerSays, roundTable, nightKind, recruit, night, quietNight,
+  humansOf, isTraitor, stillIn, playerSays, firstVote, tiePleas, revote, chests, nightKind, recruit, night, quietNight,
   computerChoice, canMurderTonight, isDaggerNight, giveDagger, finalRound, DAGGER_AT,
 } from "./castle.js";
 import {
@@ -60,7 +60,15 @@ export function applyDecision(game, type, parts) {
       return { lines };
     }
     case "votes":
-      return roundTable(game, Object.fromEntries(inOrder.map(([id, d]) => [id, d])));
+      return firstVote(game, Object.fromEntries(inOrder.map(([id, d]) => [id, d])));
+    // A draw (Gareth): the tied people speak, everyone else votes again,
+    // and if it's still a draw, chests.
+    case "pleas":
+      return tiePleas(game, Object.fromEntries(inOrder.filter(([, d]) => d)));
+    case "revote":
+      return revote(game, Object.fromEntries(inOrder.filter(([, d]) => d)));
+    case "chests":
+      return chests(game, Object.fromEntries(inOrder.filter(([, d]) => d != null)));
     case "night": {
       const kind = nightKind(game);
       const traitors = inOrder.filter(([id]) => isTraitor(game, id));

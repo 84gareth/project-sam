@@ -701,3 +701,57 @@ test("who's who: a player who's out sees everyone's side (Gareth, 2026-10-29)", 
   const w = Object.fromEntries(whosWho(g).map((p) => [p.id, p]));
   for (const id of left) assert.eq(w[id].side, g.players.find((p) => p.id === id).side, `${id} shown`);
 });
+
+// ─── A draw (Gareth, 2026-10-29) ────────────────────────────────────────────
+import { firstVote, tiePleas, revote, chests, pleaOptions, PLEAS } from "../../js/castle.js";
+import { CHARACTERS } from "../../js/characters.js";
+const everyone = CHARACTERS.map((c) => c.id);
+// Everyone a real player, so every vote is chosen by the test.
+const allReal = (seed = 5) => arriveAtCastle(newGame("dot", seed, everyone));
+
+test("a draw: nobody leaves yet; the tied people speak; then only the others vote", () => {
+  const g = allReal();
+  const [a, b] = ["fizz", "barry"];
+  const voters = stillIn(g);
+  const first = firstVote(g, Object.fromEntries(voters.map((v, i) => [v, v === a ? b : v === b ? a : i % 2 ? a : b])));
+  assert.eq(first.tie, [a, b].sort(), "a draw");
+  assert.eq(stillIn(g).length, voters.length, "nobody out yet");
+  assert.eq(g.day, 1, "still today");
+  const { pleas } = tiePleas(g, { [a]: "Not me!" });
+  assert.eq(pleas.map((p) => p.speaker), [a, b].sort());
+  assert.eq(pleas.find((p) => p.speaker === a).text, "Not me!", "a real player says their pick");
+  assert.ok(PLEAS.includes(pleaOptions(g, b)[0]));
+  // Everyone else picks barry; fizz and barry vote for each other (ignored).
+  const r = revote(g, Object.fromEntries(voters.map((v) => [v, v === b ? a : b])));
+  assert.ok(r.votes.every(([v]) => v !== a && v !== b), "the tied people don't vote");
+  assert.eq(r.banished, b);
+  assert.eq(r.counts[a], 0);
+  assert.eq(g.day, 2, "the day moves on once someone leaves");
+  assert.eq(g.tie, undefined);
+});
+
+test("still a draw: one chest each, one empty; exactly one person leaves", () => {
+  for (let seed = 1; seed <= 20; seed++) {
+    const g = allReal(seed);
+    const tied = ["fizz", "barry", "olive"];
+    g.tie = { day: g.day, votes: [], counts: {}, tied };
+    const before = stillIn(g).length;
+    const r = chests(g, { fizz: 0, barry: 0, olive: 2 });
+    assert.eq(stillIn(g).length, before - 1, "one out");
+    assert.ok(tied.includes(r.banished));
+    assert.eq(r.chests.find((c) => c.chest === r.empty).id, r.banished, "the empty chest's owner");
+    assert.eq(new Set(r.chests.map((c) => c.chest)).size, 3, "a chest each");
+    assert.eq(r.chests.find((c) => c.id === "fizz").chest, 0, "fizz picked first and got her chest");
+    assert.ok(r.chests.find((c) => c.id === "barry").chest !== 0, "barry's pick was taken");
+  }
+});
+
+test("the computers' Round Table always ends with exactly one person out", () => {
+  for (let seed = 1; seed <= 60; seed++) {
+    const g = castle(seed);
+    const before = stillIn(g).length;
+    roundTable(g, null);
+    assert.eq(stillIn(g).length, before - 1);
+    assert.eq(g.tie, undefined);
+  }
+});

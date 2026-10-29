@@ -15,31 +15,31 @@
   <!-- STAMP (tools/stamp.py writes this; don't edit by hand) -->
   <script type="importmap">{
   "imports": {
-    "./js/castle-ui.js": "./js/castle-ui.js?v=0.27.2",
-    "./js/castle.js": "./js/castle.js?v=0.27.2",
-    "./js/characters.js": "./js/characters.js?v=0.27.2",
-    "./js/dialogue.js": "./js/dialogue.js?v=0.27.2",
-    "./js/engine.js": "./js/engine.js?v=0.27.2",
-    "./js/firebase-net.js": "./js/firebase-net.js?v=0.27.2",
-    "./js/fit.js": "./js/fit.js?v=0.27.2",
-    "./js/game.js": "./js/game.js?v=0.27.2",
-    "./js/lobby.js": "./js/lobby.js?v=0.27.2",
-    "./js/main.js": "./js/main.js?v=0.27.2",
-    "./js/mission-more.js": "./js/mission-more.js?v=0.27.2",
-    "./js/mission-ui.js": "./js/mission-ui.js?v=0.27.2",
-    "./js/missions.js": "./js/missions.js?v=0.27.2",
-    "./js/multiplayer-ui.js": "./js/multiplayer-ui.js?v=0.27.2",
-    "./js/net-engine.js": "./js/net-engine.js?v=0.27.2",
-    "./js/net.js": "./js/net.js?v=0.27.2",
-    "./js/puppets.js": "./js/puppets.js?v=0.27.2",
-    "./js/save.js": "./js/save.js?v=0.27.2",
-    "./js/sound.js": "./js/sound.js?v=0.27.2",
-    "./js/ui.js": "./js/ui.js?v=0.27.2",
-    "./js/version.js": "./js/version.js?v=0.27.2",
-    "./js/voice.js": "./js/voice.js?v=0.27.2"
+    "./js/castle-ui.js": "./js/castle-ui.js?v=0.28.0",
+    "./js/castle.js": "./js/castle.js?v=0.28.0",
+    "./js/characters.js": "./js/characters.js?v=0.28.0",
+    "./js/dialogue.js": "./js/dialogue.js?v=0.28.0",
+    "./js/engine.js": "./js/engine.js?v=0.28.0",
+    "./js/firebase-net.js": "./js/firebase-net.js?v=0.28.0",
+    "./js/fit.js": "./js/fit.js?v=0.28.0",
+    "./js/game.js": "./js/game.js?v=0.28.0",
+    "./js/lobby.js": "./js/lobby.js?v=0.28.0",
+    "./js/main.js": "./js/main.js?v=0.28.0",
+    "./js/mission-more.js": "./js/mission-more.js?v=0.28.0",
+    "./js/mission-ui.js": "./js/mission-ui.js?v=0.28.0",
+    "./js/missions.js": "./js/missions.js?v=0.28.0",
+    "./js/multiplayer-ui.js": "./js/multiplayer-ui.js?v=0.28.0",
+    "./js/net-engine.js": "./js/net-engine.js?v=0.28.0",
+    "./js/net.js": "./js/net.js?v=0.28.0",
+    "./js/puppets.js": "./js/puppets.js?v=0.28.0",
+    "./js/save.js": "./js/save.js?v=0.28.0",
+    "./js/sound.js": "./js/sound.js?v=0.28.0",
+    "./js/ui.js": "./js/ui.js?v=0.28.0",
+    "./js/version.js": "./js/version.js?v=0.28.0",
+    "./js/voice.js": "./js/voice.js?v=0.28.0"
   }
 }</script>
-  <link rel="stylesheet" href="css/style.css?v=0.27.2">
+  <link rel="stylesheet" href="css/style.css?v=0.28.0">
   <!-- /STAMP -->
 </head>
 <body>
@@ -191,7 +191,7 @@
 
     <!-- 6. The Round Table: tap who you think is a Traitor. -->
     <section id="screen-table" class="screen table" hidden>
-      <h2>Who do you think is a Traitor?</h2>
+      <h2 id="table-title">Who do you think is a Traitor?</h2>
       <div id="table-cards" class="cards"></div>
       <button id="cast-vote" class="big" disabled>Write it on my chalkboard</button>
     </section>
@@ -203,6 +203,14 @@
       <p id="tally" class="tally" hidden></p>
       <p id="most-votes" class="most-votes" hidden></p>
       <button id="to-reveal" class="big" hidden>Find out...</button>
+    </section>
+
+    <!-- A draw that's still a draw: pick a chest (Gareth). -->
+    <section id="screen-chests" class="screen table" hidden>
+      <h2>Pick a chest!</h2>
+      <p id="chest-text" class="most-votes"></p>
+      <div id="chests" class="chests"></div>
+      <button id="chests-go" class="big" hidden>Find out...</button>
     </section>
 
     <!-- 8. Banished: drum roll, then "I am a... FAITHFUL!" -->
@@ -364,6 +372,6 @@
     <p>Turn your phone sideways to play!</p>
   </div>
 
-  <script type="module" src="js/main.js?v=0.27.2"></script>
+  <script type="module" src="js/main.js?v=0.28.0"></script>
 </body>
 </html>
