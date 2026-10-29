@@ -32,18 +32,50 @@ codes). It names the room in Firebase. Codes are thrown away after a game.
 
 ## Firebase layout (Realtime Database)
 
-    rooms/<code>/
-      host: <uid>                    who hosts (only they write public/)
-      seats/<uid>: { name, character, ready }   each player writes their own
-      public: { phase, day, ... }    what everyone may see (host writes)
-      private/<uid>: { side, fellows, letter, ... }   host writes; only
-                                     that player and the host can read
-      actions/<uid>/<id>: { type, ... }   a player's taps, for the host
+    rooms/<code>/                  everyone in the room can read
+      host: <uid>                  only the host writes the room
+      seats/<uid>: { character, joined }   each player writes their own
+      public: { phase, day, ... }  what everyone may see
+    secrets/<code>/<uid>: { side, fellows, letter, ... }
+                                   only that player and the host can read;
+                                   only the host writes
+    inbox/<code>/<uid>/<id>: { type, ... }
+                                   a player's taps (votes, night picks):
+                                   only that player writes, only they and
+                                   the host can read
 
-Every device signs in anonymously (no names, no accounts for the players).
-The database rules (pasted by Gareth) let: anyone signed in create a room;
-the host write `public` and `private`; each player write only their own seat
-and actions; each player read only their own `private`.
+Secrets and taps live outside `rooms`, because Firebase can't hide part of
+something a player is allowed to read. Every device signs in anonymously
+(no names, no accounts for the players). The rules Gareth pastes are in
+the chat message of 2026-10-29 and below.
+
+    {
+      "rules": {
+        "rooms": {
+          "$code": {
+            ".read": "auth != null",
+            ".write": "auth != null && (!data.exists() || data.child('host').val() === auth.uid)",
+            "seats": { "$uid": { ".write": "auth != null && auth.uid === $uid" } }
+          }
+        },
+        "secrets": {
+          "$code": {
+            "$uid": {
+              ".read": "auth != null && (auth.uid === $uid || root.child('rooms').child($code).child('host').val() === auth.uid)",
+              ".write": "auth != null && root.child('rooms').child($code).child('host').val() === auth.uid"
+            }
+          }
+        },
+        "inbox": {
+          "$code": {
+            "$uid": {
+              ".read": "auth != null && (auth.uid === $uid || root.child('rooms').child($code).child('host').val() === auth.uid)",
+              ".write": "auth != null && auth.uid === $uid"
+            }
+          }
+        }
+      }
+    }
 
 ## Phases in a day, with several real players
 
