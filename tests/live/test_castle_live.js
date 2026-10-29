@@ -665,6 +665,23 @@ test("Letter Jumble: spell all three names", async () => {
   assert.eq(await result(doc), "You spelled 3 out of 3 names!");
 });
 
+test("Letter Jumble: a wrong try's clear-up can't wipe letters typed since (Sam got stuck)", async () => {
+  const { page, doc, box } = await playMission("jumble");
+  const w = jumbleWords(page.game, stillIn(page.game))[0];
+  await until(() => box.dataset.word === "0" && box.querySelector(".jumble-tile"), "word 1", 8000);
+  const tap = (sel) => box.querySelector(sel).click();
+  // A wrong try (the jumbled order), then Start again and two right letters
+  // straight away, before the wrong try's clear-up comes.
+  for (const t of [...box.querySelectorAll(".jumble-tile")]) t.click();
+  [...box.querySelectorAll("button")].find((b) => b.textContent === "Start again").click();
+  for (const letter of w.word.slice(0, 2)) tap(`.jumble-tile[data-letter="${letter}"]:not(:disabled)`);
+  await new Promise((r) => setTimeout(r, 50));
+  const slots = () => [...box.querySelectorAll(".jumble-slot")].map((s) => s.textContent).join("");
+  assert.eq(slots(), w.word.slice(0, 2), "the two letters are still there");
+  for (const letter of w.word.slice(2)) tap(`.jumble-tile[data-letter="${letter}"]:not(:disabled)`);
+  await until(() => box.dataset.word === "1", "on to word 2", 8000);
+});
+
 test("Secret Code: crack all three words", async () => {
   const { page, doc, box } = await playMission("code");
   for (const [i, word] of secretCode(page.game).words.entries()) {

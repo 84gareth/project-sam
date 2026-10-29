@@ -100,30 +100,35 @@ async function jumble(ctx) {
     const ok = await new Promise((resolve) => {
       const answer = el("div", "jumble-answer");
       const tiles = el("div", "jumble-tiles");
-      let typed = "";
       const slots = [...w.word].map(() => el("span", "jumble-slot"));
       answer.append(...slots);
+      // What's typed is read from the slots, so what Sam sees is what's
+      // checked. `tries` counts attempts: a clear-up from an older wrong
+      // try is ignored, so it can't wipe letters typed since (Sam got
+      // stuck mashing letters, 2026-10-29).
+      const typed = () => slots.map((sl) => sl.textContent).join("");
+      let tries = 0, done = false;
       const reset = () => {
-        typed = "";
-        for (const s of slots) s.textContent = "";
+        tries += 1;
+        for (const sl of slots) sl.textContent = "";
         for (const t of tiles.children) t.disabled = false;
       };
       w.letters.forEach((letter) => {
         const t = button("jumble-tile", letter);
         t.dataset.letter = letter;
         t.onclick = () => {
+          const slot = slots.find((sl) => !sl.textContent);
+          if (done || !slot) return;
           t.disabled = true;
-          slots[typed.length].textContent = letter;
-          typed += letter;
-          if (typed.length < w.word.length) return;
-          if (typed === w.word) resolve(true);
-          else {
-            answer.classList.remove("shake");
-            void answer.offsetWidth;
-            answer.classList.add("shake");
-            ctx.status("Not quite! Try again.");
-            setTimeout(reset, FAST ? 0 : 500);
-          }
+          slot.textContent = letter;
+          if (typed().length < w.word.length) return;
+          if (typed() === w.word) { done = true; resolve(true); return; }
+          answer.classList.remove("shake");
+          void answer.offsetWidth;
+          answer.classList.add("shake");
+          ctx.status("Not quite! Try again.");
+          const now = tries;
+          setTimeout(() => { if (tries === now) reset(); }, FAST ? 0 : 500);
         };
         tiles.append(t);
       });
@@ -131,7 +136,7 @@ async function jumble(ctx) {
       again.onclick = reset;
       const skip = button("question", "Skip");
       skip.id = "jumble-skip";
-      skip.onclick = () => resolve(false);
+      skip.onclick = () => { done = true; resolve(false); };
       const tools = el("div", "jumble-tools");
       tools.append(again, skip);
       box.replaceChildren(answer, tiles, tools);
