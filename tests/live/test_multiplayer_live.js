@@ -22,7 +22,8 @@ async function toMulti() {
 test("host: get a code, someone joins, everyone picks, start", async () => {
   const { page, doc } = await toMulti();
   doc.getElementById("multi-host").click();
-  assert.ok(visible(doc, "screen-lobby"));
+  await until(() => visible(doc, "screen-lobby"), "the lobby");
+  await until(() => doc.querySelectorAll("#lobby-code .code-slot .symbol-icon").length === 4, "the code");
   assert.eq(doc.querySelectorAll("#lobby-code .code-slot .symbol-icon").length, 4, "a 4-symbol code");
   const name = page.multiplayer.room;
   const net = other();
@@ -35,7 +36,7 @@ test("host: get a code, someone joins, everyone picks, start", async () => {
   await until(() => !doc.getElementById("lobby-start").disabled, "everyone has picked");
   doc.getElementById("lobby-start").click();
   await until(() => visible(doc, "lobby-soon"), "started");
-  assert.ok(net.readRoom(name).started, "the other device sees it start");
+  assert.ok((await net.readRoom(name)).started, "the other device sees it start");
 });
 
 test("join: tap the host's four symbols", async () => {
@@ -47,12 +48,12 @@ test("join: tap the host's four symbols", async () => {
   // A wrong code first.
   for (const s of ["sun", "sun", "sun", "sun"]) doc.querySelector(`.symbol-button[data-symbol="${s}"]`).click();
   doc.getElementById("mp-join-go").click();
-  assert.ok(visible(doc, "mp-join-error"), "no game with that code");
+  await until(() => visible(doc, "mp-join-error"), "no game with that code");
   doc.getElementById("mp-join-clear").click();
   for (const s of code) doc.querySelector(`.symbol-button[data-symbol="${s}"]`).click();
   assert.eq(doc.querySelectorAll("#mp-join-slots .symbol-icon").length, 4);
   doc.getElementById("mp-join-go").click();
-  assert.ok(visible(doc, "screen-lobby"), "in the lobby");
-  assert.eq(Object.keys(net.readRoom(codeName(code)).seats).length, 2, "the host sees them join");
+  await until(() => visible(doc, "screen-lobby"), "in the lobby");
+  assert.eq(Object.keys((await net.readRoom(codeName(code))).seats).length, 2, "the host sees them join");
   assert.notOk(visible(doc, "lobby-start"), "only the host can start");
 });

@@ -1,9 +1,11 @@
 // How devices share a multiplayer room (docs/multiplayer-spec.md). One
 // face, two versions behind it:
 // - local: between browser tabs on one device (for building and tests);
-// - Firebase: between devices (coming once Gareth's project exists).
-// Every version gives: uid, readRoom(name), updateRoom(name, change),
-// watchRoom(name, onChange) -> stop.
+// - Firebase: between devices (firebase-net.js, Gareth's project).
+// Every version gives: uid, ready(), readRoom(name), createRoom(name, room)
+// (host), setSeat(name, uid, seat) (your own seat), setRoom(name, patch)
+// (host), and watchRoom(name, onChange) -> stop. All but watchRoom return
+// promises. The Firebase version is in firebase-net.js.
 
 // Who this tab is: a random id, kept for this tab only (two tabs on one
 // computer are two players).
@@ -45,5 +47,13 @@ export function localNet(store = window.localStorage) {
     onChange(readRoom(name));
     return () => listeners.get(name).delete(onChange);
   }
-  return { kind: "local", uid: tabUid(), readRoom, updateRoom, watchRoom };
+  const net = {
+    kind: "local", uid: tabUid(), updateRoom, watchRoom,
+    ready: async () => net,
+    readRoom: async (name) => readRoom(name),
+    createRoom: async (name, room) => updateRoom(name, () => room),
+    setSeat: async (name, uid, seat) => updateRoom(name, (r) => (r ? { ...r, seats: { ...r.seats, [uid]: seat } } : null)),
+    setRoom: async (name, patch) => updateRoom(name, (r) => (r ? { ...r, ...patch } : null)),
+  };
+  return net;
 }

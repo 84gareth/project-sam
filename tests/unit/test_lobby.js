@@ -43,3 +43,19 @@ test("up to all 22 players", () => {
   assert.eq(Object.keys(room.seats).length, 22);
   assert.eq(join(room, "late").error, "full");
 });
+
+// ─── Firebase's live stream, merged into our copy of the room ───────────────
+import { applyEvent } from "../../js/firebase-net.js";
+
+test("live changes from Firebase keep our copy of the room right", () => {
+  let room = applyEvent(null, "put", "/", { host: "h", seats: { h: { character: null, joined: 1 } } });
+  room = applyEvent(room, "put", "/seats/p2", { character: null, joined: 2 });
+  assert.eq(Object.keys(room.seats).sort(), ["h", "p2"]);
+  room = applyEvent(room, "patch", "/seats/p2", { character: "puddle" });
+  assert.eq(room.seats.p2, { character: "puddle", joined: 2 });
+  room = applyEvent(room, "patch", "/", { started: true });
+  assert.ok(room.started);
+  assert.eq(room.host, "h", "a patch keeps the rest");
+  room = applyEvent(room, "put", "/seats/p2", null);
+  assert.eq(Object.keys(room.seats), ["h"], "null deletes");
+});

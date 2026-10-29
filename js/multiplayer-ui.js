@@ -6,7 +6,8 @@ import {
   SYMBOLS, CODE_LENGTH, newCode, codeName, newRoom, join, pick, takenBy, canStart, seatOrder,
 } from "./lobby.js";
 import { localNet } from "./net.js";
-import { $, show, badge, card, character } from "./ui.js";
+import { firebaseNet } from "./firebase-net.js";
+import { $, show, badge, card, character, FAST } from "./ui.js";
 import { narrate } from "./voice.js";
 
 // Drawn icons: the code symbols, and the buttons' pictures. Sam's own
@@ -44,16 +45,35 @@ export function icon(name, size = 56) {
 // Fill the [data-icon] spots in the page's buttons.
 for (const spot of document.querySelectorAll("[data-icon]")) spot.replaceChildren(icon(spot.dataset.icon, 72));
 
-const net = localNet();   // Firebase replaces this once Gareth's project exists
+// Gareth's Firebase project, between devices. Tests (?fast=1) and ?local
+// use the local version (between tabs), so they never touch the internet.
+const local = FAST || new URLSearchParams(location.search).has("local");
+const net = local ? localNet() : firebaseNet();
 let roomName = null;
 let stopWatching = null;
+let current = null;   // the room as we last saw it
+
+// Something went wrong talking to the other devices: say so plainly.
+function trouble(where, err) {
+  console.error(err);
+  $(where).textContent = "Couldn't reach the other devices. Check the internet and try again.";
+  $(where).hidden = false;
+}
 
 // ─── Host ───────────────────────────────────────────────────────────────────
 
-function host() {
-  const code = newCode();
-  roomName = codeName(code);
-  net.updateRoom(roomName, () => newRoom(code, net.uid, Date.now()));
+async function host() {
+  try {
+    await net.ready();
+    // A code nobody is using (try a few).
+    let code = newCode();
+    for (let i = 0; i < 5 && await net.readRoom(codeName(code)); i++) code = newCode();
+    roomName = codeName(code);
+    await net.createRoom(roomName, newRoom(code, net.uid, Date.now()));
+  } catch (err) {
+    show("screen-multi");
+    return trouble("multi-error", err);
+  }
   openLobby();
   narrate("You're the host! Show everyone the four symbols so they can join.");
 }
@@ -90,15 +110,21 @@ function openJoin() {
   }));
   show("screen-mp-join");
 }
-function tryJoin() {
+async function tryJoin() {
   const name = codeName(typed);
   let problem = null;
-  net.updateRoom(name, (room) => {
-    if (!room) { problem = "There's no game with that code. Check the symbols!"; return null; }
-    const r = join(room, net.uid, Date.now());
-    if (r.error) { problem = r.error === "full" ? "That game is full." : "That game has already started."; return null; }
-    return r.room;
-  });
+  try {
+    await net.ready();
+    const room = await net.readRoom(name);
+    if (!room) problem = "There's no game with that code. Check the symbols!";
+    else {
+      const r = join(room, net.uid, Date.now());
+      if (r.error) problem = r.error === "full" ? "That game is full." : "That game has already started.";
+      else await net.setSeat(name, net.uid, r.room.seats[net.uid]);
+    }
+  } catch (err) {
+    return trouble("mp-join-error", err);
+  }
   if (problem) {
     $("mp-join-error").textContent = problem;
     $("mp-join-error").hidden = false;
@@ -117,7 +143,8 @@ function openLobby() {
 }
 
 function drawLobby(room) {
-  if (!room) return;
+  if (!room || !room.seats) return;
+  current = room;
   const me = net.uid;
   const isHost = room.host === me;
   $("lobby-title").textContent = isHost ? "You're the host!" : "You're in!";
@@ -145,10 +172,8 @@ function drawLobby(room) {
     cards.replaceChildren(...CHARACTERS.map((c) => {
       const el = card(c, null);
       el.addEventListener("click", () => {
-        net.updateRoom(roomName, (r) => {
-          const p = pick(r, net.uid, c.id);
-          return p.error ? null : p.room;
-        });
+        const p = pick(current, net.uid, c.id);
+        if (!p.error) net.setSeat(roomName, net.uid, p.room.seats[net.uid]).catch((err) => console.error(err));
       });
       return el;
     }));
@@ -166,7 +191,7 @@ function drawLobby(room) {
 }
 
 function startGame() {
-  net.updateRoom(roomName, (room) => (room && canStart(room) ? { ...room, started: true } : null));
+  if (current && canStart(current)) net.setRoom(roomName, { started: true }).catch((err) => console.error(err));
 }
 
 // ─── Buttons ────────────────────────────────────────────────────────────────

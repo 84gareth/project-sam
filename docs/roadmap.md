@@ -114,5 +114,6 @@ code; up to all 22 real players, everything together, roles kept secret;
 through Gareth's own Firebase project. Built all at once over several
 sessions (Sam and Gareth's choice): see `docs/multiplayer-spec.md`.
 Done so far: the start screens, host and join with the code, and the
-lobby (working between browser tabs; Firebase next, once it's set up).
+lobby, working between real devices through Firebase (v0.21.0; Gareth's
+project set up 2026-10-29). Next: the host runs the game for everyone.
 
