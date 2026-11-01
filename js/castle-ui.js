@@ -1300,13 +1300,39 @@ function openOverview() {
   const left = stillIn(game).length;
   $("overview-title").textContent = `Day ${Math.min(game.day, DAYS)} of ${DAYS}`;
   $("overview-pot").textContent = `${left} people left. The pot: £${(game.pot ?? 0).toLocaleString("en-GB")}.`;
+  $("overview-buttons").hidden = false;
+  $("home-check").hidden = true;
   $("overview").hidden = false;
+}
+
+// Back to the home screen (Gareth, 2026-11-01). It asks first, and says
+// what happens to the game: a tap by mistake mustn't end anyone's game.
+function homeWarning() {
+  const out = !stillIn(game).includes(game.playerId);
+  if (engine.kind === "solo") {
+    return out || winner(game) ? "Your game is over." : "You can carry on from the start of today.";
+  }
+  if (engine.isHost) return "You're the host. The game stops until you tap Rejoin to come back.";
+  return out ? "The others can play on without you." : "Tap Rejoin to come back. The others may have to wait for you.";
 }
 
 // ─── Buttons ────────────────────────────────────────────────────────────────
 
 $("pause").addEventListener("click", openOverview);
 $("overview-close").addEventListener("click", () => { $("overview").hidden = true; });
+$("overview-home").addEventListener("click", () => {
+  $("home-text").textContent = `Go to the home screen? ${homeWarning()}`;
+  $("overview-buttons").hidden = true;
+  $("home-check").hidden = false;
+});
+$("home-no").addEventListener("click", () => {
+  $("overview-buttons").hidden = false;
+  $("home-check").hidden = true;
+});
+$("home-yes").addEventListener("click", () => {
+  window.speechSynthesis?.cancel();
+  location.reload();
+});
 
 $("voices").addEventListener("click", () => {
   setVoices(!voicesOn());

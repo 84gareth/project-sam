@@ -886,6 +886,48 @@ test("pause: shows everyone, and closes again", async () => {
   assert.notOk(visible(doc, "overview"));
 });
 
+test("pause: Home screen asks first, then goes home, and you can carry on", async () => {
+  const { page, doc } = await toCastle(seedFor("pepper", FAITHFUL));
+  const before = page.game;
+  doc.getElementById("pause").click();
+  doc.getElementById("overview-home").click();
+  assert.ok(visible(doc, "home-check"), "it asks first");
+  assert.ok(doc.getElementById("home-text").textContent.includes("carry on"));
+  assert.notOk(visible(doc, "overview-buttons"));
+  doc.getElementById("home-no").click();
+  assert.notOk(visible(doc, "home-check"), "stay: back to the pause screen");
+  assert.ok(visible(doc, "overview-close"));
+  assert.ok(visible(doc, "overview"));
+  assert.eq(page.game, before, "the game is untouched");
+  doc.getElementById("overview-home").click();
+  doc.getElementById("home-yes").click();
+  await until(() => page.document !== doc && page.document.getElementById("screen-station")
+    && visible(page.document, "screen-station"), "the home screen", 8000);
+  assert.notOk(visible(page.document, "pause"), "no pause button at home");
+  const again = await openPage("../index.html?fast=1");
+  await until(() => visible(again.document, "carry-on"), "a Carry on button");
+});
+
+test("pause on a phone: the buttons stay on the screen", async () => {
+  const page = await openPage(`../index.html?seed=${seedFor("pepper", FAITHFUL)}&fast=1`, 844, 390);
+  const doc = page.document;
+  await until(() => doc.querySelectorAll(".card").length === 22, "cards built");
+  doc.getElementById("start").click();
+  doc.getElementById("mode-single").click();
+  doc.querySelectorAll("#cards .card")[4].click();
+  doc.getElementById("choose").click();
+  doc.getElementById("to-castle").click();
+  await until(() => visible(doc, "screen-castle"), "the castle", 8000);
+  doc.getElementById("pause").click();
+  const onScreen = (id) => {
+    const r = doc.getElementById(id).getBoundingClientRect();
+    return r.height > 0 && r.top >= 0 && r.bottom <= page.innerHeight + 1;
+  };
+  for (const id of ["overview-close", "overview-home"]) assert.ok(onScreen(id), `${id} is on screen`);
+  doc.getElementById("overview-home").click();
+  for (const id of ["home-text", "home-no", "home-yes"]) assert.ok(onScreen(id), `${id} is on screen`);
+});
+
 test("saving: reload the page and carry on from the day you got to", async () => {
   const { page } = await toCastle(seedFor("pepper", FAITHFUL));
   const day = page.game.day;

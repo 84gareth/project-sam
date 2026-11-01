@@ -1039,3 +1039,12 @@ span.chest-inside { font: 400 22px var(--title-font); color: #ff7b6b; text-shado
   #lobby-players .who-name { font-size: 13px; }
   #screen-lobby .cards { min-height: 45cqh; }
 }
+/* Pause: back to the game, or home. */
+.overview-buttons { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+.overview-buttons[hidden], .home-check[hidden] { display: none; }
+.home-check { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.home-check p { margin: 0; font-size: 20px; font-weight: 700; text-align: center; }
+/* The buttons stay on screen; on a phone, only the people scroll. */
+.overview { overflow: hidden; box-sizing: border-box; }
+.overview > * { flex-shrink: 0; }
+.overview > .overview-people { flex: 1 1 0; min-height: 0; overflow-y: auto; touch-action: pan-y; align-content: flex-start; padding: 8px; }

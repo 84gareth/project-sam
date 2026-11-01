@@ -9,8 +9,8 @@ import { newRoom, join, pick, codeName } from "../../js/lobby.js";
 const visible = (doc, id) => !doc.getElementById(id).hidden;
 const other = () => ({ ...localNet(), uid: "other-device" });
 
-async function toMulti() {
-  const page = await openPage("../index.html?fast=1");
+async function toMulti(path = "../index.html?fast=1") {
+  const page = await openPage(path);
   const doc = page.document;
   await until(() => doc.querySelectorAll(".card").length === 22, "cards built");
   doc.getElementById("start").click();
@@ -198,5 +198,30 @@ test("rejoining after a reload: back into the game where you left it", async () 
   assert.eq(again.game.history.length, 0, "no vote yet");
   doc2.querySelector("#talk-options .question").click();
   await until(() => visible(doc2, "to-vote"), "both have spoken, carrying on", 10000);
+  stopBot();
+});
+
+test("pause: the host goes home, is warned the game stops, and can rejoin", async () => {
+  const { page, doc } = await toMulti("../index.html?fast=1&rejoin");   // the reload keeps this address
+  doc.getElementById("multi-host").click();
+  await until(() => visible(doc, "screen-lobby"), "the lobby");
+  const name = page.multiplayer.room;
+  const net = other();
+  net.updateRoom(name, (r) => join(r, net.uid, Date.now()).room);
+  net.updateRoom(name, (r) => pick(r, net.uid, "puddle").room);
+  await until(() => doc.querySelector('#lobby-cards .card[data-id="pepper"]'), "cards");
+  doc.querySelector('#lobby-cards .card[data-id="pepper"]').click();
+  await until(() => !doc.getElementById("lobby-start").disabled, "ready to start");
+  const stopBot = bot(net, name, "puddle");
+  doc.getElementById("lobby-start").click();
+  await until(() => visible(doc, "screen-ready"), "your side");
+  doc.getElementById("to-castle").click();
+  await until(() => visible(doc, "screen-castle"), "the castle", 8000);
+  doc.getElementById("pause").click();
+  doc.getElementById("overview-home").click();
+  assert.ok(doc.getElementById("home-text").textContent.includes("host"), "the host is warned");
+  doc.getElementById("home-yes").click();
+  await until(() => page.document !== doc && page.document.getElementById("rejoin")
+    && visible(page.document, "rejoin"), "the Rejoin button", 8000);
   stopBot();
 });
