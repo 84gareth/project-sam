@@ -7,6 +7,11 @@ Sam's first game, Turbo Town, is archived with its own roadmap:
 `archive/turbo-town/docs/roadmap.md` (Phases 0-4 done, power-ups never
 started).
 
+## Sam's home page ✅ (2026-11-01, The Traitors v0.31.0)
+Gareth: "a home page like Charlie's ... that replaces the start screen and
+can have a new tile to launch his new game". The Traitors moved to
+`traitors/`; paths below mean inside it. Next game: interview, then spec.
+
 ## Phase 0: Web setup ✅ (v0.1.0, 2026-10-24)
 - ✅ Turbo Town moved to `archive/turbo-town/`, tagged `turbo-town-v0.4.1`
 - ✅ A plain web page for the iPad showing the name and version

@@ -1,4 +1,4 @@
-// The page: the station, picking who you are, and your secret. Then the
+// The page: how to play, picking who you are, and your secret. Then the
 // castle (castle-ui.js). The rules live in game.js and castle.js; page
 // files only draw and listen.
 import "./fit.js";
@@ -56,13 +56,10 @@ function showReady() {
 }
 
 document.title = GAME_NAME;
-$("title").textContent = GAME_NAME;
 $("version").textContent = "v" + VERSION;
 buildCards();
 // Single player or multiplayer (Phase 8).
-$("start").addEventListener("click", () => show("screen-mode"));
 $("mode-single").addEventListener("click", () => show("screen-pick"));
-$("mode-back").addEventListener("click", () => show("screen-station"));
 // A saved game: carry on from the start of the day you got to.
 const saved = new URLSearchParams(location.search).has("seed") ? null : loadGame();
 if (saved) {
@@ -107,7 +104,7 @@ $("to-castle").addEventListener("click", async () => {
   goToCastle(window.game, engine ? { engine } : {});
 });
 // The debug menu (Gareth: "a debug menu to play each mission on its own to
-// test it"). Add ?debug to the address to see its button at the station.
+// test it"). Add ?debug to the address to see its button on the first screen.
 function debugMenu() {
   const box = $("debug-missions");
   box.replaceChildren();
@@ -127,7 +124,7 @@ function debugMenu() {
 }
 if (new URLSearchParams(location.search).has("debug")) $("debug").hidden = false;
 $("debug").addEventListener("click", debugMenu);
-$("debug-back").addEventListener("click", () => show("screen-station"));
+$("debug-back").addEventListener("click", () => show("screen-mode"));
 
 // The first tap switches sound on (iPad rule); every button tap clicks.
 document.addEventListener("pointerdown", unlockSounds, { capture: true });

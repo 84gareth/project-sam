@@ -28,7 +28,6 @@ async function toCastle(seed) {
   const page = await openPage(`../index.html?seed=${seed}&fast=1`);
   const doc = page.document;
   await until(() => doc.querySelectorAll(".card").length === 22, "cards built");
-  doc.getElementById("start").click();
   doc.getElementById("mode-single").click();
   doc.querySelectorAll("#cards .card")[4].click();
   doc.getElementById("choose").click();
@@ -407,7 +406,6 @@ test("All aboard! plays the train ride before the castle", async () => {
   const page = await openPage(`../index.html?seed=1&fast=1`);
   const doc = page.document;
   await until(() => doc.querySelectorAll(".card").length === 22, "cards built");
-  doc.getElementById("start").click();
   doc.getElementById("mode-single").click();
   doc.querySelectorAll("#cards .card")[4].click();
   doc.getElementById("choose").click();
@@ -901,9 +899,7 @@ test("pause: Home screen asks first, then goes home, and you can carry on", asyn
   assert.eq(page.game, before, "the game is untouched");
   doc.getElementById("overview-home").click();
   doc.getElementById("home-yes").click();
-  await until(() => page.document !== doc && page.document.getElementById("screen-station")
-    && visible(page.document, "screen-station"), "the home screen", 8000);
-  assert.notOk(visible(page.document, "pause"), "no pause button at home");
+  await until(() => page.document !== doc && page.document.querySelector("a.game"), "Sam's home page", 8000);
   const again = await openPage("../index.html?fast=1");
   await until(() => visible(again.document, "carry-on"), "a Carry on button");
 });
@@ -912,7 +908,6 @@ test("pause on a phone: the buttons stay on the screen", async () => {
   const page = await openPage(`../index.html?seed=${seedFor("pepper", FAITHFUL)}&fast=1`, 844, 390);
   const doc = page.document;
   await until(() => doc.querySelectorAll(".card").length === 22, "cards built");
-  doc.getElementById("start").click();
   doc.getElementById("mode-single").click();
   doc.querySelectorAll("#cards .card")[4].click();
   doc.getElementById("choose").click();

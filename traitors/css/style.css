@@ -1048,3 +1048,10 @@ span.chest-inside { font: 400 22px var(--title-font); color: #ff7b6b; text-shado
 .overview { overflow: hidden; box-sizing: border-box; }
 .overview > * { flex-shrink: 0; }
 .overview > .overview-people { flex: 1 1 0; min-height: 0; overflow-y: auto; touch-action: pan-y; align-content: flex-start; padding: 8px; }
+/* The way back to Sam's games: a little house, top left of the first
+   screen (from a saved Home Screen icon there's no browser back button). */
+.home { display: inline-flex; align-items: center; justify-content: center; width: 72px; height: 72px; border-radius: 20px;
+  background: #ffd84d; border: 4px solid #261a40; box-sizing: border-box; }
+.home svg { width: 52px; height: 52px; }
+#home { position: absolute; top: max(16px, env(safe-area-inset-top)); left: max(16px, env(safe-area-inset-left)); z-index: 2; }
+#screen-mode { justify-content: center; gap: 16px; }

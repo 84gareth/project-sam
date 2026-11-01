@@ -1312,8 +1312,8 @@ function homeWarning() {
   if (engine.kind === "solo") {
     return out || winner(game) ? "Your game is over." : "You can carry on from the start of today.";
   }
-  if (engine.isHost) return "You're the host. The game stops until you tap Rejoin to come back.";
-  return out ? "The others can play on without you." : "Tap Rejoin to come back. The others may have to wait for you.";
+  if (engine.isHost) return "You're the host. The game stops until you rejoin.";
+  return out ? "The others can play on without you." : "Rejoin to come back. The others may have to wait for you.";
 }
 
 // ─── Buttons ────────────────────────────────────────────────────────────────
@@ -1331,7 +1331,7 @@ $("home-no").addEventListener("click", () => {
 });
 $("home-yes").addEventListener("click", () => {
   window.speechSynthesis?.cancel();
-  location.reload();
+  location.href = "../";   // Sam's home page
 });
 
 $("voices").addEventListener("click", () => {

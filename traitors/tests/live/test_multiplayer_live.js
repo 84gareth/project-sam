@@ -9,11 +9,10 @@ import { newRoom, join, pick, codeName } from "../../js/lobby.js";
 const visible = (doc, id) => !doc.getElementById(id).hidden;
 const other = () => ({ ...localNet(), uid: "other-device" });
 
-async function toMulti(path = "../index.html?fast=1") {
-  const page = await openPage(path);
+async function toMulti() {
+  const page = await openPage("../index.html?fast=1");
   const doc = page.document;
   await until(() => doc.querySelectorAll(".card").length === 22, "cards built");
-  doc.getElementById("start").click();
   assert.ok(visible(doc, "screen-mode"), "single or multiplayer?");
   assert.ok(doc.querySelector("#mode-single svg") && doc.querySelector("#mode-multi svg"), "icons on the buttons");
   doc.getElementById("mode-multi").click();
@@ -202,7 +201,7 @@ test("rejoining after a reload: back into the game where you left it", async () 
 });
 
 test("pause: the host goes home, is warned the game stops, and can rejoin", async () => {
-  const { page, doc } = await toMulti("../index.html?fast=1&rejoin");   // the reload keeps this address
+  const { page, doc } = await toMulti();
   doc.getElementById("multi-host").click();
   await until(() => visible(doc, "screen-lobby"), "the lobby");
   const name = page.multiplayer.room;
@@ -221,7 +220,9 @@ test("pause: the host goes home, is warned the game stops, and can rejoin", asyn
   doc.getElementById("overview-home").click();
   assert.ok(doc.getElementById("home-text").textContent.includes("host"), "the host is warned");
   doc.getElementById("home-yes").click();
-  await until(() => page.document !== doc && page.document.getElementById("rejoin")
-    && visible(page.document, "rejoin"), "the Rejoin button", 8000);
+  await until(() => page.document !== doc && page.document.querySelector("a.game"), "Sam's home page", 8000);
+  // Back into The Traitors from the home page.
+  const back = await openPage("../index.html?fast=1&rejoin");
+  await until(() => visible(back.document, "rejoin"), "the Rejoin button", 8000);
   stopBot();
 });

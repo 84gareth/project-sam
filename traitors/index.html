@@ -1,0 +1,380 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <!-- Fill the iPad screen, no pinch or double-tap zoom while playing. -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <!-- Added to the Home Screen, it opens full screen like an app. -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <!-- The Home Screen icon: the castle (Sam). -->
+  <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-title" content="The Traitors">
+  <title>The Traitors</title>
+  <!-- STAMP (tools/stamp.py writes this; don't edit by hand) -->
+  <script type="importmap">{
+  "imports": {
+    "./js/castle-ui.js": "./js/castle-ui.js?v=0.31.0",
+    "./js/castle.js": "./js/castle.js?v=0.31.0",
+    "./js/characters.js": "./js/characters.js?v=0.31.0",
+    "./js/dialogue.js": "./js/dialogue.js?v=0.31.0",
+    "./js/engine.js": "./js/engine.js?v=0.31.0",
+    "./js/firebase-net.js": "./js/firebase-net.js?v=0.31.0",
+    "./js/fit.js": "./js/fit.js?v=0.31.0",
+    "./js/game.js": "./js/game.js?v=0.31.0",
+    "./js/lobby.js": "./js/lobby.js?v=0.31.0",
+    "./js/main.js": "./js/main.js?v=0.31.0",
+    "./js/mission-more.js": "./js/mission-more.js?v=0.31.0",
+    "./js/mission-ui.js": "./js/mission-ui.js?v=0.31.0",
+    "./js/missions.js": "./js/missions.js?v=0.31.0",
+    "./js/multiplayer-ui.js": "./js/multiplayer-ui.js?v=0.31.0",
+    "./js/net-engine.js": "./js/net-engine.js?v=0.31.0",
+    "./js/net.js": "./js/net.js?v=0.31.0",
+    "./js/puppets.js": "./js/puppets.js?v=0.31.0",
+    "./js/save.js": "./js/save.js?v=0.31.0",
+    "./js/sound.js": "./js/sound.js?v=0.31.0",
+    "./js/ui.js": "./js/ui.js?v=0.31.0",
+    "./js/version.js": "./js/version.js?v=0.31.0",
+    "./js/voice.js": "./js/voice.js?v=0.31.0"
+  }
+}</script>
+  <link rel="stylesheet" href="css/style.css?v=0.31.0">
+  <!-- /STAMP -->
+</head>
+<body>
+  <!-- The whole game, designed at iPad size and shrunk evenly to fit
+       smaller screens (phones), by js/fit.js. -->
+  <div id="app">
+    <!-- 2. Who do you want to be? -->
+    <!-- Phase 8: single player or multiplayer (Sam), with icons. -->
+    <!-- The first screen, now the home page has replaced the old Start
+         screen (Gareth, 2026-11-01). -->
+    <section id="screen-mode" class="screen pick">
+      <a id="home" class="home" href="../" aria-label="Back to Sam's games"><svg viewBox="0 0 64 64" aria-hidden="true"><path d="M8 30 L32 9 L56 30" fill="none" stroke="#261a40" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/><path d="M15 27 V55 H49 V27" fill="#ff8a5c" stroke="#261a40" stroke-width="6" stroke-linejoin="round"/><rect x="27" y="37" width="11" height="18" fill="#261a40"/></svg></a>
+      <h2>How do you want to play?</h2>
+      <button id="carry-on" class="big" hidden>Carry on</button>
+      <button id="rejoin" class="big" hidden>Rejoin your game</button>
+      <div class="mode-buttons">
+        <button id="mode-single" class="big mode-button"><span class="mode-icon" data-icon="one"></span>Single player</button>
+        <button id="mode-multi" class="big mode-button"><span class="mode-icon" data-icon="many"></span>Multiplayer</button>
+      </div>
+      <button id="debug" class="big" hidden>Test a mission</button>
+      <p id="version">v0.0.0</p>
+    </section>
+
+    <section id="screen-multi" class="screen pick" hidden>
+      <h2>Multiplayer</h2>
+      <p class="hint">Everyone plays on their own iPad or phone. Keep your role secret!</p>
+      <div class="mode-buttons">
+        <button id="multi-host" class="big mode-button"><span class="mode-icon" data-icon="crown"></span>Host a game</button>
+        <button id="multi-join" class="big mode-button"><span class="mode-icon" data-icon="key"></span>Join a game</button>
+      </div>
+      <p id="multi-error" class="most-votes" hidden></p>
+      <button id="multi-back" class="small">Back</button>
+    </section>
+
+    <section id="screen-mp-join" class="screen pick" hidden>
+      <h2>Type the code</h2>
+      <p class="hint">Ask the host for the 4 symbols on their screen.</p>
+      <div id="mp-join-slots" class="code-slots"></div>
+      <div id="mp-join-symbols" class="symbol-buttons"></div>
+      <p id="mp-join-error" class="most-votes" hidden></p>
+      <div class="mode-buttons">
+        <button id="mp-join-clear" class="small">Start again</button>
+        <button id="mp-join-go" class="big" disabled>Join</button>
+      </div>
+      <button id="mp-join-back" class="small">Back</button>
+    </section>
+
+    <section id="screen-lobby" class="screen pick" hidden>
+      <h2 id="lobby-title">Your game</h2>
+      <div id="lobby-code" class="code-slots"></div>
+      <p id="lobby-hint" class="hint"></p>
+      <label id="lobby-name-row" class="name-row">Your first name
+        <input id="lobby-name" type="text" maxlength="12" autocomplete="off" autocapitalize="words" spellcheck="false" placeholder="Type it here">
+      </label>
+      <div id="lobby-players" class="final-votes"></div>
+      <div id="lobby-cards" class="cards"></div>
+      <button id="lobby-start" class="big" hidden disabled>Start the game</button>
+      <div id="lobby-soon" class="mission-result" hidden>
+        <p>The game has started! Multiplayer is still being built, so this is as far as it goes for now.</p>
+        <button id="lobby-leave" class="big">Back to the station</button>
+      </div>
+    </section>
+
+    <section id="screen-pick" class="screen pick" hidden>
+      <h2>Who do you want to be?</h2>
+      <div id="cards" class="cards"></div>
+      <button id="choose" class="big" disabled>Choose</button>
+    </section>
+
+    <!-- 3. Who you are, and your secret: Faithful or Traitor. The castle
+         comes next (Phase 3). -->
+    <section id="screen-ready" class="screen ready" hidden>
+      <div id="ready-badge" class="badge big-badge"></div>
+      <h2 id="ready-who"></h2>
+      <p id="ready-side" class="ready-side"></p>
+      <p class="ready-next">The train to the castle leaves soon...</p>
+      <button id="to-castle" class="big">All aboard!</button>
+    </section>
+
+    <!-- 3b. The train ride to the castle (the steam train sound plays here). -->
+    <section id="screen-train" class="screen train" hidden>
+      <h2 class="train-text">All aboard! The train is taking you to the castle...</h2>
+    </section>
+
+    <!-- 4. The castle: walk around the rooms as a paper puppet (castle-ui.js,
+         puppets.js). Tap the floor to walk, a door to change room, someone to
+         chat. -->
+    <section id="screen-castle" class="screen castle" hidden>
+      <div id="stage" class="stage">
+        <img id="room-picture" class="room-picture" alt="">
+        <div id="puppets" class="puppets"></div>
+        <!-- Names in their own layer on top, spaced apart: easy to tap. -->
+        <div id="names" class="names"></div>
+        <button id="door-left" class="door door-left"></button>
+        <button id="door-right" class="door door-right"></button>
+      </div>
+      <div class="topbar castle-top">
+        <h2 id="castle-day">Day 1 at the castle</h2>
+        <button id="voices" class="small">Voices: On</button>
+      </div>
+      <p id="fellows" class="fellows" hidden></p>
+      <p id="no-murder" class="no-murder" hidden>No murder tonight</p>
+      <p id="room-name" class="room-name"></p>
+      <p class="hint walk-hint">Tap the floor to walk. Tap someone to chat.</p>
+      <button id="to-table" class="big table-button">Go to the Round Table</button>
+    </section>
+
+    <!-- 5. A chat: pick a question, they answer. -->
+    <section id="screen-chat" class="screen chat" hidden>
+      <div id="chat-picture" class="chat-picture"></div>
+      <h2 id="chat-name"></h2>
+      <div id="bubble" class="bubble" hidden>
+        <p id="bubble-text"></p>
+        <ol id="bubble-list" class="bubble-list" hidden></ol>
+      </div>
+      <div id="questions" class="questions"></div>
+      <button id="chat-back" class="big">Back</button>
+    </section>
+
+    <!-- 5a. Joining two people who are chatting. -->
+    <section id="screen-join" class="screen chat" hidden>
+      <div id="join-pictures" class="join-pictures"></div>
+      <h2 id="join-names"></h2>
+      <div class="bubble"><p><b id="join-who"></b> <span id="join-text"></span></p></div>
+      <div id="join-actions" class="join-actions"></div>
+      <button id="join-back" class="big">Back</button>
+    </section>
+
+    <!-- 5b. Round Table talk: people accuse and defend; Sam joins in. -->
+    <!-- The slow-motion walk to the Round Table, every day (Sam). -->
+    <section id="screen-walk" class="screen table walk" hidden>
+      <h2 id="walk-title">The Round Table</h2>
+      <div id="walk-line" class="walk-line"></div>
+    </section>
+
+    <section id="screen-talk" class="screen table" hidden>
+      <h2>The Round Table</h2>
+      <div id="talk-lines" class="talk-lines"></div>
+      <div id="talk-options" class="questions" hidden></div>
+      <button id="to-vote" class="big" hidden>Time to vote</button>
+    </section>
+
+    <!-- 6. The Round Table: tap who you think is a Traitor. -->
+    <section id="screen-table" class="screen table" hidden>
+      <h2 id="table-title">Who do you think is a Traitor?</h2>
+      <div id="table-cards" class="cards"></div>
+      <button id="cast-vote" class="big" disabled>Write it on my chalkboard</button>
+    </section>
+
+    <!-- 7. Everyone shows their chalkboard. -->
+    <section id="screen-votes" class="screen table" hidden>
+      <h2>The votes</h2>
+      <div id="boards" class="boards"></div>
+      <p id="tally" class="tally" hidden></p>
+      <p id="most-votes" class="most-votes" hidden></p>
+      <button id="to-reveal" class="big" hidden>Find out...</button>
+    </section>
+
+    <!-- A draw that's still a draw: pick a chest (Gareth). -->
+    <section id="screen-chests" class="screen table" hidden>
+      <h2>Pick a chest!</h2>
+      <p id="chest-text" class="most-votes"></p>
+      <div id="chests" class="chests"></div>
+      <button id="chests-go" class="big" hidden>Find out...</button>
+    </section>
+
+    <!-- 8. Banished: drum roll, then "I am a... FAITHFUL!" -->
+    <section id="screen-banished" class="screen table" hidden>
+      <div id="banished-picture"></div>
+      <h2 id="banished-name"></h2>
+      <p id="reveal" class="reveal"></p>
+      <div id="after-reveal" hidden>
+        <button id="next-day" class="big">Night falls...</button>
+      </div>
+      <div id="game-over" class="game-over" hidden>
+        <p id="game-over-text"></p>
+        <button id="play-again" class="big">Play again</button>
+      </div>
+    </section>
+
+    <!-- The final after day 12: end it, or banish again? (Sam) -->
+    <!-- The final at the fire pit (Sam's drawings): green flame to end the
+         game, red flame to banish again. -->
+    <section id="screen-final" class="screen table final" hidden>
+      <h2>The final!</h2>
+      <p id="final-text" class="most-votes final-text"></p>
+      <div id="final-choice" class="final-choice"></div>
+      <div id="final-stage" class="final-stage" hidden>
+        <div id="final-speaker" class="final-speaker"></div>
+        <div class="pit">
+          <img id="final-flame" class="flame" alt="" hidden>
+          <img class="fire-pit" src="assets/final/fire-pit.png" alt="The fire pit">
+        </div>
+      </div>
+      <div id="final-votes" class="final-votes"></div>
+      <p id="final-result" class="most-votes" hidden></p>
+      <button id="final-next" class="big" hidden></button>
+    </section>
+
+    <!-- The end: the big reveal, the money, a party, every Traitor (Sam). -->
+    <section id="screen-ending" class="screen table ending" hidden>
+      <h2 id="ending-title">The big reveal!</h2>
+      <div id="ending-reveal" class="final-votes"></div>
+      <div id="ending-result" class="ending-result" hidden>
+        <p id="ending-winner" class="reveal"></p>
+        <p id="ending-money" class="most-votes"></p>
+        <p class="gone-title">All the Traitors this game</p>
+        <div id="ending-traitors" class="final-votes"></div>
+        <button id="ending-play-again" class="big">Play again</button>
+      </div>
+      <div id="confetti" class="confetti" hidden></div>
+    </section>
+
+    <!-- 9. Night, for a Faithful: wait... is there a letter? -->
+    <section id="screen-night" class="screen night" hidden>
+      <h2 id="night-title">Night falls...</h2>
+      <p id="night-text" class="night-text">The Traitors are meeting in secret.</p>
+      <!-- A sealed letter: tap it to open (Gareth). -->
+      <button id="envelope" class="envelope" hidden>
+        <span class="envelope-flap"></span>
+        <span class="wax-seal">T</span>
+        <span class="envelope-label">Tap to open</span>
+      </button>
+      <div id="letter" class="letter" hidden>
+        <p>By order of the Traitors,</p>
+        <p id="letter-big" class="letter-big">you have been murdered.</p>
+      </div>
+      <button id="to-breakfast" class="big" hidden>Go to breakfast</button>
+      <div id="night-over" class="game-over" hidden>
+        <button id="night-play-again" class="big">Play again</button>
+      </div>
+    </section>
+
+    <!-- 10. Night, for a Traitor: the secret meeting. You pick. -->
+    <section id="screen-traitors" class="screen traitors-room" hidden>
+      <h2>The Traitors' secret meeting</h2>
+      <div id="traitor-ideas" class="ideas"></div>
+      <p id="meeting-hint" class="hint">Who will the Traitors murder tonight? You pick.</p>
+      <div id="victim-cards" class="cards"></div>
+      <button id="murder" class="big" disabled>Send the letter</button>
+    </section>
+
+    <!-- 11. Breakfast: people arrive in little groups. Who's missing? -->
+    <!-- Debug menu (address ends ?debug): play any mission on its own. -->
+    <section id="screen-debug" class="screen mission" hidden>
+      <h2>Test a mission</h2>
+      <div id="debug-missions" class="questions"></div>
+      <button id="debug-back" class="big">Back</button>
+    </section>
+
+    <!-- Today's mission (docs/missions.md). -->
+    <section id="screen-mission" class="screen mission" hidden>
+      <h2 id="mission-name"></h2>
+      <p id="mission-how" class="mission-how"></p>
+      <p id="mission-status" class="mission-status"></p>
+      <div id="bells" class="bells" hidden></div>
+      <div id="pies" class="pies" hidden></div>
+      <div id="catapult" class="catapult" hidden></div>
+      <div id="mission-play" class="mission-play" hidden></div>
+      <div id="cooking" class="cooking" hidden>
+        <div class="diner"><div id="diner-picture"></div><p id="diner-clue" class="diner-clue"></p></div>
+        <div id="trucks" class="trucks"></div>
+        <button id="serve" class="big" disabled>Serve dinner!</button>
+      </div>
+      <button id="mission-go" class="big">Start the mission</button>
+      <div id="mission-result" class="mission-result" hidden>
+        <p id="mission-score"></p>
+        <p id="mission-pot"></p>
+        <p id="mission-extra"></p>
+        <p id="mission-shield"></p>
+        <div id="mission-leaders" class="leaders"></div>
+        <button id="mission-done" class="big">Go to the castle</button>
+      </div>
+    </section>
+
+    <section id="screen-breakfast" class="screen breakfast" hidden>
+      <h2>Breakfast</h2>
+      <div id="arrivals" class="arrivals"></div>
+      <!-- The missing one, in a big panel; a red X is drawn across them. -->
+      <div id="crossout" class="crossout" hidden>
+        <div class="crossout-frame">
+          <div id="crossout-picture"></div>
+          <svg class="red-x" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+            <line x1="6" y1="6" x2="94" y2="94" pathLength="1"/>
+            <line x1="94" y1="6" x2="6" y2="94" pathLength="1"/>
+          </svg>
+        </div>
+        <p id="missing" class="most-votes"></p>
+      </div>
+      <!-- Then everyone: the ones who have gone are crossed out. -->
+      <div id="gone-box" class="gone-box" hidden>
+        <p class="gone-title">Everyone at the castle</p>
+        <div id="gone" class="gone-row"></div>
+      </div>
+      <div id="quiet-news" class="quiet-news" hidden>
+        <p class="quiet-title">Announcement for TONIGHT</p>
+        <p>After today's Round Table, the Traitors will NOT murder anyone tonight.</p>
+      </div>
+      <p id="dagger-news" class="most-votes dagger-news" hidden></p>
+      <button id="start-day" class="big" hidden>Start the day</button>
+      <div id="breakfast-over" class="game-over" hidden>
+        <p id="breakfast-over-text"></p>
+        <button id="breakfast-play-again" class="big">Play again</button>
+      </div>
+    </section>
+    <!-- Multiplayer: who we're waiting for; the host can stop waiting. -->
+    <div id="waiting" class="waiting" hidden>
+      <span id="waiting-text"></span>
+      <button id="dont-wait" class="small" hidden>Don't wait</button>
+    </div>
+    <!-- Pause: who's who (Gareth). -->
+    <button id="pause" class="pause" hidden aria-label="Pause">||</button>
+    <div id="overview" class="overview" hidden>
+      <h2 id="overview-title">Who's who</h2>
+      <p id="overview-pot" class="overview-pot"></p>
+      <div id="overview-people" class="overview-people"></div>
+      <div id="overview-buttons" class="overview-buttons">
+        <button id="overview-close" class="big">Back to the game</button>
+        <button id="overview-home" class="big">Home screen</button>
+      </div>
+      <div id="home-check" class="home-check" hidden>
+        <p id="home-text"></p>
+        <div class="overview-buttons">
+          <button id="home-no" class="big">Stay here</button>
+          <button id="home-yes" class="big">Go home</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Phones held upright: please turn sideways. -->
+  <div id="turn" class="turn" hidden>
+    <div class="turn-phone"></div>
+    <p>Turn your phone sideways to play!</p>
+  </div>
+
+  <script type="module" src="js/main.js?v=0.31.0"></script>
+</body>
+</html>

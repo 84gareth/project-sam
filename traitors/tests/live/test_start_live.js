@@ -1,4 +1,4 @@
-// Start at the station, pick a character, pick a side: on the real page.
+// How to play, pick a character, pick a side: on the real page.
 import { test, assert, openPage, until } from "../framework.js";
 import { newGame, TRAITOR, FAITHFUL } from "../../js/game.js";
 
@@ -15,27 +15,26 @@ async function tapThrough(characterIndex, seed) {
   const page = await openPage(`../index.html?seed=${seed}`);
   const doc = page.document;
   await until(() => doc.querySelectorAll(".card").length === 22, "22 cards built");
-  doc.getElementById("start").click();
   doc.getElementById("mode-single").click();
   doc.querySelectorAll(".card")[characterIndex].click();
   doc.getElementById("choose").click();
   return { page, doc };
 }
 
-test("the station picture shows first, with a Start button", async () => {
+test("how to play shows first, with big buttons and a way home", async () => {
   const page = await openPage();
   const doc = page.document;
-  const img = doc.getElementById("station-picture");
-  await until(() => img.complete && img.naturalWidth > 0, "station picture loaded");
-  assert.ok(visible(doc, "screen-station"), "station showing");
+  assert.ok(visible(doc, "screen-mode"), "first screen");
   assert.notOk(visible(doc, "screen-pick"), "picker hidden");
-  assert.gt(doc.getElementById("start").getBoundingClientRect().height, 59, "Start is big enough to tap");
+  for (const id of ["mode-single", "mode-multi", "home"]) {
+    assert.gt(doc.getElementById(id).getBoundingClientRect().height, 59, `${id} is big enough to tap`);
+  }
+  assert.eq(doc.getElementById("home").getAttribute("href"), "../", "the house goes to the home page");
 });
 
 test("all 22 characters are on the picker", async () => {
   const page = await openPage();
   const doc = page.document;
-  doc.getElementById("start").click();
   doc.getElementById("mode-single").click();
   await until(() => doc.querySelectorAll(".card").length === 22, "22 cards");
   assert.ok(visible(doc, "screen-pick"));
@@ -46,7 +45,6 @@ test("all 22 characters are on the picker", async () => {
 test("you can't choose until you've picked someone", async () => {
   const page = await openPage();
   const doc = page.document;
-  doc.getElementById("start").click();
   doc.getElementById("mode-single").click();
   assert.ok(doc.getElementById("choose").disabled, "Choose starts greyed out");
   doc.querySelectorAll(".card")[4].click();
@@ -77,7 +75,6 @@ test("there's no Faithful-or-Traitor button to pick", async () => {
 test("Sam's drawings show on the picker; the rest show their initials", async () => {
   const page = await openPage();
   const doc = page.document;
-  doc.getElementById("start").click();
   doc.getElementById("mode-single").click();
   const cards = doc.querySelectorAll(".card");
   const img = cards[0].querySelector("img.portrait");

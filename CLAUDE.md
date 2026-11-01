@@ -5,6 +5,18 @@ A game that **Sam (aged 8 to 11) designs** with his dad, Gareth, built as a
 project. Separate from Gareth's other games. See `docs/roadmap.md` for where
 we are.
 
+**A home page and his games (since 2026-11-01, like Charlie's):**
+- `index.html` (root): Sam's home page, one big picture tile per game. It
+  replaced The Traitors' old Start screen. Tests in `tests/`.
+- `traitors/`: **The Traitors**, self-contained (its own `index.html`, `js/`,
+  `css/`, `assets/`, `tests/`, `js/version.js`). **Every game path in this
+  file and in `docs/` (`js/castle.js`, `assets/...`) means inside
+  `traitors/`.** Its first screen is "How do you want to play?", with a
+  house button home; Pause has "Home screen" too.
+- A new game gets its own folder and its tile on the home page (now a
+  "Coming soon" tile waiting for Sam's new game; make it an `<a>` then, and
+  add the folder to `run_tests.sh` and `tools/playtest.sh`).
+
 Sam's first game here, **Turbo Town** (a Godot crazy-car race), was put away
 on 2026-10-24 when Sam chose a new idea: `archive/turbo-town/`, git tag
 `turbo-town-v0.4.1`. It still runs and passes its tests.
@@ -90,7 +102,7 @@ These rules are carried over from Project 2126
    about process ("why did that take so long?") wants an answer, not another
    investigation.
 6. **Bump the version on every gameplay change.** Single source of truth:
-   `VERSION` in `js/version.js`. **Then run `python3 tools/stamp.py`**: it
+   `VERSION` in `traitors/js/version.js`. **Then run `python3 tools/stamp.py`**: it
    stamps the version onto every file index.html loads, so devices fetch
    the new copy (a test fails if you forget).
 7. **When you suggest options, number them** so Sam can pick by number. Keep
@@ -161,13 +173,16 @@ is OFF on purpose; don't propose turning it back on.
   heredoc. Edit such files with the Edit tool instead.
 
 ## Web conventions for this project
-- `index.html` at the root (GitHub Pages serves it). `js/` for code (ES
-  modules), `css/` for styles, `assets/` for pictures and sounds when
-  there are any.
+- The home page `index.html` at the root (GitHub Pages serves it); each
+  game in its own folder with `index.html`, `js/` (ES modules), `css/`,
+  `assets/` and `tests/`. Shared tools stay in `tools/`.
 - Game rules live in pure modules (no `document`, no timers) so unit tests
   can import them. The page code only draws and handles touches.
-- Every test file is listed in `tests/index.html`; the runner fails a file
-  that doesn't load or registers no tests.
+- Every test file is listed in its game's `tests/index.html` (or the home
+  page's `tests/index.html`); the runner fails a file that doesn't load or
+  registers no tests. `./run_tests.sh` runs them all; `--game=traitors|home`
+  runs one. `tools/playtest.sh` opens the home page; add `traitors`,
+  `missions`, `tests` or `home-tests` for the others.
 - Touch: use Pointer Events (`pointerdown`/`pointermove`/`pointerup`), not
   mouse events. Buttons at least 60 px. `touch-action: none` on the game so
   Safari doesn't scroll or zoom.
@@ -224,7 +239,10 @@ so, kindly.
   crashes partway can look like a pass (learned in Project 2126).
 
 ## Current status
-Updated 2026-10-29 (v0.25.0).
+Updated 2026-11-01 (The Traitors v0.31.0).
+- **Home page (2026-11-01):** tiles for The Traitors and "Coming soon"
+  (Sam's new game, not started: interview first). The test address for
+  missions is now `traitors/?debug`.
 - **Phase 0 (web setup) done.** Tests in headless Chrome; GitHub Pages;
   Turbo Town archived.
 - **Phase 1 done.** The game: like The Traitors, starting at Havenbrook

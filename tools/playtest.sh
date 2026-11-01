@@ -3,9 +3,11 @@
 # The iPad can play the same copy over home Wi-Fi (the address is printed),
 # or the published copy on GitHub Pages once changes are pushed.
 #
-#   tools/playtest.sh             the game
-#   tools/playtest.sh tests       the test page, in a visible browser
-#   tools/playtest.sh missions    the game with the "Test a mission" button
+#   tools/playtest.sh             the home page
+#   tools/playtest.sh traitors    The Traitors
+#   tools/playtest.sh missions    The Traitors with the "Test a mission" button
+#   tools/playtest.sh tests       The Traitors' test page, in a visible browser
+#   tools/playtest.sh home-tests  the home page's test page
 #
 # Stop it with Ctrl+C (or the terminal's stop button).
 set -euo pipefail
@@ -15,16 +17,18 @@ PORT=8000
 PAGE=""
 case "${1:-}" in
   "") PAGE="" ;;
-  tests) PAGE="tests/" ;;
-  missions) PAGE="?debug" ;;
-  -h|--help) sed -n '2,10p' "$0"; exit 0 ;;
-  *) echo "Unknown page '$1'. Try: tools/playtest.sh, tools/playtest.sh tests or tools/playtest.sh missions"; exit 2 ;;
+  traitors) PAGE="traitors/" ;;
+  missions) PAGE="traitors/?debug" ;;
+  tests) PAGE="traitors/tests/" ;;
+  home-tests) PAGE="tests/" ;;
+  -h|--help) sed -n '2,12p' "$0"; exit 0 ;;
+  *) echo "Unknown page '$1'. Try: tools/playtest.sh, or add traitors, missions, tests or home-tests"; exit 2 ;;
 esac
 
-VERSION="$(sed -n 's/^export const VERSION = "\(.*\)";/\1/p' js/version.js)"
+VERSION="$(sed -n 's/^export const VERSION = "\(.*\)";/\1/p' traitors/js/version.js)"
 WIFI_IP="$(ipconfig getifaddr en0 2>/dev/null || ipconfig getifaddr en1 2>/dev/null || true)"
 
-echo "Starting Project Sam v$VERSION"
+echo "Starting Sam's games (The Traitors v$VERSION)"
 echo "  On this Mac:       http://localhost:$PORT/$PAGE"
 [ -n "$WIFI_IP" ] && echo "  On the iPad:       http://$WIFI_IP:$PORT/$PAGE   (same Wi-Fi)"
 echo "  Published (iPad):  https://84gareth.github.io/project-sam/"

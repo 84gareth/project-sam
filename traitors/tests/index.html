@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <title>Tests</title>
+  <style>
+    body { font: 14px/1.4 ui-monospace, Menlo, monospace; margin: 16px; }
+    /* On screen but almost invisible: browsers pause animation in frames
+       placed off-screen, and the puppet castle needs it. */
+    iframe { position: fixed; left: 0; top: 0; opacity: 0.02; pointer-events: none; z-index: -1; }
+  </style>
+</head>
+<body>
+  <pre id="out">Running...</pre>
+  <script type="module">
+    import { run } from "./framework.js";
+    // Every test file. A new file must be added here to run.
+    const FILES = [
+      "unit/test_version.js",
+      "unit/test_game.js",
+      "unit/test_castle.js",
+      "unit/test_voice.js",
+      "unit/test_puppets.js",
+      "unit/test_missions.js",
+      "unit/test_save.js",
+      "unit/test_final.js",
+      "unit/test_lobby.js",
+      "unit/test_engine.js",
+      "live/test_page_live.js",
+      "live/test_start_live.js",
+      "live/test_castle_live.js",
+      "live/test_multiplayer_live.js",
+    ];
+    run(FILES);
+  </script>
+</body>
+</html>

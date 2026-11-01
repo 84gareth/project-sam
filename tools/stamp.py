@@ -10,7 +10,7 @@ Run after bumping VERSION in js/version.js; a unit test fails if you forget.
 """
 import pathlib, re, json
 
-root = pathlib.Path(__file__).resolve().parent.parent
+root = pathlib.Path(__file__).resolve().parent.parent / "traitors"
 version = re.search(r'VERSION = "([^"]+)"', (root / "js/version.js").read_text()).group(1)
 modules = sorted(p.name for p in (root / "js").glob("*.js"))
 imports = {f"./js/{m}": f"./js/{m}?v={version}" for m in modules}

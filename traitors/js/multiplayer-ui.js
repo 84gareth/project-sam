@@ -241,7 +241,7 @@ function begin(room, rejoining = false) {
 }
 
 // ─── Rejoining (a reload, or the iPad went to sleep) ────────────────────────
-// This device remembers the game it's in, and its sign-in, so the station
+// This device remembers the game it's in, and its sign-in, so the first screen
 // can offer to rejoin it.
 const REJOIN = "project-sam-rejoin";
 function remember() {

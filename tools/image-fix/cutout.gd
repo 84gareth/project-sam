@@ -79,7 +79,7 @@ func _initialize() -> void:
 		first = 2
 	for i in range(first, a.size()):
 		var id := a[i]
-		var img := Image.load_from_file(root + "/assets/characters/" + id + ".jpg")
+		var img := Image.load_from_file(root + "/traitors/assets/characters/" + id + ".jpg")
 		img.convert(Image.FORMAT_RGBA8)
 		var w := img.get_width()
 		var h := img.get_height()
@@ -118,6 +118,6 @@ func _initialize() -> void:
 		var box := img.get_used_rect()
 		var out := img.get_region(box)
 		out.resize(int(box.size.x * HEIGHT / float(box.size.y)), HEIGHT, Image.INTERPOLATE_BILINEAR)
-		out.save_png(root + "/assets/puppets/" + id + ".png")
+		out.save_png(root + "/traitors/assets/puppets/" + id + ".png")
 		print(id, " ", out.get_size())
 	quit()

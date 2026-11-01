@@ -7,7 +7,6 @@ test("page shows the name and version", async () => {
   const doc = page.document;
   // The first page of the run loads everything cold: give it longer.
   await until(() => doc.getElementById("version").textContent !== "v0.0.0", "page script ran", 15000);
-  assert.eq(doc.getElementById("title").textContent, GAME_NAME);
   assert.eq(doc.getElementById("version").textContent, "v" + VERSION);
   assert.eq(doc.title, GAME_NAME);
 });
@@ -48,8 +47,10 @@ test("the game shrinks evenly to fit a phone held sideways", async () => {
   const doc = page.document;
   await until(() => doc.getElementById("version").textContent !== "v0.0.0", "page script ran");
   assert.near(Number(doc.getElementById("app").style.getPropertyValue("--fit")), 0.5, 1e-9);
-  const start = doc.getElementById("start").getBoundingClientRect();
-  assert.ok(start.bottom <= 340 && start.right <= 750 && start.top >= 0, "Start is on the screen");
+  for (const id of ["home", "mode-single", "mode-multi"]) {
+    const r = doc.getElementById(id).getBoundingClientRect();
+    assert.ok(r.bottom <= 340 && r.right <= 750 && r.top >= 0, `${id} is on the screen`);
+  }
   assert.ok(doc.getElementById("turn").hidden, "no 'turn sideways' message");
   assert.ok(doc.documentElement.scrollHeight <= 340, "no scrolling");
 });
@@ -66,7 +67,6 @@ test("character cards: rows centred, and no words spill out of a card", async ()
   const page = await openPage("../index.html?fast=1");
   const doc = page.document;
   await until(() => doc.querySelectorAll(".card").length === 22, "cards built");
-  doc.getElementById("start").click();
   doc.getElementById("mode-single").click();
   const cards = [...doc.querySelectorAll("#cards .card")];
   for (const c of cards) assert.ok(c.scrollHeight <= c.clientHeight + 1, `${c.dataset.id}'s words fit`);
